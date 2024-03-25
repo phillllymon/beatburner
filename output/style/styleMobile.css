@@ -1,0 +1,239 @@
+.slides-container {
+    height: 150vh;
+    perspective: 20vh;
+    width: 100vw;
+}
+
+.three-wide-slides-container {
+    width: 107vw;
+}
+
+.four-wide-slides-container {
+    width: 114vw;
+}
+
+.slide {
+    width: 50vw;
+}
+
+.clear-slide {
+    width: 50vw;
+}
+
+.tapper {
+    /* top: 0vh; */
+    /* travelLength is 128.5vh to account for top border */
+    border: 1.5vh solid orange;
+    border-left: 3vh solid orange;
+    border-right: 3vh solid orange;
+}
+
+#tappers-inner-container {
+    position: absolute;
+    top: 127vh;
+    
+}
+
+.tapper-shadow-bar {
+    height: 1.5vh;
+}
+#lower-shadow-bar {
+    top: 100%;
+    /* box-shadow: 0px 2.5px 5px rgb(94, 0, 51); */
+    transform: translate(0vmin, -4.5vh);
+    /* ^this is a mystery - why does -4.5vmin get it to the right spot? */
+}
+
+#tappers {
+    top: 127vh;
+}
+
+#test-note2 {
+    top: 115vh;
+}
+
+.note {
+    border-top: 0.35vh solid rgb(241, 133, 0);
+    border-bottom: 1.5vh solid rgb(219, 121, 0);
+    border-right: 3vh solid darkorange;
+    border-left: 3vh solid darkorange;
+}
+.note-tail {
+    width: 20%;
+}
+
+.note-leaving-right {
+    top: 128.5vh;
+}
+.note-leaving-left {
+    top: 128.5vh;
+}
+
+.cloud {
+    top: 1.5vh;
+}
+@keyframes note-leave-right {
+    0%      {opacity: 1; top: 1.5vh; left: 50%}
+    100%    {opacity: 1; top: -85vh; left: 100vh}
+}
+@keyframes note-leave-left {
+    0%      {opacity: 1; top: 1.5vh; left: 50%}
+    100%    {opacity: 1; top: -85vh; left: -100vh}
+}
+
+
+.side-controls {
+    top: 10%;
+}
+
+
+
+/* #vertical {
+    height: 7.5vw;
+    border-left: 0.75vw solid gray;
+} */
+
+#song-label {
+    font-size: 5vw;
+    text-shadow: 0px 0px 3vw white;
+}
+
+#background-left {
+    position: absolute;
+    height: 100%;
+    width: 15%;
+    top: 0px;
+    left: 0px;
+}
+#background-right {
+    position: absolute;
+    height: 100%;
+    width: 15%;
+    top: 0px;
+    left: 100%;
+    transform: translate(-100%, 0px);
+}
+#fog-mobile {
+    position: absolute;
+    height: 40%;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    /* background-color: red; */
+}
+#fog-mobile-top {
+    position: absolute;
+    height: 16%;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    background-color: red;
+}
+#fog-mobile-gradient {
+    position: absolute;
+    height: 84%;
+    width: 100%;
+    top: 16%;
+    left: 0px;
+    background-color: green;
+}
+
+.rock-label {
+    font-family: sans-serif;
+    font-size: 12vw;
+    opacity: 0.5;
+    font-weight: bold;
+    animation-name: youRock;
+    animation-duration: 500ms;
+}
+@keyframes youRock {
+    0%    {font-size: 0px}
+    100%    {font-size: 12vw}
+}
+
+.countdown-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24vw;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    color: gray;
+    z-index: 4;
+    padding: 15px;
+    opacity: 0.8;
+}
+
+.slides {
+    opacity: 1;
+}
+
+#feedback {
+    width: 80vmin;
+    overflow: hidden;
+}
+#feedback-title {
+    cursor: default;
+    font-size: 2.5vh;
+    color: rgb(105, 105, 105);
+    margin: 0.5vh;
+}
+
+.feedback-item {
+    color: gray;
+    width: 100%;
+    border-top: 2px solid gray;
+    font-size: 2.5vh;
+    padding: 1vw;
+}
+.row {
+    width: 70vmin;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+#percent-bar-container {
+    width: 70vmin;
+    height: 1vh;
+    border: 1px solid gray;
+    position: relative;
+}
+#percent-bar-inner-container {
+    position: absolute;
+    height: 100%;
+    left: 0px;
+}
+#percent-bar {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 1vh;
+    width: 100%;
+    background-color: rgb(255, 231, 188);
+}
+
+.note-bulb {
+    border-top: 0.35vh solid rgb(241, 219, 177);
+    border-bottom: 1.5vh solid rgb(219, 199, 163);
+    border-right: 3vh solid rgb(241, 219, 177);
+    border-left: 3vh solid rgb(241, 219, 177);
+    color: transparent;
+}
+
+.note-lighted {
+    border-top: 0.35vh solid rgb(255, 225, 200);
+    border-bottom: 1.5vh solid rgb(255, 218, 184);
+    border-right: 3vh solid rgb(255, 219, 189);
+    border-left: 3vh solid rgb(255, 219, 189);
+}
+
+.note-middle-lighted {
+    top: 0.4vh;
+    width: 8vh;
+    height: 5vh;
+}
+
+.flash {
+    top: 0.7vh;
+}
+

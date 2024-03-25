@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat Burner</title>
+    <link rel="stylesheet" href="style/styleReset.css">
+    <link rel="stylesheet" href="style/style.css">
+    <link id="background-css" rel="stylesheet" href="style/background.css">
+    <link rel="stylesheet" href="style/menu.css">
+    <link rel="stylesheet" href="style/buttons.css">
+    <link rel="stylesheet" href="style/stream.css">
+    <link rel="stylesheet" href="style/animate.css">
+    <link rel="stylesheet" href="style/noteColors.css">
+    <link rel="stylesheet" href="style/sideMeters.css">
+
+</head>
+<body>
+    <center>
+        <div id="game-container" class="game-container">
+            <div id="open-feedback-link">feedback</div>
+            <div id="give-feedback-modal" class="hidden">
+                Send a message to the creators of Beat Burner. Any feedback is helpful!
+                Be sure to include your email if you'd like a reply.
+                <br>
+                <br>
+                <textarea id="feedback-message" placeholder="message"></textarea>
+                <br>
+                <input type="text" id="feedback-email" placeholder="email (optional)" />
+                <button id="submit-give-feedback" >Submit</button>
+                <br>
+                <button id="cancel-give-feedback">Cancel</button>
+            </div>
+            <div id="modal-background" class="hidden"></div>
+            <div id="connecting-radio" class="hidden">
+                <div class="menu-title">
+                    Connecting...
+                </div>
+                <div id="acquiring" class="menu-choice">
+                    Stream acquired
+                </div>
+                <div id="initial-received" class="menu-choice">
+                    Initial data received 
+                </div>
+                <div id="now-streaming" class="menu-choice">
+                    Streaming
+                </div>
+            </div>
+            <div id="feedback" class="menu">
+                <div id="feedback-title" class="feedback-title"></div>
+                <div class="feedback-item">
+                    <div id="percent-bar-container">
+                        <div id="percent-bar-inner-container"><div id="percent-bar"></div></div>
+                    </div>
+                    <div id="feedback-percent"></div>
+                </div>
+                <div id="feedback-streak" class="feedback-item"></div>
+                <div id="feedback-streak-overall" class="feedback-item"></div>
+                <div class="row">
+                    <div id="replay" class="primary-button">Replay song</div>
+                    <div id="no-replay" class="primary-button">Switch song</div>
+                </div>
+            </div>
+            <div id="source-menu" class="menu">
+                <div class="menu-title">
+                    Select music source
+                </div>
+                <div id="source-demo-songs" class="menu-choice">
+                    Demo songs
+                </div>
+                <div id="source-upload" class="menu-choice">
+                    Upload music
+                </div>
+                <div id="source-radio" class="menu-choice">
+                    Live radio
+                </div>
+                <div id="source-streaming" class="menu-choice">
+                    Streaming
+                </div>
+            </div>
+            <div id="main-menu" class="menu">
+                <div id="show-source-menu" class="menu-button">&#8678; Source</div>
+                <br>
+                <div id="choose-song-button" class="menu-button">
+                    Song:
+                    <select id="select-song" class="select">
+                        <option selected="selected" value=""></option>
+                        <option value="aintOverYou">Ain't Over You</option>
+                        <option value="bigWhiteLimousine">Big White Limousine</option>
+                        <option value="burningWish">Burning Wish</option>
+                        <option value="cricket">Cricket</option>
+                        <option value="cosmicCaravan">Cosmic Caravan</option>
+                        <option value="disfigure">Disfigure</option>
+                        <option value="findAWay">Find a Way</option>
+                        <option value="godOrDevil">God or Devil</option>
+                        <option value="goodLook">Good Look</option>
+                        <option value="iNeedYourLove">I Need Your Love</option>
+                        <option value="inTheGlowOfTheMoon">In the Glow of the Moon</option>
+                        <option value="keepYou">Keep You</option>
+                        <option value="littleGirl">Little Girl</option>
+                        <option value="maniaMaster">Mania Master</option>
+                        <option value="myHeart">My Heart</option>
+                        <option value="onAndOn">On And On</option>
+                        <option value="oneSweetDream">One Sweet Dream</option>
+                        <option value="romeoAndJuliet">Romeo and Juliet</option>
+                        <option value="secretToSell">Secret to Sell</option>
+                        <option value="skyHigh">Sky High</option>
+                        <option value="stickAroundYou">Stick Around You</option>
+                        <option value="takeMe">Take Me</option>
+                        <option value="ufo">UFO</option>
+                        <option value="unbreakable">Unbreakable</option>
+
+                        
+                    </select> 
+                </div>
+                <div id="upload-song-button" class="menu-button">
+                    Upload song:
+                    <br>
+                    <input class="upload" id="file-input" type="file" />
+                    <br>
+                    <br>
+                    <div class="small-note">
+                        NOTE: m4a files work best and mp3
+                        <br>
+                        sometimes cause errors. You can
+                        <br>
+                        easily convert mp3 to m4a <a href="https://cloudconvert.com/mp3-to-m4a">here</a>
+                    </div>
+                </div>
+                <div id="select-station-button" class="menu-button">
+                    Station:
+                    <select id="select-station" class="select"></select>
+                </div>
+                <div id="show-stream-modal-button" class="menu-button">
+                    Connect stream
+                </div>
+                <br>
+                <div class="menu-title">Difficulty</div>
+                <div id="level-1" class="level">stupid</div>
+                <div id="level-2" class="level">easy</div>
+                <div id="level-3" class="level">medium</div>
+                <div id="level-4" class="level">hard</div>
+                <div id="level-5" class="level">crazy</div>
+                <br>
+                <div class="menu-title">Slides</div>
+                <div id="slides-2" class="level">2</div>
+                <div id="slides-3" class="level">3</div>
+                <div id="slides-4" class="level">4</div>
+                <br>
+                <div id="close-and-play" class="primary-button">Play</div>
+                <div id="close-and-play-ghost" class="primary-button-ghost">loading...</div>
+            </div>
+            <div id="stream-modal" class="hidden">    
+                This is an experimental feature!
+                <br>
+                <br>
+                You can play with music from your favorite streaming service but it takes a minute to
+                set up and you'll need the help of a computer in addition to this device. To set it up,
+                visit
+                <br>
+                <br>
+                <a href="https://beatburner.com/live/stream.html" target="none">
+                    beatburner.com/live/stream.html
+                </a>
+                <br>
+                <br>
+                on your other computer. Once you
+                get your stream id, enter it in the box below and hit Connect.
+                <br>
+                <br>
+                <input type="text" id="enter-stream-id" placeholder="stream id"/>
+                <button id="connect-stream-button">Connect</button>
+                <br>
+                <br>
+                <div id="stream-status">not connected</div>
+                <br>
+                <button id="cancel-stream-button">Cancel</button>
+            </div>
+            <div id="settings-modal" class="hidden">
+                Tapper keys:
+                <br>
+                <div id="change-tappers">
+                    <div>
+                        <button id="change-left">Change</button>
+                        <br>
+                        <center id="left-key"></center>
+                    </div>
+                    <div>
+                        <button id="change-a">Change</button>
+                        <br>
+                        <center id="a-key"></center>
+                    </div>
+                    <div>
+                        <button id="change-b">Change</button>
+                        <br>
+                        <center id="b-key"></center>
+                    </div>
+                    <div>
+                        <button id="change-right">Change</button>
+                        <br>
+                        <center id="right-key"></center>
+                    </div>
+                </div>
+                <br>
+                <br>
+                <button id="toggle-animate">Turn off animated background</button>
+                <br>
+                <center id="animated">animated background ON</center>
+                <br>
+                <p>
+                    The animated background will syncronize the colored background
+                    movements to your music.
+                </p>
+                <br>
+                <br>
+                <button id="switch-algorithm">Switch algorithm</button>
+                <br>
+                <center id="algorithm">using algorithm A</center>
+                <br>
+                <p>
+                    Algorithm A is more dynamic. With algorithm B you will
+                    get more repetitive notes.
+                </p>
+                <br>
+                <br>
+                <button id="sustained-toggle">Turn off sustained notes</button>
+                <br>
+                <center id="sustained">sustained notes ON</center>
+                <br>
+                <p>
+                    Sustained notes are notes with a tail. This is currently
+                    experimental. (even more than the rest of this game)
+                </p>
+                <br>
+                <br>
+                <button id="auto-calibrate">Turn off autocalibration</button>
+                <br>
+                <center id="autocalibration">autocalibration ON</center>
+                <br>
+                <p>
+                    Autocalibration will continually adjust timing while you play to account
+                    for differences in song notes and when it makes sense to tap for you. The
+                    adjustment is reset to 0 when you start a new song;
+                </p>
+                <br>
+                <br>
+                <button id="save-settings">Save</button>
+            </div>
+            <div id="play-area" class="play-area">
+                <div id="background-left" class="left"></div>
+                <div id="background-right" class="right"></div>
+                <div id="slides-container" class="slides-container">
+                    <div id="slides" class="slides">
+                        <div id="a-slider" class="slider">
+                            <div id="slide-left" class="clear-slide">
+                                <!-- <div id="test-note-left" class="note"></div> -->
+                            </div>
+                            <div id="slide-a" class="clear-slide">
+                                <!-- <div id="test-note-a" class="note"></div> -->
+                            </div>
+                            <div id="slide-b" class="clear-slide">
+                                <!-- <div id="test-note-b" class="note"></div> -->
+                            </div>
+                            <div id="slide-right" class="clear-slide">
+                                <!-- <div id="test-note-right" class="note"></div> -->
+                            </div>
+                        </div>
+                        <div id="b-slider" class="slider">
+                            <div id="b-slide-left" class="clear-slide">
+                                <!-- <div id="test-note-left" class="note"></div> -->
+                            </div>
+                            <div id="b-slide-a" class="clear-slide">
+                                <!-- <div id="test-note-a" class="note"></div> -->
+                            </div>
+                            <div id="b-slide-b" class="clear-slide">
+                                <!-- <div id="test-note-b" class="note"></div> -->
+                            </div>
+                            <div id="b-slide-right" class="clear-slide">
+                                <!-- <div id="test-note-right" class="note"></div> -->
+                            </div>
+                        </div>
+                        <div id="tappers-outer-container" class="slider">
+                            <div id="dummy-left" class="slide"></div>
+                            <div id="dummy-a" class="slide"></div>
+                            <div id="dummy-b" class="slide"></div>
+                            <div id="dummy-right" class="slide"></div>
+
+                            <div id="tappers-inner-container">
+                                <div class="tapper-shadow-bar"></div>
+                                <div id="lower-shadow-bar" class="tapper-shadow-bar"></div>
+                                <div id="clear-slide-left" class="clear-slide">
+                                    
+                                    <div id="tapper-left" class="tapper">
+                                        <div id="bulb-left" class="note-bulb">S</div>
+                                    </div>
+                                    
+                                    
+                                </div>
+                                <div id="clear-slide-a" class="clear-slide">
+                                    
+                                    
+                                    <div id="tapper-a" class="tapper">
+                                        <div id="bulb-a" class="note-bulb">C</div>
+                                        
+                                        <!-- <div id="test-note2-lightup" class="note-lightup"></div> -->
+                                    </div>
+                                    
+                                    
+                                </div>
+                                <div id="clear-slide-b" class="clear-slide">
+                                    
+                                    <div id="tapper-b" class="tapper">
+                                        <div id="bulb-b" class="note-bulb">B</div>
+                                    </div>
+                                    
+                                    
+                                </div>
+                                <div id="clear-slide-right" class="clear-slide">
+                                    
+                                    <div id="tapper-right" class="tapper">
+                                        <div id="bulb-right" class="note-bulb">J</div>
+                                    </div>
+                                    
+                                    
+                                </div>
+                                <div id="flashers-container">
+                                    <div id="dummy-tapper-left-container" class="clear-slide">
+                                        <div id="dummy-tapper-left" class="dummy-tapper">
+                                            <div class="flash">
+                                                <div class="note-lighted"></div>
+    
+                                                <div class="note-middle-lighted"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="dummy-tapper-a-container" class="clear-slide">
+                                        <div id="dummy-tapper-a" class="dummy-tapper">
+                                            <div class="flash">
+                                                <div class="note-lighted"></div>
+    
+                                                <div class="note-middle-lighted"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="dummy-tapper-b-container" class="clear-slide">
+                                        <div id="dummy-tapper-b" class="dummy-tapper">
+                                            <div class="flash">
+                                                <div class="note-lighted"></div>
+    
+                                                <div class="note-middle-lighted"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="dummy-tapper-right-container" class="clear-slide">
+                                        <div id="dummy-tapper-right" class="dummy-tapper">
+                                            <div class="flash">
+                                                <div class="note-lighted"></div>
+    
+                                                <div class="note-middle-lighted"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="skilz-meter">
+                            <div id="skilz-channel" class="skilz-channel">
+                                <div id="skilz-ball"></div>
+                            </div>
+                        </div>
+                        <div id="streak-meter">
+                            <div id="streak-channel" class="skilz-channel">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="fog-top-left" class="left"></div>
+                <div id="fog-top-right" class="right"></div>
+                <div id="fog-middle-left" class="left"></div>
+                <div id="fog-middle-right" class="right"></div>
+                <div id="fog-gradient-left" class="left"></div>
+                <div id="fog-gradient-right" class="right"></div>
+                <div id="fog-mobile" class="hidden">
+                    <div id="fog-mobile-top"></div>
+                    <div id="fog-mobile-gradient"></div>
+                </div>
+                <div id="rock-label"></div>
+                <div id="song-label" class="song-label"></div>
+                <div id="controls-left" class="side-controls">
+                    <div id="button-play" class="control-button">
+                        <div id="play-arrow"></div>
+                    </div>
+                    <div id="button-pause" class="control-button">
+                        <div class="pause-rectangle"></div>
+                        <div class="pause-rectangle"></div>
+                    </div>
+                    <div id="button-restart" class="control-button">
+                        <div id="restart-rectangle"></div>
+                        <div id="restart-arrow"></div>
+                    </div>
+                </div>
+                <div id="controls-right" class="side-controls">
+                    <div id="full-screen" class="control-button">
+                        <div id="full-button-container">
+                            <div id="full-top-left-quad" class="full-screen-quad"></div>
+                            <div id="full-top-right-quad" class="full-screen-quad"></div>
+                            <div id="full-bottom-left-quad" class="full-screen-quad"></div>
+                            <div id="full-bottom-right-quad" class="full-screen-quad"></div>
+                        </div>
+                        <div id="full-arrow-a" class="full-arrow"></div>
+                        <div id="full-arrow-b" class="full-arrow"></div>
+                    </div>
+                    <div id="show-menu" class="control-button">
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                    </div>
+                    <div id="show-settings" class="control-button">
+                        <div id="teeth1" class="gear-teeth"></div>
+                        <div id="teeth2" class="gear-teeth"></div>
+                        <div id="teeth3" class="gear-teeth"></div>
+                        <div id="teeth4" class="gear-teeth"></div>
+                        <div id="teeth5" class="gear-teeth"></div>
+                        <div id="outer-gear-circle"></div>
+                        <div id="inner-gear-circle"></div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </center>
+
+    
+    <script type="text/javascript" src="./main.js"></script>
+</body>
+</html>

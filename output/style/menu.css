@@ -1,0 +1,197 @@
+.menu {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    max-height: 85vh;
+    max-width: 90vw;
+    font-size: 2.75vh;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: gray;
+    text-shadow: 0px 0px 10px lightgray;
+    z-index: 1;
+    padding: 2vh;
+    border: 0.75vh solid rgba(180, 180, 180, 0.4);
+    border-radius: 0.5vmin;
+    background-color: rgba(200, 200, 200, 0.95);
+    box-sizing: border-box;
+    z-index: 4;
+    overflow: auto;
+
+    /* opacity: 0; */
+}
+
+.primary-button {
+    background-color: gray;
+    cursor: pointer;
+    color: lightgray;
+    padding: 1vh;
+    font-size: 3vh;
+}
+.primary-button-ghost {
+    background-color: gray;
+    color: lightgray;
+    padding: 1vh;
+    font-size: 3vh;
+    font-style: italic;
+    opacity: 0.5;
+}
+
+.upload {
+    font-size: 1.75vh;
+    width: 25vh;
+}
+.select {
+    font-size: 2.5vh;
+    width: 15vh;
+}
+
+.menu-choice {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: gray;
+    margin: 2vh;
+    cursor: pointer;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.menu-choice:hover {
+    background-color: gray;
+    color: lightgray;
+}
+
+.menu-choice-selected {
+    background-color: gray;
+    cursor: default;
+    color: lightgray;
+    padding-bottom: 1vh;
+}
+
+.level {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: gray;
+    margin: 5px;
+    cursor: pointer;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.level-selected {
+    background-color: gray;
+    border-radius: 3px;
+    cursor: default;
+    color: lightgray;
+    padding-bottom: 2px;
+}
+
+.menu-button {
+    cursor: pointer;
+    width: 100%;
+}
+.menu-title {
+    cursor: default;
+    font-size: 3vh;
+    color: rgb(105, 105, 105);
+    margin: 0.5vh;
+}
+
+.control-button {
+    position: relative;
+    text-shadow: 0px 0px 10px lightgray;
+    height: 6.5vh;
+    width: 6.5vh;
+    user-select: none;
+    cursor: pointer;
+    font-size: 5vh;
+    color: gray;
+    text-shadow: 0px 0px 10px lightgray;
+    z-index: 4;
+    padding: 0.5vh;
+    padding-bottom: 0vh;
+    border-radius: 0.5vh;
+    border: 0.75vh solid rgba(180, 180, 180, 0.4);
+    background-color: rgba(180, 180, 180, 0.8);
+    box-sizing: border-box;
+}
+
+.side-controls {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+}
+
+#controls-right {
+    left: 100%;
+    transform: translate(-110%, 0%);
+}
+
+#controls-left {
+    left: 0%;
+    transform: translate(10%, 0%);
+}
+
+
+#vertical {
+    height: 4.5vh;
+    border-left: 0.5vh solid gray;
+}
+#hamburger {
+    font-size: 7vh;
+    transform: translate(-1.1vh, -1.75vh);
+}
+#gear {
+    font-size: 7.5vh;
+    transform: translate(-0.2vh, -1.75vh);
+}
+
+.disabled-button {
+    opacity: 0.5;
+}
+.disabled-button:hover {
+    opacity: 1;
+}
+#feedback {
+    width: 60vmin;
+}
+#feedback-title {
+    cursor: default;
+    font-size: 3vh;
+    color: rgb(105, 105, 105);
+    margin: 0.5vh;
+}
+
+.feedback-item {
+    color: gray;
+    width: 100%;
+    border-top: 2px solid gray;
+    font-size: 2.75vh;
+    padding-top: 1vw;
+    padding-bottom: 1vw;
+}
+.row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-top: 3vh;
+}
+#percent-bar-container {
+    width: 30vh;
+    height: 1vh;
+    border: 1px solid gray;
+    position: relative;
+    margin-bottom: 1vh;
+}
+#percent-bar-inner-container {
+    position: absolute;
+    height: 100%;
+    left: 0px;
+}
+#percent-bar {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 1vh;
+    width: 100%;
+    background-color: rgb(255, 231, 188);
+}
