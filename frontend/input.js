@@ -145,7 +145,8 @@ const masterInfo = {
 
 // ----------------------------------------- HELPERS
 const noteWriter = new NoteWriter(
-    masterInfo
+    masterInfo,
+    addNote
 );
 const backgroundAnimator = new BackgroundAnimator(
     masterInfo
@@ -450,9 +451,12 @@ let lastNote = null;
 function addNote(slideId, val, marked = false) {
     const newNote = document.createElement("div");
     newNote.classList.add("note");
-    if (marked) {
+    if (marked === true) {
         newNote.classList.add("note-marked");
         newNote.style.backgroundColor = "yellow";
+    }
+    if (marked && marked !== true) {
+        newNote.style.backgroundColor = marked;
     }
 
     let startPos = -1.0 * autoAdjustment; // should be zero initially

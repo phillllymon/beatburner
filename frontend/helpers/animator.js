@@ -108,60 +108,62 @@ export class Animator {
         
         player.calibrateLag();
 
-        // faithful
-        const dataFreqArray = player.getDataFreqArray();
-        const val0 = averageOf(dataFreqArray.slice(0, 4));
-        this.arrays[0].push(val0);
-        const val1 = averageOf(dataFreqArray.slice(4, 8));
-        this.arrays[1].push(val1);
-        const val2 = averageOf(dataFreqArray.slice(8, 12));
-        this.arrays[2].push(val2);
-        const val3 = averageOf(dataFreqArray.slice(12, 16));
-        this.arrays[3].push(val3);
-
-        // for animated background
-        const valsForBackground = [
-            val0,
-            val1,
-            val2,
-            val3
-        ];
-        this.backgroundAnimator.animateBackground(valsForBackground);
+        // DETAILED EXPERIMENT
+        const dataArray = player.getDetailedFreqArray();
+        this.noteWriter.writeNotes(dataArray, this.slides, this.notesPerSecond);
+        // END DETAILED EXPERIMENT
         
-        
+        // FAITHFUL BELOW
+        // const dataFreqArray = player.getDataFreqArray();
+        // const val0 = averageOf(dataFreqArray.slice(0, 4));
+        // this.arrays[0].push(val0);
+        // const val1 = averageOf(dataFreqArray.slice(4, 8));
+        // this.arrays[1].push(val1);
+        // const val2 = averageOf(dataFreqArray.slice(8, 12));
+        // this.arrays[2].push(val2);
+        // const val3 = averageOf(dataFreqArray.slice(12, 16));
+        // this.arrays[3].push(val3);
 
-        this.times.push(this.time);
-        while (this.times[0] < this.time - this.masterInfo.songDelay) {
-            this.arrays.forEach((arr) => {
-                arr.shift();
-            });
-            this.times.shift();
-        }
+        // this.times.push(this.time);
+        // while (this.times[0] < this.time - this.masterInfo.songDelay) {
+        //     this.arrays.forEach((arr) => {
+        //         arr.shift();
+        //     });
+        //     this.times.shift();
+        // }
         
-        const masterData = {
-            arrays: this.arrays,
-            times: this.times,
-            numSlides: this.slides.length,
-            algorithm: algorithm,
-            dataFreqArray: player.getDataFreqArrayDelayed()
-        }
+        // const masterData = {
+        //     arrays: this.arrays,
+        //     times: this.times,
+        //     numSlides: this.slides.length,
+        //     algorithm: algorithm,
+        //     dataFreqArray: player.getDataFreqArrayDelayed()
+        // }
         
-        const noteVals = this.noteWriter.writeNotes(
-            this.slides,
-            this.notesPerSecond,
-            this.addNote,
-            true,
-            masterData
-        );
+        // const noteVals = this.noteWriter.writeNotes(
+        //     this.slides,
+        //     this.notesPerSecond,
+        //     this.addNote,
+        //     true,
+        //     masterData
+        // );
 
-        if (this.masterInfo.sustainedNotes) {
-            this.noteWriter.writeTails(
-                noteVals,
-                this.slides,
-                this.makeTail
-            );
-        }
+        // if (this.masterInfo.sustainedNotes) {
+        //     this.noteWriter.writeTails(
+        //         noteVals,
+        //         this.slides,
+        //         this.makeTail
+        //     );
+        // }
 
+        // // for animated background
+        // const valsForBackground = [
+        //     val0,
+        //     val1,
+        //     val2,
+        //     val3
+        // ];
+        // this.backgroundAnimator.animateBackground(valsForBackground);
         // FAITHFUL ABOVE
             
         
@@ -178,18 +180,8 @@ export class Animator {
             dt,
             this
         );
-        
 
         if (this.animating) {
-            // TEST ONLY
-            // const timeElapsed = performance.now() - newTime;
-            // const waitTime = 15 - timeElapsed;
-            // setTimeout(() => {
-            //     this.animate(params);
-            // }, waitTime);
-            // END TEST
-
-            // faithful below
             requestAnimationFrame(() => this.animate(params));
         }
     }

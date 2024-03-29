@@ -535,3 +535,41 @@
 .small-note {
     font-size: 2vh;
 }
+
+
+
+
+#exp {
+    height: 80%;
+    width: 80%;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 0;
+}
+
+#exp-slides-container {
+    width: 512px;
+    height: 256px;
+    display: flex;
+    flex-direction: row;
+}
+
+.exp-slide {
+    height: 256px;
+    width: 8px;
+    box-sizing: border-box;
+    /* border-left: 1px solid gray;
+    border-right: 1px solid gray; */
+    background-color: blue;
+
+}
+
+.exp-active {
+    background-color: blue;
+}

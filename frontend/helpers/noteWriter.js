@@ -1,6 +1,7 @@
 export class NoteWriter {
-    constructor(masterInfo) {
+    constructor(masterInfo, addNote) {
         this.masterInfo = masterInfo;
+        this.addNote = addNote;
 
         this.lastLeft = performance.now();
         this.lastMid = performance.now();
@@ -23,363 +24,414 @@ export class NoteWriter {
         this.last = performance.now();
 
         // EXPERIMENTAL
-        this.order = "0123";
         this.gap = 200;
+
+        // DETAIL EXPERIMENT
+        this.times = [];
+        this.collectArrays = [];
+        this.startTime = performance.now();
+        this.lastTime = performance.now();
+        this.stepTime = 25; // ms to collapse data
+        this.arrLength = 64; // average order every
+
+        // order - order changes
+        this.order = [];
+        this.diffs = [];
+        this.orders = [];
+
+        // average - hills breach variance
+        this.totals = [];
+        this.aveArrs = [];
+
+        // sum - total sum
+        this.sums = [];
+        this.biggests = [];
+        this.numBiggestsSum = 200;
+        this.dir = -1;
+        this.low = 0;
+        this.lowIdx = 0;
+        
+        // every - hills on every col
+        this.numBiggests = 200;
+        this.arrs = [];
+        this.biggestsArrs = [];
+        this.dirs = [];
+        this.lows = [];
+        this.lowIdxs = [];
+        
+        
+        // preset
+        for (let i = 0; i < this.arrLength; i++) {
+            this.arrs.push([]);
+            this.aveArrs.push([]);
+            this.biggestsArrs.push([]);
+            this.dirs.push(-1);
+            this.lows.push(0);
+            this.lowIdxs.push(0);
+            this.totals.push(0);
+            this.order.push([i, i]);
+        }
+
+        // which algorithm?
+        this.doOrder = true;
+        this.doAverage = true;
+        this.doSum = true;
+        this.doEvery = true;
     }
 
-    writeTails(noteVals, slideIds, makeTail) {
+    writeNotes(dataArray, slideIds, notesPerSecond) {
+        // document.getElementById("exp").style.zIndex = 10;
+
+        // collect
+        for (let i = 0; i < dataArray.length; i++) {
+            const thisVal = dataArray[i];
+            if (this.collectArrays[i] !== undefined) {
+                this.collectArrays[i].push(thisVal);
+            } else {
+                this.collectArrays.push([thisVal]);
+            }
+        }
         
-        if (noteVals) {
-            const valsBySlideId = {
-                "slide-left": noteVals[0],
-                "slide-a": noteVals[1],
-                "slide-b": noteVals[2],
-                "slide-right": noteVals[3]
-            };
 
-            const slidesWithMakeNote = noteVals[noteVals.length - 1];
-    
-            slideIds.forEach((slideId) => {
-                const thisNoteVal = valsBySlideId[slideId];
-                if (!thisNoteVal) {
-                    return;
-                }
+        
 
-                const triggerSlideIdx = thisNoteVal.triggerSlideIdx;
+        // analyze
+        const now = performance.now();
+        if (now - this.lastTime > this.stepTime) {
+            this.times.push(now);
+            while (this.times[0] < now - 4000) {
+                this.times.shift();
+            }
+            
+            this.lastTime += this.stepTime;
 
-                const triggerSlide = {
-                    0: "slide-left",
-                    1: "slide-a",
-                    2: "slide-b",
-                    3: "slide-right"
-                }[triggerSlideIdx];
-                
-                const lastTriggerNote = this.mostRecentNotes[triggerSlide];
-                if (!lastTriggerNote) {
-                    return;
-                }
-                
-                const makeNotePass = !slidesWithMakeNote[triggerSlide];
+            let amt = 0;
+            const arrToUse = this.collectArrays.map((subArr, i) => {
+                let sum = 0;
+                subArr.forEach((ele) => {
+                    sum += ele;
+                });
+                this.collectArrays[i] = [];
+                const aveVal = 1.0 * sum / subArr.length;
+                const fraction = aveVal / 255;
+                const answer = Math.pow(fraction, 0.25);
+                amt += answer;
+                return answer;
+            });
 
-                const lastNote = this.mostRecentNotes[slideId];
-                if (lastNote) {
+            if (amt < 35) {
+                return;
+            }
 
-                    let thresholdPass = false;
-                    let adjust = {
-                        "slide-left": 1.8,
-                        "slide-a": 1.6,
-                        "slide-b": 1.5,
-                        "slide-right": 1.2
-                    }[slideId];
+            let makeNote = false;
+            let marked = false;
+            let colVal = false;
 
-                    if (lastNote.isTail) {
-                        adjust *= (1 + (lastNote.totalHeight / this.masterInfo.travelLength));
-                    }
-
-                    // if (lastNote.isTail && thisNoteVal.val < adjust * lastTriggerNote.val) {
-                    // if (lastNote.isTail && lastNote.totalHeight < 0.1 * this.masterInfo.travelLength && thisNoteVal.val < adjust * lastTriggerNote.val) {
-                        thresholdPass = thisNoteVal.val > adjust * lastTriggerNote.val;
-                    // }
-
-                    if (makeNotePass && thresholdPass) {
-                        makeTail(slideId, lastNote);
-                        const now = performance.now();
-                        if (slideIds.length === 4) {
-                            if (this.leftSlides.includes(slideId)) {
-                                this.lastLeft = now;
-                                this.lastAll[slideId] = now;
-                            } else {
-                                this.lastRight = now;
-                                this.lastAll[slideId] = now;
-                            }
-                        } else if (slideIds.length === 3) {
-                            if (slideId === this.rightId) {
-                                this.lastRight = now;
-                                this.lastAll[slideId] = now;                               
-                            } else if (slideId === this.leftId) {                                
-                                this.lastLeft = now;
-                                this.lastAll[slideId] = now;                                
-                            } else {                                
-                                this.lastMid = now;
-                                this.lastAll[slideId] = now;                                
-                            }
-                        } else {
-                            this.lastAll[slideId] = now;
-                        }
+            // order below
+            if (this.doOrder) {
+                const newOrder = arrToUse.map((val, i) => {
+                    return [val, i];
+                }).sort((a, b) => {
+                    if (a[0] > b[0]) {
+                        return -1;
                     } else {
-                        // check for tail too short - delete tail entirely
-                        if (lastNote.isTail && lastNote.totalHeight < 0.05 * this.masterInfo.travelLength) {
-                            lastNote.cloud.remove();
-                            lastNote.note.remove();
-                            lastNote.parentNote.tail = null;
-                        }
-                        this.mostRecentNotes[slideId] = null;
+                        return 1;
                     }
+                }).map((pair, i) => {
+                    return [pair[1], i]; // [col, newPos]
+                });
+                const newRanks = {};
+                newOrder.forEach((pair) => {
+                    newRanks[pair[0]] = pair[1];
+                });
+                let diff = 0;
+                this.order.forEach((pair) => {
+                    const col = pair[0];
+                    const oldRank = pair[1];
+                    const newRank = newRanks[col];
+                    let thisDiff = newRank - oldRank;
+                    if (thisDiff < 0) {
+                        thisDiff *= -1;
+                    }
+                    diff += thisDiff;
+                });
+                this.order = newOrder;
+                this.diffs.push(diff);
+                while (this.diffs.length > this.times.length) {
+                    this.diffs.shift();
                 }
-            });
-        }
-    }
 
-    // data is array of arrays same length as slideIds
-    // addNote takes a slideId
-    // mobile only allows 2 notes at once
-    writeNotes(slideIds, notesPerSecond, addNote, mobile, masterData) {
-
-        const vals = [];
-
-        let amt = 0;
-        const dataArrays = masterData.arrays;
-        for (let i = 0; i < dataArrays.length; i++) {
-            const arr = dataArrays[i];
-            const midIdx = Math.floor(arr.length / 2);
-            const thisVal = arr[midIdx];
-            vals.push(thisVal);
-            amt += thisVal;
-        }
-
-        amt = Math.max(...vals);
-
-        const maxToneVal = Math.max(...vals);
-        
-        let thisToneVal = (vals[0] / maxToneVal) 
-            + (2 * (vals[1] / maxToneVal))
-            + (3 * (vals[2] / maxToneVal))
-            + (4 * (vals[3] / maxToneVal));
-
-        // FREQUENCY ORDER EXPERIMENT
-        const wholeArray = masterData.dataFreqArray;
-
-        // console.log(wholeArray);
-
-        const valPairings = [];
-        wholeArray.forEach((val, i) => {
-            valPairings.push([i, val]);
-        });
-
-        const newOrder = valPairings.sort((a, b) => {
-            return a[1] > b[1] ? -1 : 1;
-        }).map((pair) => {
-            return pair[0];
-        }).join("");
-
-        const newRanks = {};
-        newOrder.split("").forEach((char, i) => {
-            newRanks[char] = i;
-        });
-
-        let diffScore = 0;
-        
-        this.order.split("").forEach((char, i) => {
-            const newRank = newRanks[char];
-            let diff = newRank - i;
-            if (diff < 0) {
-                diff *= -1;
-            }
-            diffScore += diff;
-        });
-
-        const diffThreshold = {
-            5: 122,
-            4: 125,
-            3: 128,
-            2: 131,
-            1: 135
-        }[notesPerSecond];
-        this.order = newOrder;
-
-        const thisAmt = Math.max(...wholeArray);
-        if (diffScore > diffThreshold && amt > 140) {
-
-            const noteWriteParams = {
-                slideToUse: this.getSlideToUse(thisToneVal, masterData.numSlides),
-                slideIds,
-                noteVal: thisToneVal, // just make it hard to create tail from this note
-                toneVal: thisToneVal,
-                addNote,
-                marked: false,
-                mobile,
-                notesPerSecond
-            };
-            this.attemptNoteWrite(noteWriteParams);
-        }
-
-        
-        // END FREQUENCY ORDER EXPERIMENT
-        
-        
-        
-
-        
-        // NEW START -------------
-        const arrays = masterData.arrays;
-        const times = masterData.times;
-        const startTime = times[0];
-        const endTime = times[times.length - 1];
-        const timeGiven = endTime - startTime;
-        
-        if (timeGiven < 3500) {
-            return; // see noteVals below
-        }
-
-        let midIdx = 0;
-        while (endTime - times[midIdx] > 2000) {
-            midIdx += 1;
-        }
-
-        const milsPerNode = (1.0 * timeGiven) / times.length;
-        const twoSecondLeg = 2000.0 / milsPerNode;
-
-        // const leg = Math.floor(twoSecondLeg / notesPerSecond);
-        const leg = Math.floor(twoSecondLeg / 4);
-
-        // returned from this function to be used for writeTails
-        const tailLeg = Math.floor(1.0 * twoSecondLeg / 5);
-
-        const noteVals = [];
-        const slidesWithMakeNote = {};
-
-        
-
-        for (let i = 0; i < arrays.length; i++) { // OLD
-        // for (let i = 0; i < 1; i++) {   // JANKY TEMP ***************** just for trying all arrays together
-            const arr = arrays[i];
-
-            const noteVal = arr[midIdx];
-
-            // const midVal = (noteVal - arr[midIdx - 1]) - (arr[midIdx - 1] - arr[midIdx - 2]);
-            const midVal = noteVal - arr[midIdx - 1];
-            // const midVal = noteVal;
-
-            const legToUse = Math.max(leg, tailLeg);
-            
-            const beforeIdx = midIdx - legToUse;
-            const afterIdx = midIdx + legToUse;
-
-            let overallBeforeMax = 0;
-            let overallBeforeMin = 255;
-
-            let overallAfterMax = 0;
-            let overallAfterMin = 255;
-
-            // each array individually below and multiple biggests
-            const combineArr = arr.slice(beforeIdx, afterIdx);
-            let current = combineArr[1];
-            let dir = 1; // 1 for up -1 for down
-            let lowTimeIdx = times[0];
-            let low = combineArr[0];
-
-            // for tails only
-            const tailRatioTime = 300;
-
-            // each item is [height, idx] of an increase note
-            const biggests = [];
-            const level = {
-                1: 1,
-                2: 4,
-                3: 8,
-                4: 12,
-                5: 16
-            }[notesPerSecond];
-            for (let k = 0; k < level; k++) {
-                biggests.push([0, 0]);
-            }
-
-            for (let j = 1; j < combineArr.length; j++) {
-
-                current = combineArr[j];
-
-                // for tails
-                const smallMidIdx = Math.floor(combineArr.length / 2);
-                if (j > smallMidIdx && times[j] < times[midIdx] + tailRatioTime) {
-                    if (current < overallAfterMin) {
-                        overallAfterMin = current;
-                    }
-                    if (current > overallAfterMax) {
-                        overallAfterMax = current;
-                    }
-                }
-                // end for tails
-
-                const prev = combineArr[j - 1];
-                if (current > prev) { // means we're on our way up
-                    dir = 1;
-
-                } else {
-                    if (dir === 1) { // means we just reached a peak
-                        // see if we found new tallest note
-                        if (prev - low > biggests[0][0]) {
-                            const newNoteHeight = prev - low;
-                            const newNoteIdx = Math.floor(((j - 1) + lowTimeIdx) / 2);
-                            biggests.shift();
-                            // biggests.push([newNoteHeight, newNoteIdx]);
-                            biggests.push([newNoteHeight, lowTimeIdx]); // use beginning of uphill
-                            biggests.sort((a, b) => {
-                                return a[0] < b[0] ? -1 : 1;
-                            });
+                const midIdx = Math.floor(this.diffs.length / 2);
+                const leg = 40;
+                const midArr = this.diffs.slice(midIdx - leg, midIdx + leg);
+                
+                // exp
+                const maxDiffs = 25;
+                const bigDiffs = [];
+                for (let i = 0; i < midArr.length; i++) {
+                    const thisDiff = midArr[i];
+                    if (bigDiffs.length === 0 || thisDiff > bigDiffs[0][0]) {
+                        bigDiffs.push([thisDiff, i]); // [size, idx]
+                        bigDiffs.sort((a, b) => {
+                            if (a[0] > b[0]) {
+                                return 1;
+                            } else {
+                                return -1;
+                            }
+                        });
+                        if (bigDiffs.length > maxDiffs) {
+                            bigDiffs.shift();
                         }
                     }
-
-                    dir = -1
-                    low = current;
-                    lowTimeIdx = j;
-
                 }
+
+                if (bigDiffs.map((pair) => {
+                    return pair[1];
+                }).includes(Math.floor(midArr.length / 2))) {
+                    makeNote = true;
+                    marked = "yellow";
+                }
+                // end exp
+
+                // const threshold = 1 * (arrAverage(midArr) + arrVariance(midArr));
+                // if (diff > threshold) {
+                //     makeNote = true;
+                //     marked = "yellow";
+                // }
             }
 
-            
-            
-            const makeNote = biggests.map((noteArr) => {
-                return noteArr[1];
-            }).includes(Math.floor(combineArr.length / 2));
-
-            slidesWithMakeNote[slideIds[i]] = makeNote;
-
-            
-
-            noteVals.push({
-                beforeRatio: (1.0 * overallBeforeMin) / overallBeforeMax,
-                afterRatio: (1.0 * overallAfterMin * overallAfterMin) / (overallAfterMax * overallAfterMax),
-                val: noteVal,
-                val2: noteVal * noteVal,
-                triggerSlideIdx: i,
-                makeNote: makeNote,
-                firstTime: true
-            });
-
-            // if (false) {
-            if (makeNote) {
-                let marked = false;
-                if (amt < 140) {
-                    marked = true;
-                    return noteVals;
-                }    
-
-                let slideToUse;
-                if (algorithm === "A") {
+            // average below order above
+            if (this.doAverage) {
+                arrToUse.forEach((val, arrIdx) => {
+                    this.aveArrs[arrIdx].push(val);
+                    this.totals[arrIdx] += val;
+                });
+                while (this.aveArrs[0].length > this.times.length) {
+                    for (let i = 0; i < arrToUse.length; i++) {
+                        const thisArr = this.aveArrs[i];
+                        this.totals[i] -= thisArr.shift();
+                    }
+                }
+    
+                for (let i = 0; i < arrToUse.length; i++) {
+                    const thisArr = this.aveArrs[i];
+                    const thisAverage = 1.0 * this.totals[i] / thisArr.length;
+    
+                    const legSize = 25;
+                    const midIdx = Math.floor(arrToUse.length / 2);
+    
+                    let sumVariance = 0;
+                    if (thisArr.length > 2 * legSize) {
+                        for (let j = 0; j < thisArr.length; j++) {
+                        // for (let j = midIdx - legSize; j < midIdx + legSize; j++) {
+                            let diff = thisArr[j] - thisAverage;
+                            if (diff < 0) {
+                                diff *= -1;
+                            }
+                            sumVariance += diff;
+                        }
+                        const variance = 1.0 * sumVariance / thisArr.length;
+                        const diffFactor = 1 + (1.0 * variance / thisAverage);
+        
+                        const controlIdx = midIdx;
+                        const testIdx = controlIdx + 1;
+                        
+                        if (thisArr[controlIdx] < thisAverage && thisArr[testIdx] > diffFactor * thisAverage) {
+                            makeNote = true;
+                            marked = "blue";
+                        }
+        
+                        
+                    }
                     
-                    slideToUse = this.getSlideToUse(thisToneVal, masterData.numSlides);
-
-                } else if (algorithm === "B") {
-                    slideToUse = slideIds[i];
                 }
+            }
 
-                // write notes - same for both algorithms once slideToUse is established
-                const noteWriteParams = {
-                    slideToUse,
-                    // slideToUse: diffSlide,
-                    slideIds,
-                    noteVal,
-                    toneVal: thisToneVal,
-                    addNote,
-                    marked,
-                    mobile,
-                    notesPerSecond
-                };
-                this.attemptNoteWrite(noteWriteParams);
+
+
+            // every below average above
+            if (this.doEvery) {
+                arrToUse.forEach((val, arrIdx) => {
+                    this.arrs[arrIdx].push(val);
+                });
+                while (this.arrs[0].length > this.times.length) {
+                    for (let i = 0; i < arrToUse.length; i++) {
+                        const thisArr = this.arrs[i];
+                        thisArr.shift();
+                        let remove = false;
+                        const thisBiggests = this.biggestsArrs[i];
+                        thisBiggests.forEach((bigNote, idx) => {
+                            bigNote.idx -= 1;
+                            if (bigNote.idx < 0) {
+                                remove = idx;
+                            }
+                        });
+                        if (remove !== false) {
+                            const first = thisBiggests.slice(0, remove);
+                            const second = thisBiggests.slice(remove + 1, thisBiggests.length);
+                            this.biggestsArrs[i] = first.concat(second);
+                        }
+                    }
+                }
+                for (let i = 0; i < arrToUse.length; i++) {
+                    const thisArr = this.arrs[i];
+                    if (thisArr.length > 1) {
+                        const thisVal = thisArr[thisArr.length - 1];
+                        const prevVal = thisArr[thisArr.length - 2];
+                        const newDiff = thisVal - prevVal;
+                        if (newDiff > 0) { // going up
+                            if (this.dirs[i] === -1) {
+                                this.lows[i] = prevVal;
+                                this.lowIdxs[i] = thisArr.length - 2;
+                                this.dirs[i] = 1;
+                            }
+                        } else { // going down
+                            if (this.dirs[i] === 1) {
+                                // found a peak
+                                const newHeight = prevVal - this.lows[i];
+                                const thisBiggests = this.biggestsArrs[i];
+                                
+                                if (thisBiggests.length > 0) {
+    
+                                    if (newHeight > thisBiggests[0].height) {
+                                        let runner = 0;
+                                        while (thisBiggests[runner] && newHeight > thisBiggests[runner].height) {
+                                            runner += 1;
+                                        }
+                                        const first = thisBiggests.slice(0, runner);
+                                        const second = thisBiggests.slice(runner, thisBiggests.length);
+                                        first.push({ height: newHeight, idx: this.lowIdxs[i] }); // USE LOW AS idx - MAY CHANGE THIS
+                                        this.biggestsArrs[i] = first.concat(second);
+            
+                                        if (thisBiggests.length > this.numBiggests) {
+                                            thisBiggests.shift();
+                                        }
+                                    }
+    
+                                } else {
+                                    this.biggestsArrs[i].push({ height: newHeight, idx: this.lowIdxs[i] });
+                                }
+    
+                                this.dirs[i] = -1;
+                            } else {
+                                this.lows[i] = prevVal;
+                                this.lowIdxs[i] = thisArr.length - 2;
+                            }
+                        }
+                    }
+                    if (this.biggestsArrs[i].map((bigNote) => {
+                        return bigNote.idx;
+                    }).includes(Math.floor(arrToUse.length / 2))) {
+                        makeNote = true;
+                        marked = "green";
+                    }
+                    // if (makeNote) {
+                    //     colVal = i;
+                    //     break;
+                    // }
+                }
+            }
+
+            
+            // sum below, every above
+            if (this.doSum) {
+                const thisSum = arrSum(arrToUse);
+                this.sums.push(thisSum);
+                
+    
+                while(this.sums.length > this.times.length) {
+                    this.sums.shift();
+    
+                    let remove = false;
+                    this.biggests.forEach((bigNote, i) => {
+                        bigNote.idx -= 1;
+                        
+                        if (bigNote.idx < 0) {
+                            remove = i;
+                        }
+                    });
+                    if (remove !== false) {
+                        const first = this.biggests.slice(0, remove);
+                        const second = this.biggests.slice(remove + 1, this.biggests.length);
+                        this.biggests = first.concat(second);
+                    }
+                }
+    
+                if (this.sums.length > 1) {
+                    const thisVal = this.sums[this.sums.length - 1];
+                    const prevVal = this.sums[this.sums.length - 2];
+                    const newDiff = thisVal - prevVal;
+                    if (newDiff > 0) { // going up
+                        if (this.dir === -1) {
+                            // found a low
+                            this.low = prevVal;
+                            this.lowIdx = this.sums.length - 2;
+                            this.dir = 1;
+                        }
+                    } else {    // going down
+                        if (this.dir === 1) {
+                            // found a high
+                            const newHeight = prevVal - this.low;
+                        
+                            if (this.biggests.length > 0) {
+    
+                                if (newHeight > this.biggests[0].height) {
+                                    let runner = 0;
+                                    while (this.biggests[runner] && newHeight > this.biggests[runner].height) {
+                                        runner += 1;
+                                    }
+                                    const first = this.biggests.slice(0, runner);
+                                    const second = this.biggests.slice(runner, this.biggests.length);
+                                    first.push({ height: newHeight, idx: this.lowIdx }); // USE LOW AS idx - MAY CHANGE THIS
+                                    this.biggests = first.concat(second);
+        
+                                    if (this.biggests.length > this.numBiggestsSum) {
+                                        this.biggests.shift();
+                                    }
+                                }
+                            } else {
+                                this.biggests.push({ height: newHeight, idx: this.lowIdx });
+                            }
+    
+                            this.dir = -1;
+                        } else {
+                            this.low = thisVal;
+                            this.lowIdx = this.sums.length - 1;
+                        }
+                    }
+                }
+                if (this.biggests.map((bigNote) => {
+                    return bigNote.idx;
+                }).includes(Math.floor(arrToUse.length / 2))) {
+                    makeNote = true;
+                    marked = "orange";
+                }
+            }
+            // sum above
+
+
+            
+            if (makeNote) {
+
+                let toneValToUse = weightedAve(arrToUse);
+                const slideToRequest = this.getSlideToUse(toneValToUse, slideIds.length);
+                
+                if (colVal !== false) {
+                    toneValToUse = colVal;
+                }
+                this.attemptNoteWrite({
+                    slideToUse: slideToRequest,
+                    slideIds: slideIds,
+                    noteVal: toneValToUse,
+                    toneVal: toneValToUse,
+                    addNote: this.addNote,
+                    marked: marked,
+                    mobile: true,
+                    notesPerSecond: notesPerSecond
+                });
             }
         }
-        noteVals.push(slidesWithMakeNote);
-        return noteVals;
+        
     }
 
     getSlideToUse(toneVal, numSlides) {
@@ -415,6 +467,7 @@ export class NoteWriter {
     }
 
     attemptNoteWrite(params) {
+        
         const {
             slideToUse,
             slideIds,
@@ -525,40 +578,64 @@ export class NoteWriter {
         }
 
         if (noteMade) {
-            if (!this.lastValTime || performance.now() - this.lastValTime > (gap - 1)) {
+            // if (!this.lastValTime || performance.now() - this.lastValTime > (gap - 1)) {
                 this.recentToneVals.push(toneVal);
                 this.lastValTime = performance.now();
                 this.recentToneVals.shift();
-            }
+            // }
         }
 
     }
 }
 
-function getNumInfoArr(arr) {
-    if (arr.length === 0) {
-        return {
-            min: 0,
-            max: 0,
-            average: 0
-        }
+function arrSum(arr) {
+    let total = 0;
+    for (let i = 0; i < arr.length; i++) {
+        total += arr[i];
     }
-    let min = arr[0];
-    let max = arr[0];
-    let sum = 0;
-    arr.forEach((val) => {
-        if (val > max) {
-            max = val;
-        }
-        if (val < min) {
-            min = val;
-        }
-        sum += val;
-    });
-    return {
-        min: min,
-        max: max,
-        average: Math.floor(sum / arr.length)
-    };
+    return total;
+}
 
+function weightedAve(arr) {
+    let num = 0;
+    let total = 0;
+    for (let i = 0; i < arr.length; i++) {
+        const thisVal = arr[i];
+        total += i * thisVal;
+        num += thisVal;
+    }
+    if (num === 0) {
+        return 0;
+    } else {
+        return 1.0 * total / num;
+    }
+}
+
+function arrAverage(arr) {
+    let sum = 0;
+    arr.forEach((ele) => {
+        sum += ele;
+    });
+    if (arr.length === 0) {
+        return 0;
+    } else {
+        return 1.0 * sum / arr.length;
+    }
+}
+
+function arrVariance(arr) {
+    const ave = arrAverage(arr);
+    let sum = 0;
+    arr.forEach((ele) => {
+        let diff = ele - ave;
+        if (diff < 0) {
+            diff *= -1;
+        }
+        sum += diff;
+    });
+    if (arr.length === 0) {
+        return 0;
+    } else {
+        return 1.0 * sum / arr.length;
+    }
 }

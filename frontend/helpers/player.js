@@ -13,6 +13,7 @@ export class Player {
         this.timeStarted = false;
         this.song2Timeout = false;
         this.delay = masterInfo.songDelay;
+        // this.delay = 0;
         this.timeToStart2 = this.delay;
 
         this.song1.addEventListener("ended", () => {
@@ -27,15 +28,29 @@ export class Player {
         this.waiting = false;
         this.countdownCanceled = false;
 
-        const audioCtx = new AudioContext();
+        // FAITHFUL
+        // const audioCtx = new AudioContext();
 
-        const audioSource = audioCtx.createMediaElementSource(this.song1);
-        this.analyser = audioCtx.createAnalyser();
-        audioSource.connect(this.analyser);
-        audioCtx.setSinkId({ type: "none" });
-        this.analyser.connect(audioCtx.destination);
-        this.analyser.fftSize = fftSize;
-        this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        // const audioSource = audioCtx.createMediaElementSource(this.song1);
+        // this.analyser = audioCtx.createAnalyser();
+        // audioSource.connect(this.analyser);
+        // audioCtx.setSinkId({ type: "none" });
+        // this.analyser.connect(audioCtx.destination);
+        // this.analyser.fftSize = fftSize;
+        // this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        // END FAITHFUL
+
+        // DETAILED EXPERIMENT
+        const detailedAudioCtx = new AudioContext();
+
+        const detailedAudioSource = detailedAudioCtx.createMediaElementSource(this.song1);
+        this.detailedAnalyser = detailedAudioCtx.createAnalyser();
+        detailedAudioSource.connect(this.detailedAnalyser);
+        detailedAudioCtx.setSinkId({ type: "none" });
+        this.detailedAnalyser.connect(detailedAudioCtx.destination);
+        this.detailedAnalyser.fftSize = 128;
+        this.detailedDataArray = new Uint8Array(this.detailedAnalyser.frequencyBinCount);
+        // END DETAILED EXPERIMENT
 
         // For delayed frequency array requests
         this.freqArrays = [];
@@ -145,6 +160,13 @@ export class Player {
         
 
     }
+
+    // for DETAILED EXPERIMENT
+    getDetailedFreqArray() {
+        this.detailedAnalyser.getByteFrequencyData(this.detailedDataArray);
+        return this.detailedDataArray;
+    }
+    // END DETAILED EXPERIMENT
 
     getDataFreqArray() {
         this.analyser.getByteFrequencyData(this.dataArray);
