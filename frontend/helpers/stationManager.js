@@ -143,7 +143,7 @@ export class StationManager {
             radioSource.connect(analyser);
             nowCtx.setSinkId({ type: "none" });
             analyser.connect(nowCtx.destination);
-            analyser.fftSize = 32;
+            analyser.fftSize = 4096;
             const dataArray = new Uint8Array(analyser.frequencyBinCount);
             // const nowGain = nowCtx.createGain();
             // radioSource.connect(nowGain);

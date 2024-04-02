@@ -172,9 +172,9 @@
 }
 
 #dummy-tapper-a .note-lighted {
-    background-color: rgb(108, 201, 255);
-    border: 4vmin solid rgb(106, 196, 255);
-    border-top: 0.5vmin solid rgb(77, 205, 255);
+    background-color: rgb(132, 209, 253);
+    border: 4vmin solid rgb(135, 207, 255);
+    border-top: 0.5vmin solid rgb(115, 215, 255);
     border-bottom: 2vmin solid rgb(98, 218, 255);
     box-shadow:
         18px 0px 40px rgb(86, 230, 255),
@@ -201,30 +201,30 @@
 
 #dummy-tapper-b .note-lighted {
     background-color: rgb(205, 144, 255);
-    border: 4vmin solid rgb(201, 140, 250);
-    border-top: 0.5vmin solid rgb(192, 124, 255);
+    border: 4vmin solid rgb(206, 154, 248);
+    border-top: 0.5vmin solid rgb(201, 147, 252);
     border-bottom: 2vmin solid rgb(216, 147, 255);
     box-shadow:
-        18px 0px 40px rgb(178, 96, 255),
-        -18px 0px 40px rgb(178, 96, 255),
-        0px 0px 25px rgb(178, 96, 255),
-        0px 0px 25px rgb(178, 96, 255),
-        18px 0px 40px rgb(178, 96, 255),
-        -18px 0px 40px rgb(178, 96, 255),
-        0px 0px 25px rgb(178, 96, 255),
-        0px 0px 25px rgb(178, 96, 255);
+        18px 0px 40px rgb(202, 145, 255),
+        -18px 0px 40px rgb(202, 145, 255),
+        0px 0px 25px rgb(202, 145, 255),
+        0px 0px 25px rgb(202, 145, 255),
+        18px 0px 40px rgb(202, 145, 255),
+        -18px 0px 40px rgb(202, 145, 255),
+        0px 0px 25px rgb(202, 145, 255),
+        0px 0px 25px rgb(202, 145, 255);
 }
 #dummy-tapper-b .note-middle-lighted {
-    background-color: rgb(200, 119, 255);
+    background-color: rgb(202, 145, 255);
     box-shadow:
-        18px 0px 20px rgb(200, 119, 255),
-        -18px 0px 20px rgb(200, 119, 255),
-        0px 0px 20px rgb(200, 119, 255),
-        0px 0px 20px rgb(200, 119, 255),
-        18px 0px 20px rgb(200, 119, 255),
-        -18px 0px 20px rgb(200, 119, 255),
-        0px 0px 20px rgb(200, 119, 255),
-        0px 0px 20px rgb(200, 119, 255);
+        18px 0px 20px rgb(202, 145, 255),
+        -18px 0px 20px rgb(202, 145, 255),
+        0px 0px 20px rgb(202, 145, 255),
+        0px 0px 20px rgb(202, 145, 255),
+        18px 0px 20px rgb(202, 145, 255),
+        -18px 0px 20px rgb(202, 145, 255),
+        0px 0px 20px rgb(202, 145, 255),
+        0px 0px 20px rgb(202, 145, 255);
 }
 
 #dummy-tapper-right .note-lighted {

@@ -37,6 +37,42 @@ export class StreamPlayer {
         }, this.songDelay);
     }
 
+    getDetailedFreqArray() {
+        if (this.liveStream) {
+            this.liveAnalyser.smoothingTimeConstant = 0.85;
+            this.liveAnalyser.getByteFrequencyData(this.liveDataArray);
+            return this.liveDataArray.map(ele => ele);
+        }
+        if (this.silentPlayer) {
+            this.analyser.smoothingTimeConstant = 0.85;
+            this.analyser.getByteFrequencyData(this.dataArray);
+            return this.dataArray.map(ele => ele);
+        }
+        else {
+            this.current.analyser.smoothingTimeConstant = 0.85;
+            this.current.analyser.getByteFrequencyData(this.current.dataArray);
+            return this.current.dataArray.map(ele => ele);
+        }
+    }
+
+    getDetailedTimeArray() {
+        if (this.liveStream) {
+            this.liveAnalyser.smoothingTimeConstant = 0.0;
+            this.liveAnalyser.getByteTimeDomainData(this.liveDataArray);
+            return this.liveDataArray.map(ele => ele);
+        }
+        if (this.silentPlayer) {
+            this.analyser.smoothingTimeConstant = 0.0;
+            this.analyser.getByteTimeDomainData(this.dataArray);
+            return this.dataArray.map(ele => ele);
+        }
+        else {
+            this.current.analyser.smoothingTimeConstant = 0.0;
+            this.current.analyser.getByteTimeDomainData(this.current.dataArray);
+            return this.current.dataArray.map(ele => ele);
+        }
+    }
+
     getDataFreqArray() {
         if (this.liveStream) {
             this.liveAnalyser.getByteFrequencyData(this.liveDataArray);
@@ -179,7 +215,7 @@ export class StreamPlayer {
                 audioSource.connect(this.nextAnalyser);
                 audioCtx.setSinkId({ type: "none" });
                 this.nextAnalyser.connect(audioCtx.destination);
-                this.nextAnalyser.fftSize = 32;
+                this.nextAnalyser.fftSize = 4096;
                 this.nextDataArray = new Uint8Array(this.nextAnalyser.frequencyBinCount);
 
                 const assignNexts = () => {
@@ -191,7 +227,7 @@ export class StreamPlayer {
                 newSilentPlayer.addEventListener("canplaythrough", assignNexts);
 
             } else {
-                console.log("making new player");
+                // console.log("making new player");
                 this.player = new Audio(`data:audio/x-wav;base64,${data.str}`);
                 this.silentPlayer = new Audio(`data:audio/x-wav;base64,${data.str}`);
 
@@ -201,7 +237,7 @@ export class StreamPlayer {
                 audioSource.connect(this.analyser);
                 audioCtx.setSinkId({ type: "none" });
                 this.analyser.connect(audioCtx.destination);
-                this.analyser.fftSize = 32;
+                this.analyser.fftSize = 4096;
                 this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
                 const startPlaying = () => {
@@ -244,7 +280,7 @@ export class StreamPlayer {
                 audioSource.connect(this.analyser);
                 audioCtx.setSinkId({ type: "none" });
                 this.analyser.connect(audioCtx.destination);
-                this.analyser.fftSize = 32;
+                this.analyser.fftSize = 4096;
                 this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
                 newSilentPlayer.addEventListener("canplaythrough", () => {
@@ -297,7 +333,7 @@ export class StreamPlayer {
         audioSource.connect(analyser);
         audioCtx.setSinkId({ type: "none" });
         analyser.connect(audioCtx.destination);
-        analyser.fftSize = 32;
+        analyser.fftSize = 4096;
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
         const newSongObj = {

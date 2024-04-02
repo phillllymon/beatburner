@@ -110,7 +110,8 @@ export class Animator {
 
         // DETAILED EXPERIMENT
         const dataArray = player.getDetailedFreqArray();
-        this.noteWriter.writeNotes(dataArray, this.slides, this.notesPerSecond);
+        const timeArray = player.getDetailedTimeArray();
+        this.noteWriter.writeNotes(dataArray, timeArray, this.slides, this.notesPerSecond);
         // END DETAILED EXPERIMENT
         
         // FAITHFUL BELOW

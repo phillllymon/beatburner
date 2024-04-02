@@ -48,7 +48,8 @@ export class Player {
         detailedAudioSource.connect(this.detailedAnalyser);
         detailedAudioCtx.setSinkId({ type: "none" });
         this.detailedAnalyser.connect(detailedAudioCtx.destination);
-        this.detailedAnalyser.fftSize = 128;
+        // this.detailedAnalyser.smoothingTimeConstant = 0;
+        this.detailedAnalyser.fftSize = 4096;
         this.detailedDataArray = new Uint8Array(this.detailedAnalyser.frequencyBinCount);
         // END DETAILED EXPERIMENT
 
@@ -163,8 +164,14 @@ export class Player {
 
     // for DETAILED EXPERIMENT
     getDetailedFreqArray() {
+        this.detailedAnalyser.smoothingTimeConstant = 0.85;
         this.detailedAnalyser.getByteFrequencyData(this.detailedDataArray);
-        return this.detailedDataArray;
+        return this.detailedDataArray.map(ele => ele);
+    }
+    getDetailedTimeArray() {
+        this.detailedAnalyser.smoothingTimeConstant = 0.0;
+        this.detailedAnalyser.getByteTimeDomainData(this.detailedDataArray);
+        return this.detailedDataArray.map(ele => ele);
     }
     // END DETAILED EXPERIMENT
 

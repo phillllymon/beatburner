@@ -1,7 +1,8 @@
 export class NoteWriter {
-    constructor(masterInfo, addNote) {
+    constructor(masterInfo, addNote, makeTail) {
         this.masterInfo = masterInfo;
         this.addNote = addNote;
+        this.makeTail = makeTail;
 
         this.lastLeft = performance.now();
         this.lastMid = performance.now();
@@ -17,7 +18,9 @@ export class NoteWriter {
             "slide-right": performance.now()
         };
         this.mostRecentNotes = masterInfo.mostRecentNotesOrTails;
-        this.recentToneVals = [0, 0, 0];
+
+        // this.recentToneVals = [0, 0, 0];
+        this.recentToneVals = [20, 50, 80];
 
         this.sideWithNotes = null // remember which side can have new notes when sustained note in middle of 3 slides
     
@@ -29,76 +32,138 @@ export class NoteWriter {
         // DETAIL EXPERIMENT
         this.times = [];
         this.collectArrays = [];
+        this.collectTimeArrays = [];
+        this.timeArrayVariances = [];
         this.startTime = performance.now();
         this.lastTime = performance.now();
-        this.stepTime = 25; // ms to collapse data
-        this.arrLength = 64; // average order every
-
-        // order - order changes
-        this.order = [];
-        this.diffs = [];
-        this.orders = [];
-
-        // average - hills breach variance
-        this.totals = [];
-        this.aveArrs = [];
-
-        // sum - total sum
-        this.sums = [];
-        this.biggests = [];
-        this.numBiggestsSum = 200;
-        this.dir = -1;
-        this.low = 0;
-        this.lowIdx = 0;
+        this.stepTime = 5; // ms to collapse data
+        this.arrLength = 2048;
         
-        // every - hills on every col
-        this.numBiggests = 200;
-        this.arrs = [];
-        this.biggestsArrs = [];
-        this.dirs = [];
-        this.lows = [];
-        this.lowIdxs = [];
+
+        // precise - hills in moment get taller
+        this.aveHillHeights = [];
+        this.tallestTowers = [];
+        this.toneVals = [];
         
+
         
-        // preset
-        for (let i = 0; i < this.arrLength; i++) {
-            this.arrs.push([]);
-            this.aveArrs.push([]);
-            this.biggestsArrs.push([]);
-            this.dirs.push(-1);
-            this.lows.push(0);
-            this.lowIdxs.push(0);
-            this.totals.push(0);
-            this.order.push([i, i]);
-        }
 
         // which algorithm?
-        this.doOrder = true;
-        this.doAverage = true;
-        this.doSum = true;
-        this.doEvery = true;
+        this.doPrecise = true;
     }
 
-    writeNotes(dataArray, slideIds, notesPerSecond) {
+    writeTails(theseTowerHeights, slideIds) {
+        slideIds.forEach((slideId) => {
+
+            const lastNote = this.mostRecentNotes[slideId];
+            if (lastNote) {
+
+                // console.log(lastNote.val);
+                
+
+
+                // console.log("-----------");
+                // console.log(lastNoteTowerHeight);
+                // console.log(lastNoteTowerIdx);
+                // console.log(theseTowerHeights.map(ele => ele.map(el => el)));
+
+                let yesesToTail = [false, false, false];
+                let closests = [1000, 1000, 1000];
+                let closestIdxes = [null, null, null];
+                let closestTowerHeights = [0, 0, 0];
+                theseTowerHeights.forEach((tower) => {
+                    const thisTowerHeight = tower[0];
+                    const thisTowerIdx = tower[1];
+                    lastNote.val.forEach((lastTower, i) => {
+                        const lastTowerIdx = lastTower[1];
+                        const dist = Math.abs(thisTowerIdx - lastTowerIdx);
+                        if (dist < closests[i]) {
+                            closests[i] = dist;
+                            closestIdxes[i] = thisTowerIdx;
+                            closestTowerHeights[i] = thisTowerHeight;
+                        }
+                    });
+                });
+                for (let i = 0; i < closests.length; i++) {
+                    const dist = closests[i];
+                    const height = closestTowerHeights[i];
+                    if (dist < 4 && height > 0.5 * lastNote.val[i][0]) {
+                        yesesToTail[i] = true;
+                        lastNote.val[i][1] = closestIdxes[i];
+                    }
+                }
+                let yesToTail = false;
+
+                yesesToTail.forEach((yes) => {
+                    if (yes) {
+                        yesToTail = true;
+                    }
+                });
+                // lastNote.note.innerHTML = closest;
+                // lastNote.note.style.fontSize = "30px";
+
+                if (yesToTail) {
+                    this.makeTail(slideId, lastNote);
+                    const now = performance.now();
+                    if (slideIds.length === 4) {
+                        if (this.leftSlides.includes(slideId)) {
+                            this.lastLeft = now;
+                            this.lastAll[slideId] = now;
+                        } else {
+                            this.lastRight = now;
+                            this.lastAll[slideId] = now;
+                        }
+                    } else if (slideIds.length === 3) {
+                        if (slideId === this.rightId) {
+                            this.lastRight = now;
+                            this.lastAll[slideId] = now;                               
+                        } else if (slideId === this.leftId) {                                
+                            this.lastLeft = now;
+                            this.lastAll[slideId] = now;                                
+                        } else {                                
+                            this.lastMid = now;
+                            this.lastAll[slideId] = now;                                
+                        }
+                    } else {
+                        this.lastAll[slideId] = now;
+                    }
+                } else {
+                    // check for tail too short - delete tail entirely
+                    if (lastNote.isTail && lastNote.totalHeight < 0.1 * this.masterInfo.travelLength) {
+                        lastNote.cloud.remove();
+                        lastNote.note.remove();
+                        lastNote.parentNote.tail = null;
+
+                        // lastNote.parentNote.note.innerHTML = closest;
+                    }
+                    this.mostRecentNotes[slideId] = null;
+                }
+            }
+        });
+        
+    }
+
+    writeNotes(dataArray, timeArray, slideIds, notesPerSecond) {
         // document.getElementById("exp").style.zIndex = 10;
 
         // collect
         for (let i = 0; i < dataArray.length; i++) {
             const thisVal = dataArray[i];
+            const thisTimeVal = timeArray[i];
             if (this.collectArrays[i] !== undefined) {
                 this.collectArrays[i].push(thisVal);
+                this.collectTimeArrays[i].push(thisTimeVal);
             } else {
                 this.collectArrays.push([thisVal]);
+                this.collectTimeArrays.push([thisTimeVal]);
             }
         }
         
-
-        
-
         // analyze
         const now = performance.now();
         if (now - this.lastTime > this.stepTime) {
             this.times.push(now);
+            
             while (this.times[0] < now - 4000) {
                 this.times.shift();
             }
@@ -106,323 +171,219 @@ export class NoteWriter {
             this.lastTime += this.stepTime;
 
             let amt = 0;
-            const arrToUse = this.collectArrays.map((subArr, i) => {
+            let arrToUse = this.collectArrays.map((subArr, i) => {
                 let sum = 0;
                 subArr.forEach((ele) => {
                     sum += ele;
                 });
                 this.collectArrays[i] = [];
                 const aveVal = 1.0 * sum / subArr.length;
-                const fraction = aveVal / 255;
-                const answer = Math.pow(fraction, 0.25);
-                amt += answer;
-                return answer;
+                amt += aveVal;
+                return aveVal;
             });
 
-            if (amt < 35) {
-                return;
-            }
+            let timeArrToUse = this.collectTimeArrays.map((subArr, i) => {
+                let sum = 0;
+                subArr.forEach((ele) => {
+                    sum += ele;
+                });
+                this.collectTimeArrays[i] = [];
+                const aveVal = 1.0 * sum / subArr.length;
+                return aveVal;
+            });
+
+            this.timeArrayVariances.push(Math.max(...timeArrToUse) - Math.min(...timeArrToUse));
 
             let makeNote = false;
             let marked = false;
             let colVal = false;
 
-            // order below
-            if (this.doOrder) {
-                const newOrder = arrToUse.map((val, i) => {
-                    return [val, i];
-                }).sort((a, b) => {
-                    if (a[0] > b[0]) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                }).map((pair, i) => {
-                    return [pair[1], i]; // [col, newPos]
-                });
-                const newRanks = {};
-                newOrder.forEach((pair) => {
-                    newRanks[pair[0]] = pair[1];
-                });
-                let diff = 0;
-                this.order.forEach((pair) => {
-                    const col = pair[0];
-                    const oldRank = pair[1];
-                    const newRank = newRanks[col];
-                    let thisDiff = newRank - oldRank;
-                    if (thisDiff < 0) {
-                        thisDiff *= -1;
-                    }
-                    diff += thisDiff;
-                });
-                this.order = newOrder;
-                this.diffs.push(diff);
-                while (this.diffs.length > this.times.length) {
-                    this.diffs.shift();
-                }
-
-                const midIdx = Math.floor(this.diffs.length / 2);
-                const leg = 40;
-                const midArr = this.diffs.slice(midIdx - leg, midIdx + leg);
-                
-                // exp
-                const maxDiffs = 25;
-                const bigDiffs = [];
-                for (let i = 0; i < midArr.length; i++) {
-                    const thisDiff = midArr[i];
-                    if (bigDiffs.length === 0 || thisDiff > bigDiffs[0][0]) {
-                        bigDiffs.push([thisDiff, i]); // [size, idx]
-                        bigDiffs.sort((a, b) => {
-                            if (a[0] > b[0]) {
-                                return 1;
-                            } else {
-                                return -1;
-                            }
-                        });
-                        if (bigDiffs.length > maxDiffs) {
-                            bigDiffs.shift();
-                        }
-                    }
-                }
-
-                if (bigDiffs.map((pair) => {
-                    return pair[1];
-                }).includes(Math.floor(midArr.length / 2))) {
-                    makeNote = true;
-                    marked = "yellow";
-                }
-                // end exp
-
-                // const threshold = 1 * (arrAverage(midArr) + arrVariance(midArr));
-                // if (diff > threshold) {
-                //     makeNote = true;
-                //     marked = "yellow";
-                // }
-            }
-
-            // average below order above
-            if (this.doAverage) {
-                arrToUse.forEach((val, arrIdx) => {
-                    this.aveArrs[arrIdx].push(val);
-                    this.totals[arrIdx] += val;
-                });
-                while (this.aveArrs[0].length > this.times.length) {
-                    for (let i = 0; i < arrToUse.length; i++) {
-                        const thisArr = this.aveArrs[i];
-                        this.totals[i] -= thisArr.shift();
-                    }
-                }
-    
-                for (let i = 0; i < arrToUse.length; i++) {
-                    const thisArr = this.aveArrs[i];
-                    const thisAverage = 1.0 * this.totals[i] / thisArr.length;
-    
-                    const legSize = 25;
-                    const midIdx = Math.floor(arrToUse.length / 2);
-    
-                    let sumVariance = 0;
-                    if (thisArr.length > 2 * legSize) {
-                        for (let j = 0; j < thisArr.length; j++) {
-                        // for (let j = midIdx - legSize; j < midIdx + legSize; j++) {
-                            let diff = thisArr[j] - thisAverage;
-                            if (diff < 0) {
-                                diff *= -1;
-                            }
-                            sumVariance += diff;
-                        }
-                        const variance = 1.0 * sumVariance / thisArr.length;
-                        const diffFactor = 1 + (1.0 * variance / thisAverage);
+            // precise below
+            let toneValToUse;
+            let noteValToUse;
+            if (this.doPrecise) {
+                let prev = arrToUse[0];
+                let low = prev;
+                let dir = 1;
+                const peaks = []; // will be populated with [val, i] ordered by val
+                arrToUse.forEach((val, i) => {
+                    if (val > 0) {
         
-                        const controlIdx = midIdx;
-                        const testIdx = controlIdx + 1;
-                        
-                        if (thisArr[controlIdx] < thisAverage && thisArr[testIdx] > diffFactor * thisAverage) {
-                            makeNote = true;
-                            marked = "blue";
-                        }
-        
-                        
-                    }
-                    
-                }
-            }
-
-
-
-            // every below average above
-            if (this.doEvery) {
-                arrToUse.forEach((val, arrIdx) => {
-                    this.arrs[arrIdx].push(val);
-                });
-                while (this.arrs[0].length > this.times.length) {
-                    for (let i = 0; i < arrToUse.length; i++) {
-                        const thisArr = this.arrs[i];
-                        thisArr.shift();
-                        let remove = false;
-                        const thisBiggests = this.biggestsArrs[i];
-                        thisBiggests.forEach((bigNote, idx) => {
-                            bigNote.idx -= 1;
-                            if (bigNote.idx < 0) {
-                                remove = idx;
+                        if (val > prev) {   // going up
+                            if (dir === -1) {
+                                // found a low
+                                low = val;
+                                dir = 1;
                             }
-                        });
-                        if (remove !== false) {
-                            const first = thisBiggests.slice(0, remove);
-                            const second = thisBiggests.slice(remove + 1, thisBiggests.length);
-                            this.biggestsArrs[i] = first.concat(second);
-                        }
-                    }
-                }
-                for (let i = 0; i < arrToUse.length; i++) {
-                    const thisArr = this.arrs[i];
-                    if (thisArr.length > 1) {
-                        const thisVal = thisArr[thisArr.length - 1];
-                        const prevVal = thisArr[thisArr.length - 2];
-                        const newDiff = thisVal - prevVal;
-                        if (newDiff > 0) { // going up
-                            if (this.dirs[i] === -1) {
-                                this.lows[i] = prevVal;
-                                this.lowIdxs[i] = thisArr.length - 2;
-                                this.dirs[i] = 1;
-                            }
-                        } else { // going down
-                            if (this.dirs[i] === 1) {
+                        } else {    // going down
+                            if (dir === 1) {
                                 // found a peak
-                                const newHeight = prevVal - this.lows[i];
-                                const thisBiggests = this.biggestsArrs[i];
-                                
-                                if (thisBiggests.length > 0) {
-    
-                                    if (newHeight > thisBiggests[0].height) {
-                                        let runner = 0;
-                                        while (thisBiggests[runner] && newHeight > thisBiggests[runner].height) {
-                                            runner += 1;
-                                        }
-                                        const first = thisBiggests.slice(0, runner);
-                                        const second = thisBiggests.slice(runner, thisBiggests.length);
-                                        first.push({ height: newHeight, idx: this.lowIdxs[i] }); // USE LOW AS idx - MAY CHANGE THIS
-                                        this.biggestsArrs[i] = first.concat(second);
-            
-                                        if (thisBiggests.length > this.numBiggests) {
-                                            thisBiggests.shift();
-                                        }
-                                    }
-    
-                                } else {
-                                    this.biggestsArrs[i].push({ height: newHeight, idx: this.lowIdxs[i] });
+                                const height = prev - low;
+                                if (height > 0) {
+                                    peaks.push([height, i - 1]);
                                 }
-    
-                                this.dirs[i] = -1;
+                                low = val;
+                                dir = -1;
                             } else {
-                                this.lows[i] = prevVal;
-                                this.lowIdxs[i] = thisArr.length - 2;
+                                low = val;
                             }
                         }
                     }
-                    if (this.biggestsArrs[i].map((bigNote) => {
-                        return bigNote.idx;
-                    }).includes(Math.floor(arrToUse.length / 2))) {
-                        makeNote = true;
-                        marked = "green";
-                    }
-                    // if (makeNote) {
-                    //     colVal = i;
-                    //     break;
-                    // }
-                }
-            }
+                    prev = val;
+                });
 
-            
-            // sum below, every above
-            if (this.doSum) {
-                const thisSum = arrSum(arrToUse);
-                this.sums.push(thisSum);
-                
-    
-                while(this.sums.length > this.times.length) {
-                    this.sums.shift();
-    
-                    let remove = false;
-                    this.biggests.forEach((bigNote, i) => {
-                        bigNote.idx -= 1;
-                        
-                        if (bigNote.idx < 0) {
-                            remove = i;
-                        }
-                    });
-                    if (remove !== false) {
-                        const first = this.biggests.slice(0, remove);
-                        const second = this.biggests.slice(remove + 1, this.biggests.length);
-                        this.biggests = first.concat(second);
+                peaks.sort((a, b) => {
+                    if (a[0] > b[0]) {
+                        return 1;
+                    } else {
+                        return -1;
                     }
+                });
+                
+                const cutoffIdx = peaks.length * 0.9;
+                const highPeaks = peaks.slice(cutoffIdx, peaks.length);
+                
+                this.tallestTowers.push(highPeaks);
+                
+                // get toneVal from average index diff between peaks
+                const peakSpots = highPeaks.map((peak) => {
+                    return peak[1];
+                }).sort((a, b) => {
+                    if (a > b) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                });
+                
+                let diffSum = 0;
+                for (let i = Math.floor(peakSpots.length / 5); i < peakSpots.length; i++) {
+                    diffSum += peakSpots[i] - peakSpots[i - 1];
                 }
-    
-                if (this.sums.length > 1) {
-                    const thisVal = this.sums[this.sums.length - 1];
-                    const prevVal = this.sums[this.sums.length - 2];
-                    const newDiff = thisVal - prevVal;
-                    if (newDiff > 0) { // going up
-                        if (this.dir === -1) {
+                let aveDiff = 0;
+                if (peakSpots.length > 1) {
+                    aveDiff = diffSum / (peakSpots.length - 1);
+                }
+                this.toneVals.push(aveDiff);
+
+                
+
+
+                this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
+                    return peak[0]
+                }))); // put latest average peak height into this.aveHillHeights
+                
+                if (this.aveHillHeights.length > this.times.length) {
+                    this.aveHillHeights.shift();
+                    this.timeArrayVariances.shift();
+                    this.tallestTowers.shift();
+                    this.toneVals.shift();
+                }
+
+                // now look for time hills to trigger notes
+                const maxHills = 250;
+                const hills = [];
+                let timePrev = this.aveHillHeights[0];
+                let timeDir = 1;
+                let timeLow = timePrev;
+                let timeLowIdx = 0;
+                for (let i = 1; i < this.aveHillHeights.length; i++) {
+                    const thisVal = this.aveHillHeights[i];
+                    if (thisVal > timePrev) {   // going up
+                        if (timeDir === -1) {
                             // found a low
-                            this.low = prevVal;
-                            this.lowIdx = this.sums.length - 2;
-                            this.dir = 1;
+                            timeLow = timePrev;
+                            timeLowIdx = i - 1;
+                            timeDir = 1;
                         }
                     } else {    // going down
-                        if (this.dir === 1) {
-                            // found a high
-                            const newHeight = prevVal - this.low;
-                        
-                            if (this.biggests.length > 0) {
-    
-                                if (newHeight > this.biggests[0].height) {
-                                    let runner = 0;
-                                    while (this.biggests[runner] && newHeight > this.biggests[runner].height) {
-                                        runner += 1;
+                        if (timeDir === 1) {
+                            // found a peak
+                            const hillHeight = timePrev - timeLow;
+                            if (hills.length === 0 || hillHeight > hills[0][0]) {
+                                hills.push([hillHeight, timeLowIdx]);
+                                hills.sort((a, b) => {
+                                    if (a > b) {
+                                        return 1;
+                                    } else {
+                                        return -1;
                                     }
-                                    const first = this.biggests.slice(0, runner);
-                                    const second = this.biggests.slice(runner, this.biggests.length);
-                                    first.push({ height: newHeight, idx: this.lowIdx }); // USE LOW AS idx - MAY CHANGE THIS
-                                    this.biggests = first.concat(second);
-        
-                                    if (this.biggests.length > this.numBiggestsSum) {
-                                        this.biggests.shift();
-                                    }
-                                }
-                            } else {
-                                this.biggests.push({ height: newHeight, idx: this.lowIdx });
+                                });
+                                // if (hills.length > maxHills) {
+                                //     hills.shift();
+                                // }
                             }
-    
-                            this.dir = -1;
-                        } else {
-                            this.low = thisVal;
-                            this.lowIdx = this.sums.length - 1;
                         }
+                        timeLow = thisVal;
+                        timeLowIdx = i;
                     }
+                    timePrev = thisVal;
                 }
-                if (this.biggests.map((bigNote) => {
-                    return bigNote.idx;
-                }).includes(Math.floor(arrToUse.length / 2))) {
+
+                // console.log(hills.length);
+
+                let midIdx = 0;
+                while (this.times[midIdx] < now - 1900) { // 100ms offset seems to work well
+                    midIdx += 1;
+                }
+
+                noteValToUse = this.tallestTowers[midIdx].slice(this.tallestTowers[midIdx].length - 3, this.tallestTowers[midIdx].length);
+                toneValToUse = this.toneVals[midIdx];
+
+                if (this.masterInfo.sustainedNotes) {
+                    this.writeTails(this.tallestTowers[midIdx], slideIds);
+                } 
+                
+                if (this.timeArrayVariances[midIdx] < 15) {
+                    return;
+                }
+                
+                if (hills.map((hill) => {
+                    return hill[1];
+                }).includes(midIdx)) {
                     makeNote = true;
-                    marked = "orange";
                 }
+
+
+
+                // const midHillHeight = this.aveHillHeights[midIdx];
+                // let lower = 0;
+                // let higher = 0;
+                // this.aveHillHeights.forEach((height) => {
+                //     if (height > midHillHeight) {
+                //         higher += 1;
+                //     } else {
+                //         lower += 1;
+                //     }
+                // });
+
+                // const thresholdRatio = 1.5;
+
+                // if (1.0 * lower / higher > thresholdRatio) {
+                //     makeNote = true;
+                // }
+
+
+
+
+
+
+
+                
+                
             }
-            // sum above
 
 
             
             if (makeNote) {
 
-                let toneValToUse = weightedAve(arrToUse);
+                
                 const slideToRequest = this.getSlideToUse(toneValToUse, slideIds.length);
                 
-                if (colVal !== false) {
-                    toneValToUse = colVal;
-                }
                 this.attemptNoteWrite({
                     slideToUse: slideToRequest,
                     slideIds: slideIds,
-                    noteVal: toneValToUse,
+                    noteVal: noteValToUse,
                     toneVal: toneValToUse,
                     addNote: this.addNote,
                     marked: marked,
@@ -438,6 +399,25 @@ export class NoteWriter {
         const sortedTones = this.recentToneVals.map((val) => {
             return val;
         }).sort();
+        
+        // exp - also involves having 16 recents instead of only 3 - see constructor
+        let i = 0;
+        while (toneVal > sortedTones[i]) {
+            i += 1;
+        }
+        if (numSlides === 4 && this.recentToneVals.length === 8) {
+            if (i < 2) {
+                return "slide-left";
+            }
+            if (i < 4) {
+                return "slide-a";
+            }
+            if (i < 6) {
+                return "slide-b";
+            }
+            return "slide-right";
+        }
+        // end exp
 
         let slideToUse = "slide-left";
         if (numSlides === 4) {
@@ -581,7 +561,9 @@ export class NoteWriter {
             // if (!this.lastValTime || performance.now() - this.lastValTime > (gap - 1)) {
                 this.recentToneVals.push(toneVal);
                 this.lastValTime = performance.now();
-                this.recentToneVals.shift();
+                if (this.recentToneVals.length > 8) {
+                    this.recentToneVals.shift();
+                }
             // }
         }
 

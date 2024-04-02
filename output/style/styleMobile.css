@@ -197,6 +197,7 @@
     height: 1vh;
     border: 1px solid gray;
     position: relative;
+    
 }
 #percent-bar-inner-container {
     position: absolute;

@@ -92,7 +92,8 @@ let sustainedNotes = true;
 let animatedBackground = true;
 let streaming = false;
 
-let autoAdjustment = -0.05 * travelLength;
+let autoAdjustment = 0;
+// let autoAdjustment = -0.05 * travelLength;
 
 let streak = 0;
 
@@ -146,7 +147,8 @@ const masterInfo = {
 // ----------------------------------------- HELPERS
 const noteWriter = new NoteWriter(
     masterInfo,
-    addNote
+    addNote,
+    makeTail
 );
 const backgroundAnimator = new BackgroundAnimator(
     masterInfo
@@ -166,7 +168,7 @@ const player = new Player(
     () => {
         animator.stopAnimation();
         showSongControlButton("button-restart");
-        autoAdjustment = autoCalibrating ? -0.05 * travelLength : 0;
+        // autoAdjustment = autoCalibrating ? -0.05 * travelLength : 0;
         masterInfo.autoAdjustment = autoAdjustment;
         document.getElementById("feedback").classList.remove("hidden");
         const fraction = 1.0 * masterInfo.songNotesHit / (masterInfo.songNotesHit + masterInfo.songNotesMissed);
@@ -449,6 +451,7 @@ function makeTail(slideId, parentNote) {
 
 let lastNote = null;
 function addNote(slideId, val, marked = false) {
+
     const newNote = document.createElement("div");
     newNote.classList.add("note");
     if (marked === true) {
@@ -479,6 +482,7 @@ function addNote(slideId, val, marked = false) {
         tail: null,
         seen: false
     };
+
     notes.add(noteInfo);
     
     document.getElementById(slideId).appendChild(newNote);
@@ -752,7 +756,7 @@ function doAnimationStep(percentBar, stats, startTime, timeStep) {
     const overallTime = now - startTime;
     if (overallTime < timeStep) {
         const fractionToUse = 1.0 * overallTime / timeStep;
-        document.getElementById(percentBar).style.width = `${Math.floor(fractionToUse * 100)}%`;
+        document.getElementById(percentBar).style.width = `${Math.ceil(fractionToUse * 100)}%`;
     } else {
         const stepsDone = Math.floor(overallTime / timeStep);
         const statToUse = stats[stepsDone - 1];
