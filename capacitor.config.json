@@ -1,0 +1,8 @@
+{
+  "appId": "com.beatburner",
+  "appName": "beatburner",
+  "webDir": "output",
+  "server": {
+    "androidScheme": "https"
+  }
+}

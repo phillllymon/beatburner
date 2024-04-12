@@ -30,6 +30,7 @@ export class BackgroundAnimator {
                 break;
             }
         }
+
         for (let i = 0; i < numObselete; i++) {
             this.valsQueue.shift();
         }
@@ -53,11 +54,11 @@ export class BackgroundAnimator {
                 to right,
                 rgba(${colsToUse[1]}, 0) 0%,
                 rgba(${colsToUse[1]}, 1) 100%)`;
-            document.getElementById("fog-mobile-top").style.backgroundColor = `rgb(${colsToUse[0]})`;
+            document.getElementById("fog-mobile-top").style.backgroundColor = `rgb(${colsToUse[1]})`;
             document.getElementById("fog-mobile-gradient").style.background = `linear-gradient(
                 to top,
-                rgba(${colsToUse[0]}, 0) 0%,
-                rgba(${colsToUse[0]}, 1) 100%)`;
+                rgba(${colsToUse[1]}, 0) 0%,
+                rgba(${colsToUse[1]}, 1) 100%)`;
 
             let total = 0;
 
@@ -66,8 +67,8 @@ export class BackgroundAnimator {
                 total += val;
             });
             const percent = 100.0 * valsToUse[3] / total;
-            left.style.width = `${10 + percent}%`;
-            right.style.width = `${10 + percent}%`;
+            left.style.width = `${15 + percent}%`;
+            right.style.width = `${15 + percent}%`;
 
         } else {
             if (valsToUse) {

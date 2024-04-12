@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">beatburner</string>
+    <string name="title_activity_main">beatburner</string>
+    <string name="package_name">com.beatburner</string>
+    <string name="custom_url_scheme">com.beatburner</string>
+</resources>

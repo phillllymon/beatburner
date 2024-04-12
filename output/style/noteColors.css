@@ -100,7 +100,7 @@
 }
 [id$="slide-a"] .tail-active {
     background-color: rgb(41, 177, 255);
-    box-shadow: -4px 3px 15px rgb(42, 92, 255), 4px 3px 15px rgb(42, 92, 255);
+    box-shadow: -4px 3px 15px rgb(41, 177, 255), 4px 3px 15px rgb(41, 177, 255);
 }
 
 [id$="slide-b"] .note {

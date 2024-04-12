@@ -145,13 +145,14 @@ const masterInfo = {
 };
 
 // ----------------------------------------- HELPERS
+const backgroundAnimator = new BackgroundAnimator(
+    masterInfo
+);
 const noteWriter = new NoteWriter(
     masterInfo,
     addNote,
-    makeTail
-);
-const backgroundAnimator = new BackgroundAnimator(
-    masterInfo
+    makeTail,
+    backgroundAnimator
 );
 const animator = new Animator(
     masterInfo,
@@ -172,7 +173,7 @@ const player = new Player(
         masterInfo.autoAdjustment = autoAdjustment;
         document.getElementById("feedback").classList.remove("hidden");
         const fraction = 1.0 * masterInfo.songNotesHit / (masterInfo.songNotesHit + masterInfo.songNotesMissed);
-        document.getElementById("percent-bar-inner-container").style.width = `${fraction * 30}vh`;
+        document.getElementById("percent-bar-inner-container").style.width = `${100.0 * fraction}%`;
         document.getElementById("feedback-percent").innerText = `Tap accuracy: ${Math.round(fraction * 100)}%`;
         document.getElementById("feedback-streak").innerText = `Longest streak: ${masterInfo.songStreak}`;
         document.getElementById("feedback-streak-overall").innerText = `Current streak: ${streak}`;
@@ -181,6 +182,7 @@ const player = new Player(
         masterInfo.songNotesMissed = 0;
         masterInfo.songNotesHit = 0;
         masterInfo.songStreak = 0;
+        // alert(notesMade);
     }
 );
 const streamPlayer = new StreamPlayer(
@@ -351,7 +353,7 @@ function activateTapper(tapperId, slideId, leavingClass) {
     
     if (autoCalibrating) {
         const proximity = 0.1 * masterInfo.travelLength;
-        const maxAdjust = 0.15 * masterInfo.travelLength;
+        const maxAdjust = 0.1 * masterInfo.travelLength;
         if (numNotes === 1) {
             if (Math.abs(closest) < proximity) {
                 autoAdjustment += 1.0 * (closest / (10 * notes.size));
@@ -414,6 +416,7 @@ function makeTail(slideId, parentNote) {
         parentNote.note.style.top = `${startPos - masterInfo.sliderPos}px`;
         parentNote.height = newHeight;
         parentNote.position = startPos;
+        return parentNote;
     } else {
         const newTail = document.createElement("div");
         newTail.classList.add("note-tail");
@@ -445,11 +448,13 @@ function makeTail(slideId, parentNote) {
         document.getElementById(slideId).appendChild(newTail);
     
         mostRecentNotesOrTails[slideId] = tailInfo;
+        return tailInfo;
     }
 
 }
 
 let lastNote = null;
+let notesMade = 0;
 function addNote(slideId, val, marked = false) {
 
     const newNote = document.createElement("div");
@@ -489,6 +494,8 @@ function addNote(slideId, val, marked = false) {
 
     lastNote = noteInfo;
     mostRecentNotesOrTails[slideId] = noteInfo;
+    notesMade += 1;
+    return noteInfo;
 }
 
 let labelInUse = false;
@@ -774,3 +781,10 @@ function doAnimationStep(percentBar, stats, startTime, timeStep) {
         });
     }
 }
+
+// document.getElementById("feedback").classList.remove("hidden");
+// const fraction = 1.0 * masterInfo.songNotesHit / (masterInfo.songNotesHit + masterInfo.songNotesMissed);
+// document.getElementById("percent-bar-inner-container").style.width = `${fraction * 30}vh`;
+// document.getElementById("feedback-percent").innerText = `Tap accuracy: ${Math.round(fraction * 100)}%`;
+// document.getElementById("feedback-streak").innerText = `Longest streak: ${masterInfo.songStreak}`;
+// document.getElementById("feedback-streak-overall").innerText = `Current streak: ${streak}`;

@@ -175,6 +175,7 @@ export class ControlsManager {
             this.player.start();
             this.animator.runAnimation({ player: this.player, algorithm: this.masterInfo.algorithm });
         }
+        // this.animator.lastTime = performance.now();
         showSongControlButton("button-pause");
         this.masterInfo.spaceFunction = () => {
             this.pauseFunction();

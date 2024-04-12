@@ -209,8 +209,8 @@ export class Player {
         this.song2.volume = val;
     }
 
-    calibrateLag() {
-        const delayInSeconds = 1.0 * this.delay / 1000;
+    calibrateLag(delay = this.delay) {
+        const delayInSeconds = 1.0 * delay / 1000;
         if (this.song1.currentTime > delayInSeconds) {  // just check to make sure we're playing song2 yet
             this.song1.currentTime = this.song2.currentTime + delayInSeconds;
         }

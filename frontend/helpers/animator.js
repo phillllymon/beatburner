@@ -14,6 +14,7 @@ export class Animator {
         // numArrays = 1
     ) {
         this.masterInfo = masterInfo;
+        this.delay = this.masterInfo.songDelay;
         this.recents = masterInfo.mostRecentNotesOrTails;
         this.notes = masterInfo.notes;
         this.allSlides = masterInfo.allSlides;
@@ -33,7 +34,11 @@ export class Animator {
         for (let i = 0; i < numArrays; i++) {
             this.arrays.push([]);
         }
+
         this.times = [];
+        this.timeStep = 5; // ms
+        this.lastTime = 0;
+        
 
         this.noteResults = [];
         this.notesHit = 0;
@@ -102,72 +107,35 @@ export class Animator {
             algorithm,
         } = params;
 
-        const newTime = performance.now();
-        const dt = newTime - this.time;
-        this.time = newTime;
-        
-        player.calibrateLag();
+        const now = performance.now();
+        const timesToUse = [];
 
-        // DETAILED EXPERIMENT
-        const dataArray = player.getDetailedFreqArray();
-        const timeArray = player.getDetailedTimeArray();
-        this.noteWriter.writeNotes(dataArray, timeArray, this.slides, this.notesPerSecond);
-        // END DETAILED EXPERIMENT
+        if (now - this.lastTime > 35) {
+            timesToUse.push(now);
+            this.lastTime = now;
+        } else {
+            let nextTimeToUse = this.lastTime + this.timeStep;
+            while (nextTimeToUse < now) {
+                timesToUse.push(nextTimeToUse);
+                nextTimeToUse += this.timeStep;
+                this.lastTime = nextTimeToUse;
+            }
+        }
         
-        // FAITHFUL BELOW
-        // const dataFreqArray = player.getDataFreqArray();
-        // const val0 = averageOf(dataFreqArray.slice(0, 4));
-        // this.arrays[0].push(val0);
-        // const val1 = averageOf(dataFreqArray.slice(4, 8));
-        // this.arrays[1].push(val1);
-        // const val2 = averageOf(dataFreqArray.slice(8, 12));
-        // this.arrays[2].push(val2);
-        // const val3 = averageOf(dataFreqArray.slice(12, 16));
-        // this.arrays[3].push(val3);
-
-        // this.times.push(this.time);
-        // while (this.times[0] < this.time - this.masterInfo.songDelay) {
-        //     this.arrays.forEach((arr) => {
-        //         arr.shift();
-        //     });
-        //     this.times.shift();
-        // }
+        // console.log(timesToUse.map(ele => ele));
         
-        // const masterData = {
-        //     arrays: this.arrays,
-        //     times: this.times,
-        //     numSlides: this.slides.length,
-        //     algorithm: algorithm,
-        //     dataFreqArray: player.getDataFreqArrayDelayed()
-        // }
+        timesToUse.forEach((timeToUse) => {
+            const timeOffset = now - timeToUse;
+            const delayToUse = this.delay + timeOffset;
+            player.calibrateLag(delayToUse);
+            const dataArray = player.getDetailedFreqArray();
+            const timeArray = player.getDetailedTimeArray();
+            this.noteWriter.writeNotes(dataArray, timeArray, this.slides, this.notesPerSecond, timeOffset);
+        });
         
-        // const noteVals = this.noteWriter.writeNotes(
-        //     this.slides,
-        //     this.notesPerSecond,
-        //     this.addNote,
-        //     true,
-        //     masterData
-        // );
-
-        // if (this.masterInfo.sustainedNotes) {
-        //     this.noteWriter.writeTails(
-        //         noteVals,
-        //         this.slides,
-        //         this.makeTail
-        //     );
-        // }
-
-        // // for animated background
-        // const valsForBackground = [
-        //     val0,
-        //     val1,
-        //     val2,
-        //     val3
-        // ];
-        // this.backgroundAnimator.animateBackground(valsForBackground);
-        // FAITHFUL ABOVE
-            
-        
+        const dt = now - this.time;
+        this.time = now;
+        // console.log("dt: " + dt);
         moveNotes(
             this.masterInfo.notes,
             this.masterInfo.noteSpeed,

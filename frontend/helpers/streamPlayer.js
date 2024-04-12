@@ -18,8 +18,8 @@ export class StreamPlayer {
         this.blobs = [];
     }
 
-    calibrateLag() {
-        const delayInSeconds = 1.0 * this.songDelay / 1000;
+    calibrateLag(delay = this.songDelay) {
+        const delayInSeconds = 1.0 * delay / 1000;
         if (this.player && this.silentPlayer.currentTime > delayInSeconds) {
             this.silentPlayer.currentTime = this.player.currentTime + delayInSeconds;
         }
