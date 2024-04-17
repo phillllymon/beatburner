@@ -32,6 +32,13 @@
                 <br>
                 <button id="cancel-give-feedback">Cancel</button>
             </div>
+            <div id="loading" class="loading hidden">
+                <div id="loading-text">Keep your shirt on...</div>
+                <div id="loading-bar">
+                    <div id="loading-bar-inner"></div>
+                </div>
+            </div>
+            
             <div id="modal-background" class="hidden"></div>
             <div id="exp">
                 <div id="exp-slides-container">
@@ -132,26 +139,26 @@
             </div>
             <div id="source-menu" class="menu">
                 <div class="menu-title">
-                    Select music source
+                    Music source
                 </div>
                 <div id="source-demo-songs" class="menu-choice">
                     Demo songs
                 </div>
                 <div id="source-upload" class="menu-choice">
-                    Upload music
+                    Upload songs
                 </div>
                 <div id="source-radio" class="menu-choice">
-                    Live radio
+                    Radio
                 </div>
                 <div id="source-streaming" class="menu-choice">
                     Streaming
                 </div>
             </div>
             <div id="main-menu" class="menu">
-                <div id="show-source-menu" class="menu-button">&#8678; Source</div>
+                <div id="show-source-menu" class="primary-button">Change source</div>
                 <br>
                 <div id="choose-song-button" class="menu-button">
-                    Song:
+                    Select song
                     <select id="select-song" class="select">
                         <option selected="selected" value=""></option>
                         <option value="aintOverYou">Ain't Over You</option>
@@ -222,21 +229,13 @@
                     </select>  -->
                 </div>
                 <div id="upload-song-button" class="menu-button">
-                    Upload song:
+                    Upload song
                     <br>
                     <input class="upload" id="file-input" type="file" />
                     <br>
-                    <br>
-                    <div class="small-note">
-                        NOTE: m4a files work best and mp3
-                        <br>
-                        sometimes cause errors. You can
-                        <br>
-                        easily convert mp3 to m4a <a href="https://cloudconvert.com/mp3-to-m4a">here</a>
-                    </div>
                 </div>
                 <div id="select-station-button" class="menu-button">
-                    Station:
+                    Select station
                     <select id="select-station" class="select"></select>
                 </div>
                 <div id="show-stream-modal-button" class="menu-button">
@@ -494,7 +493,11 @@
                 </div>
                 <div id="rock-label"></div>
                 <div id="song-label" class="song-label"></div>
-                <div id="controls-left" class="side-controls">
+                <div id="controls-left">
+                    <div id="button-restart" class="control-button">
+                        <div id="restart-rectangle"></div>
+                        <div id="restart-arrow"></div>
+                    </div>
                     <div id="button-play" class="control-button">
                         <div id="play-arrow"></div>
                     </div>
@@ -502,27 +505,8 @@
                         <div class="pause-rectangle"></div>
                         <div class="pause-rectangle"></div>
                     </div>
-                    <div id="button-restart" class="control-button">
-                        <div id="restart-rectangle"></div>
-                        <div id="restart-arrow"></div>
-                    </div>
                 </div>
-                <div id="controls-right" class="side-controls">
-                    <div id="full-screen" class="control-button">
-                        <div id="full-button-container">
-                            <div id="full-top-left-quad" class="full-screen-quad"></div>
-                            <div id="full-top-right-quad" class="full-screen-quad"></div>
-                            <div id="full-bottom-left-quad" class="full-screen-quad"></div>
-                            <div id="full-bottom-right-quad" class="full-screen-quad"></div>
-                        </div>
-                        <div id="full-arrow-a" class="full-arrow"></div>
-                        <div id="full-arrow-b" class="full-arrow"></div>
-                    </div>
-                    <div id="show-menu" class="control-button">
-                        <div class="hamburger-rectangle"></div>
-                        <div class="hamburger-rectangle"></div>
-                        <div class="hamburger-rectangle"></div>
-                    </div>
+                <div id="controls-right">
                     <div id="show-settings" class="control-button">
                         <div id="teeth1" class="gear-teeth"></div>
                         <div id="teeth2" class="gear-teeth"></div>
@@ -531,6 +515,11 @@
                         <div id="teeth5" class="gear-teeth"></div>
                         <div id="outer-gear-circle"></div>
                         <div id="inner-gear-circle"></div>
+                    </div>
+                    <div id="show-menu" class="control-button">
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
                     </div>
                 </div>
                 

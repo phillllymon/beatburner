@@ -48,10 +48,10 @@ export function detectMobile() {
 }
 
 export function showSongControlButton(buttonId) {
-    ["button-play", "button-pause", "button-restart"].forEach((id) => {
-        addElementClass(id, "disabled-button");
+    ["button-play", "button-pause"].forEach((id) => {
+        addElementClass(id, "hidden");
     });
-    removeElementClass(buttonId, "disabled-button");
+    removeElementClass(buttonId, "hidden");
 }
 
 export function showModal(modal) {
@@ -63,6 +63,24 @@ export function hideModal(modal) {
     const modalId = `${modal}-modal`;
     document.getElementById(modalId).classList.add("hidden");
     document.getElementById("modal-background").classList.add("hidden");
+}
+
+export function setLoading(message = "loading...") {
+    document.getElementById("loading-text").innerHTML = message;
+    document.getElementById("loading").classList.remove("hidden");
+    setLoadingPercent(0);
+}
+
+export function stopLoading() {
+    document.getElementById("loading").classList.add("hidden");
+}
+
+export function setLoadingPercent(percent) {
+    document.getElementById("loading-bar-inner").style.width = `${percent}%`;
+}
+
+export function setLoadingMessage(message) {
+    document.getElementById("loading-text").innerHTML = message;
 }
 
 export function killAllNotes(masterInfo) {

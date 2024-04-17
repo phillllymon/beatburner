@@ -9,6 +9,7 @@ import { NoteWriter } from "./helpers/noteWriter.js";
 import { Player } from "./helpers/player.js";
 import { StationManager } from "./helpers/stationManager.js";
 import { StreamPlayer } from "./helpers/streamPlayer.js";
+import { FileConverter } from "./helpers/fileConverter.js";
 import {
     setElementText,
     removeElementClass,
@@ -16,6 +17,9 @@ import {
     showSongControlButton
 } from "./helpers/util.js";
 import { gameDataConst } from "./data.js";
+
+// import { StatusBar, Style } from '@capacitor/status-bar';
+// StatusBar.setStyle({ style: Style.Dark });
 
 const twangs = [
     new Audio("./effects/twang6.m4a"),
@@ -91,6 +95,7 @@ let autoCalibrating = true;
 let sustainedNotes = true;
 let animatedBackground = true;
 let streaming = false;
+let useShortSteps = true;
 
 let autoAdjustment = 0;
 // let autoAdjustment = -0.05 * travelLength;
@@ -140,6 +145,7 @@ const masterInfo = {
     targetBounds,
     targetTails,
     travelLength,
+    useShortSteps,
     vMin,
     waitingForKey
 };
@@ -193,11 +199,13 @@ const stationManager = new StationManager(
     masterInfo,
     streamPlayer
 );
+const fileConverter = new FileConverter();
 const controlsManager = new ControlsManager(
     masterInfo,
     player,
     streamPlayer,
-    animator
+    animator,
+    fileConverter
 );
 const menuManager = new MenuManager(
     masterInfo,
@@ -725,6 +733,9 @@ function setupMobile() {
             deactivateTapper("tapper-right");
         }
     });
+
+    // capacitor-specific hide status bar
+
 }
 
 

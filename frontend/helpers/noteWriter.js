@@ -190,27 +190,9 @@ export class NoteWriter {
     }
 
     writeNotes(dataArray, timeArray, slideIds, notesPerSecond, timeOffset = 0) {
-        // this.backgroundAnimator.animateBackground([
-        //     Math.pow(Math.max(...dataArray.slice(0, 512)), 0.5),
-        //     Math.pow(Math.max(...dataArray.slice(512, 1024)), 0.5),
-        //     Math.pow(Math.max(...dataArray.slice(1024, 1536)), 0.5),
-        //     Math.pow(Math.max(...dataArray.slice(1536, 2048)), 0.5)
-        // ]);
-
-        // collect
-        // for (let i = 0; i < dataArray.length; i++) {
-        //     const thisVal = dataArray[i];
-        //     const thisTimeVal = timeArray[i];
-        //     if (this.collectArrays[i] !== undefined) {
-        //         this.collectArrays[i].push(thisVal);
-        //         this.collectTimeArrays[i].push(thisTimeVal);
-        //     } else {
-        //         this.collectArrays.push([thisVal]);
-        //         this.collectTimeArrays.push([thisTimeVal]);
-        //     }
-        // }
         
-        // analyze
+        // console.log(dataArray.map(ele => ele));
+        
         const now = performance.now() - timeOffset;
         // if (now - this.lastTime > this.stepTime) {
             this.times.push(now);
@@ -220,28 +202,6 @@ export class NoteWriter {
             }
             
             this.lastTime += this.stepTime;
-
-            // let amt = 0;
-            // let arrToUse = this.collectArrays.map((subArr, i) => {
-            //     let sum = 0;
-            //     subArr.forEach((ele) => {
-            //         sum += ele;
-            //     });
-            //     this.collectArrays[i] = [];
-            //     const aveVal = 1.0 * sum / subArr.length;
-            //     amt += aveVal;
-            //     return aveVal;
-            // });
-
-            // let timeArrToUse = this.collectTimeArrays.map((subArr, i) => {
-            //     let sum = 0;
-            //     subArr.forEach((ele) => {
-            //         sum += ele;
-            //     });
-            //     this.collectTimeArrays[i] = [];
-            //     const aveVal = 1.0 * sum / subArr.length;
-            //     return aveVal;
-            // });
 
             
             let makeNote = false;

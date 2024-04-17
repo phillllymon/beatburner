@@ -4,7 +4,50 @@
     height: 100%;
     z-index: 5;
     background-color: black;
-    opacity: 0.5;
+    opacity: 0.8;
+}
+
+.loading {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background-color: black;
+    opacity: 0.8;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#loading-text {
+    /* position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); */
+    color: lightgray;
+    font-size: 3vh;
+    font-family:'Courier New', Courier, monospace;
+    z-index: 6;
+}
+
+#loading-bar {
+    width: 40vh;
+    max-width: 80vw;
+    height: 2vh;
+    border: 0.25vh solid lightgray;
+    margin-top: 1vh;
+    position: relative;
+    overflow: hidden;
+}
+
+#loading-bar-inner {
+    position: absolute;
+    left: 0vh;
+    top: 0vh;
+    height: 100%;
+    background-color: rgb(255, 231, 188);
+    width: 2%;
 }
 
 #settings-modal {
@@ -497,9 +540,7 @@
     border: 2px solid darkorange;
 }
 
-.hidden {
-    display: none;
-}
+
 
 .noter {
     position: fixed;

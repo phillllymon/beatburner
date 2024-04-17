@@ -97,7 +97,15 @@
         -1.5vh 0vh 1.5vh rgb(144, 0, 228);
 }
 
-
+.hidden {
+    display: none;
+    height: 0px;
+    width: 0px;
+    margin: 0px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: none;
+}
 
 
 

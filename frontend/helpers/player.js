@@ -7,6 +7,7 @@ export class Player {
 
         this.playing1 = false;
         this.playing2 = false;
+        this.arrayPlay = false;
 
         // this.song1.oncanplaythrough = () => {};
 
@@ -22,25 +23,13 @@ export class Player {
         this.song2.addEventListener("ended", () => {
             this.playing2 = false;
             this.timeToStart2 = this.delay;
+            this.restart();
             onEnd();
         });
         
         this.waiting = false;
         this.countdownCanceled = false;
 
-        // FAITHFUL
-        // const audioCtx = new AudioContext();
-
-        // const audioSource = audioCtx.createMediaElementSource(this.song1);
-        // this.analyser = audioCtx.createAnalyser();
-        // audioSource.connect(this.analyser);
-        // audioCtx.setSinkId({ type: "none" });
-        // this.analyser.connect(audioCtx.destination);
-        // this.analyser.fftSize = fftSize;
-        // this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-        // END FAITHFUL
-
-        // DETAILED EXPERIMENT
         const detailedAudioCtx = new AudioContext();
 
         const detailedAudioSource = detailedAudioCtx.createMediaElementSource(this.song1);
@@ -51,7 +40,18 @@ export class Player {
         // this.detailedAnalyser.smoothingTimeConstant = 0;
         this.detailedAnalyser.fftSize = 4096;
         this.detailedDataArray = new Uint8Array(this.detailedAnalyser.frequencyBinCount);
-        // END DETAILED EXPERIMENT
+
+        // mp3 experiment
+        // const detailedAudioSource = detailedAudioCtx.createMediaElementSource(this.song1);
+        // const dest = detailedAudioCtx.createMediaStreamDestination();
+        // this.detailedAnalyser = detailedAudioCtx.createAnalyser();
+        // detailedAudioSource.connect(this.detailedAnalyser);
+        // detailedAudioCtx.setSinkId({ type: "none" });
+        // this.detailedAnalyser.connect(detailedAudioCtx.destination);
+        // // this.detailedAnalyser.smoothingTimeConstant = 0;
+        // this.detailedAnalyser.fftSize = 4096;
+        // this.detailedDataArray = new Uint8Array(this.detailedAnalyser.frequencyBinCount);
+        // end experiment
 
         // For delayed frequency array requests
         this.freqArrays = [];
@@ -101,7 +101,11 @@ export class Player {
             this.countdown();
         }
         this.masterInfo.songAtStart = false;
-        this.song1.play();
+        if (this.arrayPlay) {
+            this.songPiece.audio.play();
+        } else {
+            this.song1.play();
+        }
         this.playing1 = true;
         this.timeStarted = performance.now();
         if (this.timeToStart2) {
@@ -123,11 +127,19 @@ export class Player {
         if (this.playing2) {
             this.song2.pause();
             this.playing2 = false;
-            this.song1.pause();  // no harm if it's already ended
+            if (this.arrayPlay) {
+                this.songPiece.audio.pause();
+            } else {
+                this.song1.pause();  // no harm if it's already ended
+            }
             this.playing1 = false;
         } else {
             if (this.song1.playing) {
-                this.song1.pause();
+                if (this.arrayPlay) {
+                    this.songPiece.audio.pause();
+                } else {
+                    this.song1.pause();
+                }
                 this.song1.playing = false;
                 clearTimeout(this.song2Timeout);
                 this.timeToStart2 = performance.now() - timeStarted;
@@ -137,41 +149,116 @@ export class Player {
     }
 
     restart() {
-        this.song1.pause();
-        this.song2.pause();
-        this.playing1 = false;
-        this.playing2 = false;
-        if (this.waiting) {
-            clearTimeout(this.song2Timeout);
-            this.waiting = false;
+        if (this.arrayPlay) {
+            this.songPiece.audio.pause();
+            this.arrayPos = 0;
+            this.songPiece = this.piecesArray[this.arrayPos];
+            this.song2.pause();
+            this.playing1 = false;
+            this.playing2 = false;
+            if (this.waiting) {
+                clearTimeout(this.song2Timeout);
+                this.waiting = false;
+            }
+            this.timeToStart2 = this.delay;
+            this.song2.currentTime = 0;
+            this.masterInfo.songAtStart = true;
+            this.countdownCanceled = true;
+        } else {
+            this.song1.pause();
+            this.song2.pause();
+            this.playing1 = false;
+            this.playing2 = false;
+            if (this.waiting) {
+                clearTimeout(this.song2Timeout);
+                this.waiting = false;
+            }
+            this.timeToStart2 = this.delay;
+            this.song1.currentTime = 0;
+            this.song2.currentTime = 0;
+            this.masterInfo.songAtStart = true;
+            this.countdownCanceled = true;
         }
-        this.timeToStart2 = this.delay;
-        this.song1.currentTime = 0;
-        this.song2.currentTime = 0;
-        this.masterInfo.songAtStart = true;
-        this.countdownCanceled = true;
     }
 
-    setSource(songData) {
-        this.restart();
-        this.song1.setAttribute("src", songData);
-        this.song2.setAttribute("src", songData);
-        this.masterInfo.songAtStart = true;
+    setSource(songData, arrayPlay = false, arrayData = false) {
+        if (arrayPlay) {
+            console.log("SET SOURCE");
+            if (arrayData) {
+                this.arrayPlay = true;
+                this.arrayPos = 0; // current piece in the array
 
-        
+                let arrLength = 0;
+                arrayData.forEach((piece) => {
+                    if (piece.startTime !== null) {
+                        arrLength += 1;
+                    }
+                });
 
+                this.piecesArray = arrayData.slice(0, arrLength);
+                this.songPiece = this.piecesArray[this.arrayPos];
+                this.piecesArray.forEach((pieceObj) => {
+                    pieceObj.audio.addEventListener("ended", () => {
+                        this.startNextPiece();
+                    });
+                });
+                this.song2.setAttribute("src", songData);
+                if (arrayData.length > 0) {
+                    this.restart();
+                    this.masterInfo.songAtStart = true;
+                }
+            } else {
+                if (this.piecesArray) {
+                    this.piecesArray.forEach((piece) => {
+                        if (piece.ctx) {
+                            piece.ctx.close();
+                        }
+                    });
+                }
+                this.piecesArray = null;
+                this.songPiece = null;
+            }
+        } else {
+            this.arrayPlay = false;
+            this.restart();
+            this.song1.setAttribute("src", songData);
+            this.song2.setAttribute("src", songData);
+            this.masterInfo.songAtStart = true;
+        }
+    }
+
+    startNextPiece() {
+        this.arrayPos += 1;
+        if (this.piecesArray[this.arrayPos]) {
+            this.songPiece = this.piecesArray[this.arrayPos];
+            this.songPiece.audio.play();
+        } else {
+            // Do we have to do anything here?
+        }
     }
 
     // for DETAILED EXPERIMENT
     getDetailedFreqArray() {
-        this.detailedAnalyser.smoothingTimeConstant = 0.85;
-        this.detailedAnalyser.getByteFrequencyData(this.detailedDataArray);
-        return this.detailedDataArray.map(ele => ele);
+        if (this.arrayPlay) {
+            this.songPiece.analyser.smoothingTimeConstant = 0.85;
+            this.songPiece.analyser.getByteFrequencyData(this.songPiece.array);
+            return this.songPiece.array.map(ele => ele);
+        } else {
+            this.detailedAnalyser.smoothingTimeConstant = 0.85;
+            this.detailedAnalyser.getByteFrequencyData(this.detailedDataArray);
+            return this.detailedDataArray.map(ele => ele);
+        }
     }
     getDetailedTimeArray() {
-        this.detailedAnalyser.smoothingTimeConstant = 0.0;
-        this.detailedAnalyser.getByteTimeDomainData(this.detailedDataArray);
-        return this.detailedDataArray.map(ele => ele);
+        if (this.arrayPlay) {
+            this.songPiece.analyser.smoothingTimeConstant = 0.0;
+            this.songPiece.analyser.getByteTimeDomainData(this.songPiece.array);
+            return this.songPiece.array.map(ele => ele);
+        } else {
+            this.detailedAnalyser.smoothingTimeConstant = 0.0;
+            this.detailedAnalyser.getByteTimeDomainData(this.detailedDataArray);
+            return this.detailedDataArray.map(ele => ele);
+        }
     }
     // END DETAILED EXPERIMENT
 
@@ -211,8 +298,14 @@ export class Player {
 
     calibrateLag(delay = this.delay) {
         const delayInSeconds = 1.0 * delay / 1000;
-        if (this.song1.currentTime > delayInSeconds) {  // just check to make sure we're playing song2 yet
-            this.song1.currentTime = this.song2.currentTime + delayInSeconds;
+        if (this.arrayPlay) {
+            if (this.playing2 && this.songPiece.audio.currentTime < 0.5 * this.songPiece.audio.duration) {
+                this.songPiece.audio.currentTime = this.song2.currentTime + delayInSeconds - this.songPiece.startTime;
+            }
+        } else {
+            if (this.song1.currentTime > delayInSeconds) {  // just check to make sure we're playing song2 yet
+                this.song1.currentTime = this.song2.currentTime + delayInSeconds;
+            }
         }
     }
 }

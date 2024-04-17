@@ -1,19 +1,3 @@
-// import { aintOverYou } from "../songStrings/aintOverYou.js";
-// import { burningWish } from "../songStrings/burningWish.js";
-// import { cricket } from "../songStrings/cricket.js";
-// import { disfigure } from "../songStrings/disfigure.js";
-// import { findAWay } from "../songStrings/findAWay.js";
-// import { goodLook } from "../songStrings/goodLook.js";
-// import { keepYou } from "../songStrings/keepYou.js";
-// import { maniaMaster } from "../songStrings/maniaMaster.js";
-// import { myHeart } from "../songStrings/myHeart.js";
-// import { onAndOn } from "../songStrings/onAndOn.js";
-// import { romeoAndJuliet } from "../songStrings/romeoAndJuliet.js";
-// import { skyHigh } from "../songStrings/skyHigh.js";
-// import { stickAroundYou } from "../songStrings/stickAroundYou.js";
-// import { takeMe } from "../songStrings/takeMe.js";
-// import { unbreakable } from "../songStrings/unbreakable.js";
-
 import {
     setButtonClick,
     setElementText,
@@ -23,18 +7,19 @@ import {
     showSongControlButton,
     showModal,
     hideModal,
+    setLoading,
+    stopLoading,
     killAllNotes
 } from "./util.js";
 import { gameDataConst } from "../data.js";
 
 export class ControlsManager {
-    constructor(masterInfo, player, streamPlayer, animator, radioManager) {
+    constructor(masterInfo, player, streamPlayer, animator, fileConverter) {
         this.player = player;
         this.animator = animator;
-        this.radioManager = radioManager;
+        this.fileConverter = fileConverter;
         this.masterInfo = masterInfo;
         this.streamPlayer = streamPlayer;
-        this.activateFullscreen();
         this.activateSettings();
         this.activateLevelSelector();
         this.activateSlidesSelector((newVal) => {this.animator.setNumSlides(newVal)});
@@ -129,24 +114,52 @@ export class ControlsManager {
         document.getElementById("file-input").addEventListener("change", (e) => {
             this.player.pause();
             this.animator.stopAnimation();
-        
+
+
+            setLoading();
+            document.getElementById("close-and-play").classList.add("hidden");
+            // document.getElementById("close-and-play-ghost").classList.remove("hidden");
+
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (readerE) => {
                 const str = btoa(readerE.target.result);
-
-                // console.log(str);
-
-                const newSongData = `data:audio/x-wav;base64,${str}`;
+                const fileNameArr = e.target.files[0].name.split("");
                 
-                this.animator.stopAnimation();
-                this.player.pause();
-                this.player.setSource(newSongData);
-                showSongControlButton("button-play");
-                killAllNotes(this.masterInfo);
-                
-                this.masterInfo.currentSong = e.target.files[0].name;
-                document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+                if (fileNameArr.slice(fileNameArr.length - 4, fileNameArr.length).join("") === ".m4a") {
+                    const newSongData = `data:audio/x-wav;base64,${str}`;
+                    this.animator.stopAnimation();
+                    this.player.pause();
+                    this.player.setSource(newSongData);
+                    showSongControlButton("button-play");
+                    killAllNotes(this.masterInfo);
+                    this.masterInfo.currentSong = e.target.files[0].name;
+                    document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+                    stopLoading();
+                    document.getElementById("close-and-play").classList.remove("hidden");
+                    // document.getElementById("close-and-play-ghost").classList.add("hidden");
+                } else {
+                    this.player.setSource(`data:audio/x-wav;base64,${str}`, true, false); // make player forget previous song
+                    this.fileConverter.convertToM4a(str).then((piecesArr) => {
+                        const newSongData = `data:audio/x-wav;base64,${str}`;
+                        
+                        this.animator.stopAnimation();
+                        this.player.pause();
+                        // this.player.setSource(newSongData);
+                        this.player.setSource(newSongData, true, piecesArr);
+    
+                        showSongControlButton("button-play");
+                        killAllNotes(this.masterInfo);
+                        
+                        this.masterInfo.currentSong = e.target.files[0].name;
+                        document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+    
+                        stopLoading();
+                        document.getElementById("close-and-play").classList.remove("hidden");
+                        // document.getElementById("close-and-play-ghost").classList.add("hidden");
+                        this.masterInfo.audioLoaded = true;
+                    });
+                }
             };
             reader.readAsBinaryString(file);
         });
@@ -393,26 +406,6 @@ export class ControlsManager {
                 setElementText("animated", "animated background ON");
                 setElementText("toggle-animate", "Turn off animated background");
             }
-        });
-    }
-
-    activateFullscreen() {
-        setButtonClick("full-screen", () => {
-            this.toggleFullscreen();
-        });
-        document.addEventListener("fullscreenchange", () => {
-            if (document.isFullscreen) {
-                document.isFullscreen = false;
-                ["full-top-left-quad", "full-top-right-quad", "full-bottom-left-quad", "full-bottom-right-quad"].forEach((eleId) => {
-                    document.getElementById(eleId).classList.remove("turned-inward");
-                });
-            } else {
-                document.isFullscreen = true;
-                ["full-top-left-quad", "full-top-right-quad", "full-bottom-left-quad", "full-bottom-right-quad"].forEach((eleId) => {
-                    document.getElementById(eleId).classList.add("turned-inward");
-                });
-            }
-            this.recalculateLengths();
         });
     }
 

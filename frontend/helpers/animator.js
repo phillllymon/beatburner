@@ -110,7 +110,7 @@ export class Animator {
         const now = performance.now();
         const timesToUse = [];
 
-        if (now - this.lastTime > 35) {
+        if (now - this.lastTime > 35 || !this.masterInfo.useShortSteps) {
             timesToUse.push(now);
             this.lastTime = now;
         } else {
