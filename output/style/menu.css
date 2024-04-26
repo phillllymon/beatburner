@@ -1,4 +1,4 @@
-.menu {
+/* .menu {
     position: absolute;
     left: 50%;
     top: 40%;
@@ -16,26 +16,62 @@
     border-radius: 0.5vmin;
     background-color: rgba(200, 200, 200, 0.95);
     box-sizing: border-box;
-    z-index: 4;
+    z-index: 5;
     overflow: auto;
+} */
 
-    /* opacity: 0; */
+.menu {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 85vh;
+    max-width: 98vw;
+    min-width: 30vh;
+    font-size: 2.75vh;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    /* color: rgb(0, 85, 0); */
+    box-shadow: 0px 0px 5px rgb(41, 177, 255);
+    z-index: 1;
+    padding: 2vh;
+    border: 0.75vh solid rgb(33, 33, 255);
+    border-radius: 0.5vmin;
+    background-color: rgb(188, 215, 255);
+    box-sizing: border-box;
+    z-index: 5;
+    overflow: auto;
+}
+
+.menu-title {
+    cursor: default;
+    font-size: 3vh;
+    color: rgb(33, 33, 255);
+    margin: 0.5vh;
 }
 
 .primary-button {
-    background-color: gray;
+    background-color: rgb(33, 33, 255);
     cursor: pointer;
-    color: lightgray;
+    color: rgb(210, 228, 255);
     padding: 1vh;
-    font-size: 3vh;
+    font-size: 2.5vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
+
+.left-arrow {
+    width: 0vh;
+    height: 0vh;
+    border-right: 2.5vh solid rgb(210, 228, 255);
+    border-top: 1.25vh solid transparent;
+    border-bottom: 1.25vh solid transparent;
+    margin-right: 1vh;
+}
+
 .primary-button-ghost {
-    background-color: gray;
-    color: lightgray;
-    padding: 1vh;
-    font-size: 3vh;
     font-style: italic;
-    opacity: 0.5;
+    opacity: 0.3;
 }
 
 .upload {
@@ -49,54 +85,34 @@
 
 .menu-choice {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    color: gray;
-    margin: 2vh;
+    color: rgb(215, 230, 252);
+    width: 100%;
+    background-color: rgb(33, 33, 255);
+    border-radius: 3px;
+    margin-top: 1vh;
+    padding: 0.75vh;
     cursor: pointer;
     user-select: none;
     box-sizing: border-box;
-}
-
-.menu-choice:hover {
-    background-color: gray;
-    color: lightgray;
-}
-
-.menu-choice-selected {
-    background-color: gray;
-    cursor: default;
-    color: lightgray;
-    padding-bottom: 1vh;
+    box-shadow: 0px 0px 5px rgb(41, 177, 255);
 }
 
 .level {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    color: gray;
+    color: rgb(116, 116, 255);
     margin: 5px;
     cursor: pointer;
     user-select: none;
     box-sizing: border-box;
 }
-
 .level-selected {
-    background-color: gray;
+    background-color: rgb(33, 33, 255);
     border-radius: 3px;
     cursor: default;
-    color: lightgray;
+    color: rgb(215, 230, 252);
     padding-bottom: 2px;
 }
 
-.menu-button {
-    cursor: pointer;
-    width: 100%;
-    font-size: 3vh;
-    color: gray;
-}
-.menu-title {
-    cursor: default;
-    font-size: 3vh;
-    color: rgb(105, 105, 105);
-    margin: 0.5vh;
-}
 
 .control-button {
     position: relative;
@@ -158,13 +174,14 @@
 }
 
 #feedback {
-    width: 60vmin;
+    /* width: 60vmin; */
+    z-index: 1000;
 }
 #feedback-title {
     cursor: default;
     font-size: 3vh;
     color: rgb(105, 105, 105);
-    margin: 0.5vh;
+    margin-bottom: 0.5vh;
 }
 
 .feedback-item {
@@ -201,15 +218,4 @@
     height: 1vh;
     width: 100%;
     background-color: rgb(255, 231, 188);
-}
-
-.left-arrow {
-    width: 0vh;
-    height: 0vh;
-    border-right: 2vh solid gray;
-    border-top: 1.5vh solid transparent;
-    border-bottom: 1.5vh solid transparent;
-    position: absolute;
-    left: 0vh;
-    top: 1.25vh;
 }

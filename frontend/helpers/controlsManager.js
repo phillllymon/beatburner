@@ -9,9 +9,15 @@ import {
     hideModal,
     setLoading,
     stopLoading,
-    killAllNotes
+    killAllNotes,
+    getUserProfile,
+    setUserProfile
 } from "./util.js";
-import { gameDataConst } from "../data.js";
+import {
+    gameDataConst,
+    songStages,
+    songData
+} from "../data.js";
 
 export class ControlsManager {
     constructor(masterInfo, player, streamPlayer, animator, fileConverter) {
@@ -20,96 +26,170 @@ export class ControlsManager {
         this.fileConverter = fileConverter;
         this.masterInfo = masterInfo;
         this.streamPlayer = streamPlayer;
+        this.activateSongSelect();
         this.activateSettings();
         this.activateLevelSelector();
         this.activateSlidesSelector((newVal) => {this.animator.setNumSlides(newVal)});
         this.activateSongControls();
-        this.activateSongSelection();
-        this.activateCalibration();
+        this.activateSongUpload();
     }
 
-    activateCalibration() {
-        const calibrateButton = document.getElementById("auto-calibrate");
-        setButtonClick("auto-calibrate", () => {
-            if (autoCalibrating) {
-                autoCalibrating = false;
-                autoAdjustment = 0;
-                document.getElementById("autocalibration").innerText = "autocalibration OFF";
-                calibrateButton.innerText = "Turn on autocalibration";
-            } else {
-                autoCalibrating = true;
-                autoAdjustment = 0;
-                document.getElementById("autocalibration").innerText = "autocalibration ON";
-                calibrateButton.innerText = "Turn off autocalibration";
+    activateSongSelect(chooseDefault = true) {
+        document.getElementById("stages").innerText = "";
+        const level = this.animator.notesPerSecond;
+        const slides = this.animator.slides.length;
+        const levelNames = {
+            1: "practice",
+            2: "easy",
+            3: "medium",
+            4: "hard",
+            5: "crazy"
+        }
+        document.getElementById("level-sub-title").innerText = `${levelNames[level]} / ${slides} slides`;
+        const levelCode = `l${level}s${slides}`;
+        getUserProfile().then((profile) => {
+            const scores = profile.progress[levelCode];
+            const songCodes = Object.keys(scores);
+            let stageActive = true;
+            let defaultSong = null;
+            songStages.forEach((stage, i) => {
+                const stageElement = document.createElement("div");
+                stageElement.classList.add("stage");
+                const titleElement = document.createElement("div");
+                titleElement.classList.add("stage-title");
+                titleElement.innerText = `Stage ${i + 1}`;
+                stageElement.appendChild(titleElement);
+                document.getElementById("stages").appendChild(stageElement);
+                let allPassed = true;
+                stage.forEach((songCode) => {
+                    const songContainer = document.createElement("div");
+                    songContainer.classList.add("song-title-container");
+                    songContainer.id = songCode;
+                    const markEle = document.createElement("div");
+                    markEle.classList.add("song-mark");
+                    const songTitle = document.createElement("div");
+                    songTitle.classList.add("song-title");
+                    const songScore = document.createElement("div");
+                    songScore.classList.add("song-score");
+                    songTitle.innerText = songData[songCode];
+                    if (songCodes.includes(songCode)) {
+                        songScore.innerText = `${scores[songCode]}%`;
+                        if (scores[songCode] < 90) {
+                            if (!defaultSong) {
+                                defaultSong = songCode;
+                            }
+                            songScore.classList.add("song-score-fail");
+                            const xA = document.createElement("div");
+                            xA.classList.add("red-x-a");
+                            const xB = document.createElement("div");
+                            xB.classList.add("red-x-b");
+                            markEle.appendChild(xA);
+                            markEle.appendChild(xB);
+                            allPassed = false;
+                        } else {
+                            const checkMark = document.createElement("div");
+                            checkMark.classList.add("green-check");
+                            markEle.appendChild(checkMark);
+                        }
+                    } else {
+                        allPassed = false;
+                        if (!defaultSong) {
+                            defaultSong = songCode;
+                        }
+                    }
+                    songContainer.appendChild(markEle);
+                    songContainer.appendChild(songTitle);
+                    songContainer.appendChild(songScore);
+                    stageElement.appendChild(songContainer);
+                    
+                    if (stageActive) {
+                        songContainer.addEventListener("click", () => {
+                        // setButtonClick(songCode, () => {
+                            this.masterInfo.audioLoaded = false;
+                            document.getElementById("close-and-play").classList.add("hidden");
+                            document.getElementById("close-and-play-ghost").classList.remove("hidden");
+                            this.player.setPlayerReady(() => {
+                                document.getElementById("close-and-play").classList.remove("hidden");
+                                document.getElementById("close-and-play-ghost").classList.add("hidden");
+                                this.masterInfo.audioLoaded = true;
+                                this.player.setPlayerReady(() => {});
+                            });
+                            document.getElementById("choose-song-menu").classList.add("hidden");
+                            document.getElementById("main-menu").classList.remove("hidden");
+                            document.getElementById("song-to-play").innerText = songData[songCode];
+    
+                            // fetch(`./songStrings/ann.txt`).then((res) => {
+                            fetch(`./songStrings/${songCode}.txt`).then((res) => {
+                                res.text().then((str) => {
+                                    this.masterInfo.currentSong = songData[songCode];
+                                    this.masterInfo.songCode = songCode;
+                                    this.animator.stopAnimation();
+                                    this.player.pause();
+                                    this.player.setSource(`data:audio/x-wav;base64,${str}`);
+                                    showSongControlButton("button-play");
+                                    document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+                                    killAllNotes(this.masterInfo);
+    
+                                });
+                            });
+                        });
+                    }
+                    
+                });
+                if (!stageActive) {
+                    stageElement.classList.add("stage-locked");
+                }
+                if (!allPassed) {
+                    stageActive = false;
+                }
+            });
+            this.masterInfo.defaultSong = defaultSong;
+            this.masterInfo.songCode = defaultSong;
+            if (chooseDefault) {
+                document.getElementById("song-to-play").innerText = songData[defaultSong];
             }
         });
     }
 
-    activateSongSelection() {
-        const songSelector = document.getElementById("select-song");
-
-        const songTitles = {
-            "aintOverYou": "Ain't Over You",
-            "bigWhiteLimousine": "Big White Limousine",
-            "burningWish": "Burning Wish",
-            "cricket": "Cricket",
-            "cosmicCaravan": "Cosmic Caravan",
-            "disfigure": "Disfigure",
-            "findAWay": "Find a Way",
-            "godOrDevil": "God or Devil",
-            "goodLook": "Good Look",
-            "iNeedYourLove": "I Need Your Love",
-            "inTheGlowOfTheMoon": "In the Glow of the Moon",
-            "keepYou": "Keep You",
-            "littleGirl": "Little Girl",
-            "maniaMaster": "Mania Master",
-            "myHeart": "My Heart",
-            "onAndOn": "On And On",
-            "oneSweetDream": "One Sweet Dream",
-            "romeoAndJuliet": "Romeo and Juliet",
-            "secretToSell": "Secret to Sell",
-            "skyHigh": "Sky High",
-            "stickAroundYou": "Stick Around You",
-            "takeMe": "Take Me",
-            "ufo": "UFO",
-            "unbreakable": "Unbreakable"
-        };
+    activateSongUpload() {
         
-        songSelector.addEventListener("change", (e) => {
+        
+        // songSelector.addEventListener("change", (e) => {
 
-            this.masterInfo.audioLoaded = false;
-            document.getElementById("close-and-play").classList.add("hidden");
-            document.getElementById("close-and-play-ghost").classList.remove("hidden");
-            this.player.setPlayerReady(() => {
-                document.getElementById("close-and-play").classList.remove("hidden");
-                document.getElementById("close-and-play-ghost").classList.add("hidden");
-                this.masterInfo.audioLoaded = true;
-                this.player.setPlayerReady(() => {});
-            });
+        //     this.masterInfo.audioLoaded = false;
+        //     document.getElementById("close-and-play").classList.add("hidden");
+        //     document.getElementById("close-and-play-ghost").classList.remove("hidden");
+        //     this.player.setPlayerReady(() => {
+        //         document.getElementById("close-and-play").classList.remove("hidden");
+        //         document.getElementById("close-and-play-ghost").classList.add("hidden");
+        //         this.masterInfo.audioLoaded = true;
+        //         this.player.setPlayerReady(() => {});
+        //     });
 
-            fetch(`./songStrings/${e.target.value}.txt`).then((res) => {
-                res.text().then((str) => {
-                    this.masterInfo.currentSong = songTitles[e.target.value];
-                    this.animator.stopAnimation();
-                    this.player.pause();
-                    this.player.setSource(`data:audio/x-wav;base64,${str}`);
-                    showSongControlButton("button-play");
-                    document.getElementById("song-label").innerText = this.masterInfo.currentSong;
-                    killAllNotes(this.masterInfo);
+        //     // fetch(`./songStrings/ann.txt`).then((res) => {
+        //     fetch(`./songStrings/${e.target.value}.txt`).then((res) => {
+        //         res.text().then((str) => {
+        //             this.masterInfo.currentSong = songTitles[e.target.value];
+        //             this.animator.stopAnimation();
+        //             this.player.pause();
+        //             this.player.setSource(`data:audio/x-wav;base64,${str}`);
+        //             showSongControlButton("button-play");
+        //             document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+        //             killAllNotes(this.masterInfo);
 
-                });
-            });
+        //         });
+        //     });
             
-            // const newValue = songSelector.value;
-            // this.masterInfo.currentSong = newValue;
-            // this.animator.stopAnimation();
-            // this.player.pause();
-            // this.player.setSource(`./songs/${this.masterInfo.currentSong}.m4a`);
-            // showSongControlButton("button-play");
-            // document.getElementById("song-label").innerText = newValue;
-            // killAllNotes(this.masterInfo);
+        //     // const newValue = songSelector.value;
+        //     // this.masterInfo.currentSong = newValue;
+        //     // this.animator.stopAnimation();
+        //     // this.player.pause();
+        //     // this.player.setSource(`./songs/${this.masterInfo.currentSong}.m4a`);
+        //     // showSongControlButton("button-play");
+        //     // document.getElementById("song-label").innerText = newValue;
+        //     // killAllNotes(this.masterInfo);
 
-        });
+        // });
         
         document.getElementById("file-input").addEventListener("change", (e) => {
             this.player.pause();
@@ -125,7 +205,10 @@ export class ControlsManager {
             reader.onload = (readerE) => {
                 const str = btoa(readerE.target.result);
                 const fileNameArr = e.target.files[0].name.split("");
+
+                // console.log(str);
                 
+                // if (true) {
                 if (fileNameArr.slice(fileNameArr.length - 4, fileNameArr.length).join("") === ".m4a") {
                     const newSongData = `data:audio/x-wav;base64,${str}`;
                     this.animator.stopAnimation();
@@ -228,6 +311,7 @@ export class ControlsManager {
                 this.deselectSlides();
                 this.selectSlides(slideSet[1], setNumSlides);
                 slidesButton.classList.add("level-selected");
+                this.activateSongSelect(false);
             })
         });
         document.getElementById("slides-3").classList.add("level-selected");
@@ -350,6 +434,7 @@ export class ControlsManager {
                 });
                 this.animator.setNotesPerSecond(levelSet[1]);
                 addElementClass(levelSet[0], "level-selected");
+                this.activateSongSelect(false);
             });
         });
         addElementClass("level-2", "level-selected");
@@ -360,7 +445,9 @@ export class ControlsManager {
             showModal("settings");
         });
         setButtonClick("save-settings", () => {
-            hideModal("settings");
+            if (!this.masterInfo.waitingForKey) {
+                hideModal("settings");
+            }
         });
         const keyInfo = [
             ["change-left", "left-key"],
@@ -372,40 +459,68 @@ export class ControlsManager {
             setElementText(keyInfo[i][1], this.masterInfo.tapperKeys[i]);
             setButtonClick(keyInfo[i][0], () => {
                 setElementText(keyInfo[i][1], "-");
-                document.getElementById("save-settings").disabled = true;
+                document.getElementById("change-key-message").innerText = "press a key";
+                document.getElementById("save-settings").style.opacity = "0.5";
                 this.masterInfo.waitingForKey = ([keyInfo[i][1], i]);
             });
         }
-        setButtonClick("switch-algorithm", () => {
-            if (this.masterInfo.algorithm === "A") {
-                this.masterInfo.algorithm = "B";
-                setElementText("algorithm", "using algorithm B");
+        [
+            ["toggle-background", "animatedBackground", "background-title"],
+            ["toggle-sustained", "sustainedNotes", "sustained-title"],
+            ["toggle-calibration", "autoCalibrating", "calibration-title"]
+        ].forEach((settingSet) => {
+            setButtonClick(settingSet[0], () => {
+                if (this.masterInfo[settingSet[1]]) {
+                    this.masterInfo[settingSet[1]] = false;
+                    document.getElementById(`${settingSet[0]}-ball`).classList.add("toggle-ball-off");
+                    document.getElementById(settingSet[2]).style.opacity = "0.5";
+                    if (settingSet[0] === "toggle-calibration") {
+                        this.masterInfo.autoAdjustment = 0;
+                    }
+                } else {
+                    this.masterInfo[settingSet[1]] = true;
+                    document.getElementById(`${settingSet[0]}-ball`).classList.remove("toggle-ball-off");
+                    document.getElementById(settingSet[2]).style.opacity = "1";
+                }
+                getUserProfile().then((profile) => {
+                    profile[settingSet[1]] = this.masterInfo[settingSet[1]];
+                    setUserProfile(profile);
+                });
+            });
+        });
+        const resetButton = document.getElementById("reset-button");
+        const resetCheckbox = document.getElementById("reset-checkbox");
+        resetCheckbox.addEventListener("change", () => {
+            if (resetCheckbox.checked) {
+                resetButton.disabled = false;
             } else {
-                this.masterInfo.algorithm = "A";
-                setElementText("algorithm", "using algorithm A");
+                resetButton.disabled = true;
             }
         });
-        setButtonClick("sustained-toggle", () => {
-            if (this.masterInfo.sustainedNotes) {
-                this.masterInfo.sustainedNotes = false;
-                setElementText("sustained", "sustained notes OFF");
-                setElementText("sustained-toggle", "Turn on sustained notes");
-            } else {
-                this.masterInfo.sustainedNotes = true;
-                setElementText("sustained", "sustained notes ON");
-                setElementText("sustained-toggle", "Turn off sustained notes");
-            }
-        });
-        setButtonClick("toggle-animate", () => {
-            if (this.masterInfo.animatedBackground) {
-                this.masterInfo.animatedBackground = false;
-                setElementText("animated", "animated background OFF");
-                setElementText("toggle-animate", "Turn on animated background");
-            } else {
-                this.masterInfo.animatedBackground = true;
-                setElementText("animated", "animated background ON");
-                setElementText("toggle-animate", "Turn off animated background");
-            }
+        resetButton.addEventListener("click", () => {
+            getUserProfile().then((profile) => {
+                profile.progress = {
+                    l1s2: {},
+                    l1s3: {},
+                    l1s4: {},
+                    l2s2: {},
+                    l2s3: {},
+                    l2s4: {},
+                    l3s2: {},
+                    l3s3: {},
+                    l3s4: {},
+                    l4s2: {},
+                    l4s3: {},
+                    l4s4: {},
+                    l5s2: {},
+                    l5s3: {},
+                    l5s4: {}
+                };
+                setUserProfile(profile);
+                resetButton.disabled = "disabled";
+                resetCheckbox.checked = false;
+                this.activateSongSelect();
+            });
         });
     }
 

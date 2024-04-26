@@ -92,86 +92,6 @@ export class FileConverter {
 
     // returns promise that resolves to info as string
     convertToM4a(str) {
-
-        // reuse experiment
-        // return new Promise((resolve) => {
-        //     const songData = `data:audio/x-wav;base64,${str}`;
-        //     this.player.setAttribute("src", songData);
-        //     let canPlayThrough = false;
-        //     this.player.oncanplaythrough = () => {
-        //         if (!canPlayThrough) {
-        //             canPlayThrough = true;
-        //             const totalSeconds = this.player.duration;
-        //             const pieceSize = Math.ceil(totalSeconds / 30);
-        //             this.startBarAnimate(100, 1000 + (1000 * pieceSize));
-        //             const numPieces = Math.ceil(totalSeconds / pieceSize);
-        //             this.pieces.forEach((piece) => {
-        //                 piece.startTime = null;
-        //             });
-        //             let piecesMade = 0;
-        //             for (let i = 0; i < numPieces; i++) {
-        //                 const startTime = i * pieceSize;
-        //                 this.piecePlayers[i].setAttribute("src", songData);
-        //                 let piecePlayThrough = false;
-        //                 this.piecePlayers[i].oncanplaythrough = () => {
-        //                     if (!piecePlayThrough) {
-        //                         piecePlayThrough = true;
-        //                         this.piecePlayers[i].currentTime = startTime;
-        //                         const chunks = [];
-                                
-        //                         // connect maybe
-        //                         const thisCtx = new AudioContext();
-        //                         const thisDest = thisCtx.createMediaStreamDestination();
-        //                         const recorder = new MediaRecorder(thisDest.stream);
-        //                         const thisStream = thisCtx.createMediaElementSource(this.piecePlayers[i]);
-        //                         thisStream.connect(thisDest);
-
-        //                         this.piecePlayers[i].play();
-        //                         recorder.start();
-        //                         setTimeout(() => {
-        //                             recorder.stop();
-        //                             this.piecePlayers[i].pause();
-        //                         }, 1000 * pieceSize);
-
-        //                         recorder.ondataavailable = (e) => {
-        //                             chunks.push(e.data);
-        //                         };
-
-        //                         recorder.onstop = () => {
-        //                             const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
-        //                             const reader = new FileReader();
-        //                             reader.onload = (readerE) => {
-        //                                 const readerStr = btoa(readerE.target.result);
-        //                                 this.pieces[i].audio.setAttribute("src", `data:audio/x-wav;base64,${readerStr}`);
-        //                                 let piecePlayThrough = false;
-        //                                 console.log("A: " + readerStr);
-        //                                 this.pieces[i].audio.oncanplaythrough = () => {
-        //                                     if (!piecePlayThrough) {
-        //                                         console.log("B");
-        //                                         piecePlayThrough = true;
-        //                                         this.pieces[i].startTime = startTime;
-        //                                         piecesMade += 1;
-        //                                         console.log("C " + piecesMade);
-        //                                         if (piecesMade === numPieces) {
-        //                                             setTimeout(() => {
-        //                                                 setLoadingPercent(0);
-        //                                                 this.barPos = 0;
-        //                                                 resolve(this.pieces);
-        //                                             }, 500);
-        //                                         }
-        //                                     }
-        //                                 };
-        //                             };
-        //                             reader.readAsBinaryString(blob);
-        //                         };
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // });
-        // end reuse experiment
-        
         return new Promise((resolve) => {
             this.startBarAnimate(25, 2000);
 
@@ -183,11 +103,19 @@ export class FileConverter {
                 if (!canPlayThrough) {
                     canPlayThrough = true;
                     const totalSeconds = player.duration;
+
                     
-                    const pieceSize = Math.ceil(totalSeconds / 30); // chunk length in seconds
+                    const pieceSize = Math.ceil(totalSeconds / 8); // chunk length in seconds
                     // const pieceSize = Math.ceil(totalSeconds);
 
-                    this.startBarAnimate(100, 1000 + (1000 * pieceSize));
+                    this.startBarAnimate(100, 5000 + (1000 * pieceSize));
+                    setTimeout(() => {
+                        setLoadingMessage("Keep your shirt on");
+                    }, 15000);
+                    setTimeout(() => {
+                        setLoadingMessage("m4a loads faster...");
+                    }, 4000);
+                    
 
                     const numPieces = Math.ceil(totalSeconds / pieceSize);
                     // const numPieces = 1;
@@ -217,7 +145,7 @@ export class FileConverter {
                                 piecePlayer.play();
                                 const startTime = piecePlayer.currentTime;
                                 recorder.start();
-        
+
                                 setTimeout(() => {
                                     recorder.stop();
                                     piecePlayer.pause();
@@ -258,6 +186,7 @@ export class FileConverter {
                                                     array: newArray,
                                                     ctx: newCtx
                                                 };
+                                                
                                                 piecesMade += 1;
                                                 if (piecesMade === numPieces) {
                                                     setTimeout(() => {
@@ -275,6 +204,8 @@ export class FileConverter {
                             }
                         };
                     }
+                    
+                    
                 }
             }
 

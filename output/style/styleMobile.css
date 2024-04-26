@@ -1,3 +1,15 @@
+/* top section for opening animation */
+.slides {
+    animation-name: rotateUp;
+    animation-duration: 2s;
+}
+
+@keyframes rotateUp {
+    0%      {transform: rotateX(180deg); opacity: 0}
+    100%    {transform: rotateX(20deg); opacity: 1}
+}
+
+
 .slides-container {
     height: 150vh;
     perspective: 20vh;
@@ -27,11 +39,22 @@
     border-left: 3vh solid orange;
     border-right: 3vh solid orange;
 }
+/* 
+.dummy-tapper {
+    border: 1.5vh solid transparent;
+} */
 
 #tappers-inner-container {
     position: absolute;
     top: 127vh;
-    
+    animation-name: slideUp;
+    animation-duration: 3s;
+}
+@keyframes slideUp {
+    0%      {top: 150vh; opacity: 0;}
+    60%      {top: 150vh; opacity: 0;}
+    90%    {opacity: 1;}
+    100%    {top: 127vh; opacity: 1;}
 }
 
 .tapper-shadow-bar {
@@ -95,7 +118,7 @@
 
 #song-label {
     font-size: 5vw;
-    text-shadow: 0px 0px 3vw white;
+    text-shadow: 0px 0px 0.5vw lightgray;
 }
 
 #background-left {
@@ -140,15 +163,15 @@
 
 .rock-label {
     font-family: sans-serif;
-    font-size: 12vw;
-    opacity: 0.5;
+    font-size: 16vw;
+    opacity: 0.4;
     font-weight: bold;
     animation-name: youRock;
     animation-duration: 500ms;
 }
 @keyframes youRock {
     0%    {font-size: 0px}
-    100%    {font-size: 12vw}
+    100%    {font-size: 16vw}
 }
 
 .countdown-label {
@@ -168,10 +191,6 @@
     opacity: 1;
 }
 
-#feedback {
-    width: 80vmin;
-    overflow: hidden;
-}
 #feedback-title {
     cursor: default;
     font-size: 2.5vh;
@@ -181,7 +200,7 @@
 
 .feedback-item {
     color: gray;
-    width: 100%;
+    width: 96%;
     border-top: 2px solid gray;
     font-size: 2.5vh;
     padding: 1vw;
@@ -226,6 +245,7 @@
     border-bottom: 1.5vh solid rgb(255, 218, 184);
     border-right: 3vh solid rgb(255, 219, 189);
     border-left: 3vh solid rgb(255, 219, 189);
+    transform: translate(0vh, 0.5vh);
 }
 
 .note-middle-lighted {
@@ -236,5 +256,9 @@
 
 .flash {
     top: 0.7vh;
+}
+
+.menu {
+    width: 90vw;
 }
 

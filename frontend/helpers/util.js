@@ -1,3 +1,5 @@
+import { Preferences } from "@capacitor/preferences";
+
 export function averageOf(arr) {
     let sum = 0;
     arr.forEach((val) => {
@@ -92,3 +94,52 @@ export function killAllNotes(masterInfo) {
         masterInfo.notes.delete(note);
     });
 }
+
+export function setUserProfile(profile) {
+    return new Promise((resolve) => {
+        Preferences.set({
+            key: "userProfile",
+            value: JSON.stringify(profile)
+        }).then(() => {
+            resolve();
+        });
+    });
+}
+
+export function getUserProfile() {
+    return new Promise((resolve) => {
+        Preferences.get({ key: "userProfile" }).then((res) => {
+            const profile = res.value;
+            if (profile) {
+                resolve(JSON.parse(profile));
+            } else {
+                resolve(defaultUserProfile);
+            }
+        });
+    });
+}
+
+const defaultUserProfile = {
+    level: 1,   // not currently used
+    slides: 2,   // not currently used
+    animatedBackground: true,
+    sustainedNotes: true,
+    autoCalibrating: true,
+    progress: {
+        l1s2: {},
+        l1s3: {},
+        l1s4: {},
+        l2s2: {},
+        l2s3: {},
+        l2s4: {},
+        l3s2: {},
+        l3s3: {},
+        l3s4: {},
+        l4s2: {},
+        l4s3: {},
+        l4s4: {},
+        l5s2: {},
+        l5s3: {},
+        l5s4: {}
+    } 
+};

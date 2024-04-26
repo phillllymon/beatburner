@@ -18,7 +18,7 @@ export class Animator {
         this.recents = masterInfo.mostRecentNotesOrTails;
         this.notes = masterInfo.notes;
         this.allSlides = masterInfo.allSlides;
-        this.slides = [this.allSlides[0], this.allSlides[3]];
+        this.slides = [this.allSlides[0], this.allSlides[1], this.allSlides[3]];
         this.notesPerSecond = 2; // starting level note per second
         this.targetTails = masterInfo.targetTails;
         this.targets = masterInfo.targets;

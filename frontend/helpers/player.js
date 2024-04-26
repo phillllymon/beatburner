@@ -183,7 +183,6 @@ export class Player {
 
     setSource(songData, arrayPlay = false, arrayData = false) {
         if (arrayPlay) {
-            console.log("SET SOURCE");
             if (arrayData) {
                 this.arrayPlay = true;
                 this.arrayPos = 0; // current piece in the array
@@ -240,11 +239,13 @@ export class Player {
     // for DETAILED EXPERIMENT
     getDetailedFreqArray() {
         if (this.arrayPlay) {
-            this.songPiece.analyser.smoothingTimeConstant = 0.85;
+            // this.songPiece.analyser.smoothingTimeConstant = 0.85;
+            this.songPiece.analyser.smoothingTimeConstant = 0.0;
             this.songPiece.analyser.getByteFrequencyData(this.songPiece.array);
             return this.songPiece.array.map(ele => ele);
         } else {
-            this.detailedAnalyser.smoothingTimeConstant = 0.85;
+            // this.detailedAnalyser.smoothingTimeConstant = 0.85;
+            this.detailedAnalyser.smoothingTimeConstant = 0.0;
             this.detailedAnalyser.getByteFrequencyData(this.detailedDataArray);
             return this.detailedDataArray.map(ele => ele);
         }

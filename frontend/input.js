@@ -14,17 +14,50 @@ import {
     setElementText,
     removeElementClass,
     detectMobile,
-    showSongControlButton
+    showSongControlButton,
+    getUserProfile,
+    setUserProfile
 } from "./helpers/util.js";
 import { gameDataConst } from "./data.js";
 
 // import { StatusBar, Style } from '@capacitor/status-bar';
 // StatusBar.setStyle({ style: Style.Dark });
 
+const whoosh = new Audio("./effects/whoosh.m4a");
+const electric = new Audio("./effects/static.m4a");
+const guitar = new Audio("./effects/guitar.m4a");
 const twangs = [
     new Audio("./effects/twang6.m4a"),
     new Audio("./effects/twang9.m4a"),
 ];
+
+// initial animation
+let wReady = false;
+let eReady = false;
+let gReady = false;
+let tReady = false;
+// whoosh.oncanplaythrough = () => {
+//     wReady = true;
+//     if (wReady && eReady && gReady && tReady) {
+//         initialAnimate();
+//     }
+// }
+// electric.oncanplaythrough = () => {
+//     eReady = true;
+//     if (wReady && eReady && gReady && tReady) {
+//         initialAnimate();
+//     }
+// }
+// guitar.oncanplaythrough = () => {
+//     gReady = true;
+//     if (wReady && eReady && gReady && tReady) {
+//         initialAnimate();
+//     }
+// }
+setTimeout(() => {
+    initialAnimate();
+}, 500);
+// ^animation above
 
 const {
     songDelay,
@@ -52,6 +85,9 @@ const targetBounds = {
 }
 
 handleMobile();
+setTimeout(() => {
+    document.getElementById("start-curtain").remove();
+}, 1000);
 
 const notes = new Set();
 
@@ -110,6 +146,7 @@ let songAtStart = true;
 let songNotesHit = 0;
 let songNotesMissed = 0;
 let songStreak = 0;
+let longestStreak = 0;
 
 let radioCode = "mvn925";
 let songMode = "demo";
@@ -123,6 +160,7 @@ const masterInfo = {
     animatedBackground,
     audioLoaded,
     autoAdjustment,
+    autoCalibrating,
     currentSong,
     maxTailLength,
     minNoteGap,
@@ -138,6 +176,7 @@ const masterInfo = {
     songNotesHit,
     songNotesMissed,
     songStreak,
+    streak,
     streaming,
     sustainedNotes,
     tapperKeys,
@@ -176,13 +215,20 @@ const player = new Player(
         animator.stopAnimation();
         showSongControlButton("button-restart");
         // autoAdjustment = autoCalibrating ? -0.05 * travelLength : 0;
-        masterInfo.autoAdjustment = autoAdjustment;
+        // masterInfo.autoAdjustment = autoAdjustment;
+        if (masterInfo.songStreak > longestStreak) {
+            longestStreak = masterInfo.songStreak;
+        }
         document.getElementById("feedback").classList.remove("hidden");
         const fraction = 1.0 * masterInfo.songNotesHit / (masterInfo.songNotesHit + masterInfo.songNotesMissed);
         document.getElementById("percent-bar-inner-container").style.width = `${100.0 * fraction}%`;
-        document.getElementById("feedback-percent").innerText = `Tap accuracy: ${Math.round(fraction * 100)}%`;
-        document.getElementById("feedback-streak").innerText = `Longest streak: ${masterInfo.songStreak}`;
-        document.getElementById("feedback-streak-overall").innerText = `Current streak: ${streak}`;
+        const accuracy = Math.round(fraction * 1000) / 10.0;
+        if (masterInfo.songMode === "demo") {
+            reportNewScore(accuracy, masterInfo.currentSong);
+        }
+        document.getElementById("feedback-percent").innerText = `Tap accuracy: ${accuracy}%`;
+        document.getElementById("feedback-streak").innerText = `Longest streak: ${longestStreak}`;
+        document.getElementById("feedback-streak-overall").innerText = `Current streak: ${masterInfo.streak}`;
         document.getElementById("feedback-title").innerText = masterInfo.currentSong;
         animateStats("percent-bar", ["feedback-percent", "feedback-streak", "feedback-streak-overall"]);
         masterInfo.songNotesMissed = 0;
@@ -219,7 +265,23 @@ const connector = new Connector(
     streamPlayer
 );
 
-
+getUserProfile().then((profile) => {
+    if (!profile.animatedBackground) {
+        masterInfo.animatedBackground = false;
+        document.getElementById("toggle-background-ball").classList.add("toggle-ball-off");
+        document.getElementById("background-title").style.opacity = "0.5";
+    }
+    if (!profile.sustainedNotes) {
+        masterInfo.sustainedNotes = false;
+        document.getElementById("toggle-sustained-ball").classList.add("toggle-ball-off");
+        document.getElementById("sustained-title").style.opacity = "0.5";
+    }
+    if (!profile.autoCalibrating) {
+        masterInfo.autoCalibrating = false;
+        document.getElementById("toggle-calibration-ball").classList.add("toggle-ball-off");
+        document.getElementById("calibration-title").style.opacity = "0.5";
+    }
+});
 
 
 document.isFullscreen = false;
@@ -244,8 +306,9 @@ document.addEventListener("keypress", (e) => {
         document.getElementById(masterInfo.waitingForKey[0]).innerText = e.code;
         const bulbId = `bulb-${masterInfo.waitingForKey[0].split("").slice(0, masterInfo.waitingForKey[0].length - 4).join("")}`;
         document.getElementById(bulbId).innerText = e.code;
-        document.getElementById("save-settings").disabled = false;
+        document.getElementById("save-settings").style.opacity = "1";
         masterInfo.waitingForKey = false;
+        document.getElementById("change-key-message").innerText = "";
     }
     if (e.code === "Space") {
         masterInfo.spaceFunction();
@@ -359,15 +422,14 @@ function activateTapper(tapperId, slideId, leavingClass) {
         }
     });
     
-    if (autoCalibrating) {
+    if (masterInfo.autoCalibrating) {
         const proximity = 0.1 * masterInfo.travelLength;
         const maxAdjust = 0.1 * masterInfo.travelLength;
         if (numNotes === 1) {
             if (Math.abs(closest) < proximity) {
-                autoAdjustment += 1.0 * (closest / (10 * notes.size));
-                autoAdjustment = Math.max(autoAdjustment, -1 * maxAdjust);
-                autoAdjustment = Math.min(autoAdjustment, 1.0 * maxAdjust);
-                masterInfo.autoAdjustment = autoAdjustment;
+                masterInfo.autoAdjustment += 1.0 * (closest / (10 * notes.size));
+                masterInfo.autoAdjustment = Math.max(masterInfo.autoAdjustment, -1 * maxAdjust);
+                masterInfo.autoAdjustment = Math.min(masterInfo.autoAdjustment, 1.0 * maxAdjust);
             }
         }
     }
@@ -552,28 +614,20 @@ function triggerHitNote(slideId, tapperId, hasTail) {
     }
     
     animator.recordNoteHit();
-    streak += 1;
+    masterInfo.streak += 1;
+    masterInfo.songStreak += 1;
     
-    if (streak < 100) {
+    if (masterInfo.streak < 100) {
         const newHit = document.createElement("div");
         newHit.classList.add("hit");
         document.getElementById("streak-channel").appendChild(newHit);
     }
-    if (streak > masterInfo.songStreak) {
-        masterInfo.songStreak = streak;
-    }
+    
     masterInfo.songNotesHit += 1;
     const songLabel = document.getElementById("song-label");
-    if (streak > 9 && streak < 200) {
-        songLabel.innerText = `STREAK: ${streak}`;
-    } else {
-        songLabel.innerText = masterInfo.currentSong;
-    }
-    if (streak === 50) {
-        songLabel.classList.add("font-bigA");
-    }
+    
     const rockLabel = document.getElementById("rock-label");
-    if (streak === 100) {
+    if (masterInfo.streak === 100) {
         rockLabel.innerHTML = "100 NOTE <br> STREAK!";
         rockLabel.classList.add("rock-label");
         labelInUse = true;
@@ -584,9 +638,10 @@ function triggerHitNote(slideId, tapperId, hasTail) {
         }, 1300);
         document.getElementById("streak-channel").classList.add("streak-channel-lit");
     }
-    if (streak === 200) {
+    // if (streak === 20) {
+    if (masterInfo.streak === 200) {
         document.getElementById("slides").classList.add("on-fire");
-        document.getElementById("song-label").classList.add("on-fire");
+        // document.getElementById("song-label").classList.add("on-fire");
         rockLabel.innerHTML = "ON FIRE!";
         rockLabel.classList.add("rock-label");
         
@@ -597,11 +652,27 @@ function triggerHitNote(slideId, tapperId, hasTail) {
             labelInUse = false;
         }, 1300);
     }
-    if (streak > 200) {
+    if (masterInfo.streak > 200) {
+    // if (masterInfo.streak > 20) {
         if (!labelInUse) {
             rockLabel.classList.add("static-rock");
-            rockLabel.innerText = streak;
+            rockLabel.innerText = masterInfo.streak;
         }
+    }
+    if (masterInfo.streak === 1000) {
+        rockLabel.innerHTML = "HOLY SHIT!";
+        // rockLabel.classList.add("rock-label");
+        // rockLabel.classList.add("static-rock");
+        
+        labelInUse = true;
+        // setTimeout(() => {
+        //     rockLabel.innerHTML = "SHIT!";
+        // }, 1500);
+        setTimeout(() => {
+            // rockLabel.classList.remove("rock-label");
+            // rockLabel.innerHTML = "";
+            labelInUse = false;
+        }, 2000);
     }
 }
 
@@ -629,7 +700,7 @@ function triggerMissedNote() {
     }
     rockLabel.classList.remove("static-rock");
     
-    const theStreak = streak;
+    const theStreak = masterInfo.streak;
     if (theStreak > 25) {
         labelInUse = true;
         rockLabel.innerHTML = `${theStreak} NOTE <br> STREAK!`;
@@ -649,7 +720,11 @@ function triggerMissedNote() {
             }
         }, 1300);
     }
-    streak = 0;
+    if (masterInfo.songStreak > longestStreak) {
+        longestStreak = masterInfo.songStreak;
+    }
+    masterInfo.streak = 0;
+    masterInfo.songStreak = 0;
     masterInfo.songNotesMissed += 1;
 }
 
@@ -697,6 +772,8 @@ function setupMobile() {
         masterInfo.noteSpeed = newNoteSpeed;
         masterInfo.maxTailLength = 1.0 * gameDataConst.mobile.maxTailLength * masterInfo.travelLength;
         masterInfo.slideLength = masterInfo.travelLength * 1.3;
+        tReady = true;
+        
     }, 500); // without small delay this was getting missed
 
     [
@@ -734,7 +811,8 @@ function setupMobile() {
         }
     });
 
-    // capacitor-specific hide status bar
+    document.getElementById("change-tapper-keys-item").classList.add("hidden");
+    
 
 }
 
@@ -793,9 +871,81 @@ function doAnimationStep(percentBar, stats, startTime, timeStep) {
     }
 }
 
-// document.getElementById("feedback").classList.remove("hidden");
-// const fraction = 1.0 * masterInfo.songNotesHit / (masterInfo.songNotesHit + masterInfo.songNotesMissed);
-// document.getElementById("percent-bar-inner-container").style.width = `${fraction * 30}vh`;
-// document.getElementById("feedback-percent").innerText = `Tap accuracy: ${Math.round(fraction * 100)}%`;
-// document.getElementById("feedback-streak").innerText = `Longest streak: ${masterInfo.songStreak}`;
-// document.getElementById("feedback-streak-overall").innerText = `Current streak: ${streak}`;
+function reportNewScore(score) {
+    // START HERE !!!!!!!!!!!
+    // - get old profile, check score, update if higher or not there, then set profile again
+    return new Promise((resolve) => {
+        getUserProfile().then((profile) => {
+            const levelCode = `l${animator.notesPerSecond}s${animator.slides.length}`;
+            const songCode = masterInfo.songCode;
+            const oldScore = profile.progress[levelCode][songCode];
+            if (!oldScore) {
+                profile.progress[levelCode][songCode] = score;
+            } else {
+                if (score > oldScore) {
+                    profile.progress[levelCode][songCode] = score;
+                }
+            }
+            setUserProfile(profile).then(() => {
+                controlsManager.activateSongSelect(false);
+                resolve();
+            });
+        });
+    });
+}
+
+function initialAnimate() {
+    setTimeout(() => {
+        whoosh.play();
+    }, 400);
+    setTimeout(() => {
+        electric.play();
+    }, 1500);
+    setTimeout(() => {
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const tapperId = [
+                    "tapper-left",
+                    "tapper-a",
+                    "tapper-b",
+                    "tapper-right"
+                ][Math.floor(4 * Math.random())];
+                lightUp(tapperId);
+            }, (1500 * Math.random()));
+        }
+    }, 1800);
+    setTimeout(() => {
+        menuManager.showMenu("source-menu");
+    }, 3700);
+    setTimeout(() => {
+        guitar.play();
+    }, 3500);
+}
+
+function lightUp(tapperId) {
+    const lighted = document.createElement("div");
+        lighted.classList.add("note-lighted");
+        const middleLighted = document.createElement("div");
+        middleLighted.classList.add("note-middle-lighted");
+        const light = document.createElement("div");
+        light.appendChild(lighted);
+        light.appendChild(middleLighted);
+        document.getElementById(`dummy-${tapperId}`).appendChild(light);
+        light.classList.add("flash");
+        setTimeout(() => {
+            light.remove();
+        }, 1000);
+
+}
+
+
+            // const lighted = document.createElement("div");
+            // lighted.classList.add("note-lighted");
+            // const middleLighted = document.createElement("div");
+            // middleLighted.classList.add("note-middle-lighted");
+            // const light = document.createElement("div");
+            // light.appendChild(lighted);
+            // light.appendChild(middleLighted);
+            // document.getElementById(`dummy-tapper-right`).appendChild(light);
+            // light.classList.add("flash");
+            // light.id = `${"slide-right"}-flash-sustain`;

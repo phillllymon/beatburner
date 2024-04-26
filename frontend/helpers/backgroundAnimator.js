@@ -1,3 +1,5 @@
+import { averageOf } from "./util.js";
+
 export class BackgroundAnimator {
     constructor(masterInfo) {
         this.masterInfo = masterInfo;
@@ -15,6 +17,7 @@ export class BackgroundAnimator {
         if (!this.masterInfo.animatedBackground) {
             return;
         }
+        
         this.addValsArrayToQueue(newVals);
         // const targetTime = performance.now() - this.masterInfo.songDelay + masterInfo.autoAdjustment;
         const targetTime = performance.now() - this.masterInfo.songDelay;
@@ -27,6 +30,27 @@ export class BackgroundAnimator {
                 numObselete += 1;
             } else {
                 valsToUse = thisVal[0];
+
+                // smooth out valsToUse since we have no longer smooth in analyse
+                // if (i > 7) {
+                //     const valsArrsToUse = [
+                //         this.valsQueue[i][0],
+                //         this.valsQueue[i - 1][0],
+                //         this.valsQueue[i - 2][0],
+                //         this.valsQueue[i - 3][0],
+                //         this.valsQueue[i - 4][0],
+                //         this.valsQueue[i - 5][0],
+                //         this.valsQueue[i - 6][0],
+                //         this.valsQueue[i - 7][0]
+                //     ];
+                //     valsToUse = [];
+                //     for (let j = 0; j < thisVal[0].length; j++) {
+                //         valsToUse.push(averageOf(valsArrsToUse.map((arr) => {
+                //             return arr[0];
+                //         })));
+                //     }
+                // }
+
                 break;
             }
         }
