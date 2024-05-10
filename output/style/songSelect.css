@@ -26,6 +26,7 @@
     background-color: white;
     box-sizing: border-box;
     padding: 0.5vh;
+    font-size: 2vh;
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -57,12 +58,15 @@
     height: 2vh;
     margin-left: 1vh;
 }
+.song-mark-left {
+    transform: translate(-2vh, 0vh);
+}
 
 .song-title {
     text-align: left;
     margin-left: 1vh;
-    padding-top: 0.5vh;
-    padding-bottom: 0.5vh;
+    padding-top: 0.75vh;
+    padding-bottom: 0.75vh;
     cursor: pointer;
     user-select: none;
 }
@@ -112,3 +116,15 @@
     transform: rotate(-45deg);
 }
 
+.percent-title-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#song-information-bar {
+    font-size: 2vh;
+    width: 100%;
+    margin-top: 0.5vh;
+    text-align: center;
+}

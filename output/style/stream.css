@@ -1,5 +1,5 @@
 
-#stream-modal {
+/* #stream-modal {
     position: fixed;
     left: 50%;
     top: 5%;
@@ -14,6 +14,17 @@
     background-color: lightgray;
     box-sizing: border-box;
     z-index: 5;
+} */
+#stream-modal {
+    font-size: 2vh;
+    color: gray;
+    top: 10%;
+    transform: translate(-50%, 0%);
+}
+#enter-stream-id {
+    width: 90%;
+    height: 3vh;
+    font-size: 2.25vh;
 }
 
 #stream-status {

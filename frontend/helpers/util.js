@@ -50,10 +50,24 @@ export function detectMobile() {
 }
 
 export function showSongControlButton(buttonId) {
-    ["button-play", "button-pause"].forEach((id) => {
-        addElementClass(id, "hidden");
-    });
-    removeElementClass(buttonId, "hidden");
+    // ["button-play", "button-pause"].forEach((id) => {
+    //     addElementClass(id, "hidden");
+    // });
+    // removeElementClass(buttonId, "hidden");
+
+    // new
+    if (buttonId === "button-play") {
+        addElementClass("button-pause", "hidden");
+        ["button-play", "button-restart", "show-settings", "show-menu"].forEach((buttonId) => {
+            removeElementClass(buttonId, "hidden");
+        });
+    }
+    if (buttonId === "button-pause") {
+        removeElementClass("button-pause", "hidden");
+        ["button-play", "button-restart", "show-settings", "show-menu"].forEach((buttonId) => {
+            addElementClass(buttonId, "hidden");
+        });
+    }
 }
 
 export function showModal(modal) {
@@ -85,7 +99,7 @@ export function setLoadingMessage(message) {
     document.getElementById("loading-text").innerHTML = message;
 }
 
-export function killAllNotes(masterInfo) {
+export function killAllNotes(masterInfo, noteWriter) {
     masterInfo.notes.forEach((note) => {
         if (note.tail) {
             note.tail.note.remove();
@@ -93,6 +107,7 @@ export function killAllNotes(masterInfo) {
         note.note.remove();
         masterInfo.notes.delete(note);
     });
+    noteWriter.resetData();
 }
 
 export function setUserProfile(profile) {
@@ -110,21 +125,204 @@ export function getUserProfile() {
     return new Promise((resolve) => {
         Preferences.get({ key: "userProfile" }).then((res) => {
             const profile = res.value;
+            // if (false) {
             if (profile) {
                 resolve(JSON.parse(profile));
             } else {
                 resolve(defaultUserProfile);
+
+                // TEMP
+                // const newProfile = defaultUserProfile;
+                // [
+                //     "l1s2",
+                //     "l1s3",
+                //     "l1s4",
+                //     "l2s2",
+                //     "l2s3",
+                //     "l2s4",
+                //     "l3s2",
+                //     "l3s3",
+                //     "l3s4",
+                //     "l4s2",
+                //     "l4s3",
+                //     "l4s4",
+                //     "l5s2",
+                //     "l5s3",
+                //     "l5s4"
+                // ].forEach((levelKey) => {
+                //     [
+                //         "echoesOfRebellion",
+                //         "getThatFeeling",
+                //         "heartBlueBlack",
+                //         "hypeMeUp",
+                //         "inevitable",
+                //         "lifeIBelieve",
+                //         "liveInMyHead",
+                //         "neverBackDown",
+                //         "neverBeBlue",
+                //         "paleCityGirl",
+                //         "prettyThing",
+                //         "rascalBack",
+                //         "schoolGirlCrush",
+                //         "shouldBeMe",
+                //         "whispersOfTheWreck",
+                //         "words",
+                //         "aLifeLikeThis",
+                //         "echoesOfThePast",
+                //         "hotHotFire",
+                //         "moneyMoney",
+                //         "rockItTonight",
+                //         "animal",
+                //         "handle",
+                //         "indian",
+                //         "innerPeace",
+                //         "itDoesntMatter",
+                //         "myHeartIsAllYours",
+                //         "thinkingOfYou",
+                //         "womanWithTheWind",
+                //         "temptation",
+                //         "cactusFlower"
+                //     ].forEach((songCode) => {
+                //         newProfile.progress[levelKey][songCode] = "19.5";
+                //     });
+                // });
+                // newProfile.stations = {
+                //     "kingFM": {
+                //         name: "classical king FM",
+                //         stream: "https://classicalking.streamguys1.com/king-fm-aac-128k"
+                //     },
+                //     "mvn925": {
+                //         name: "movin' 92.5",
+                //         stream: "https://23093.live.streamtheworld.com/KQMVFM.mp3?dist=hubbard&source=hubbard-web&ttag=web&gdpr=0"
+                //     },
+                //     "unsung80s": {
+                //         name: "Unsung 80s",
+                //         stream: "https://unsung80s.out.airtime.pro/unsung80s_a"
+                //     },
+                //     "beat90s": {
+                //         name: "The beat",
+                //         stream: "https://ice10.securenetsystems.net/AM1380?playSessionID=1C5D8230-00FD-2EFE-2AEE4302B829B5F3"
+                //     },
+                //     "100hitz": {
+                //         name: "100 hitz",
+                //         stream: "https://pureplay.cdnstream1.com/6045_128.mp3"
+                //     },
+                //     "mlelive": {
+                //         name: "MLE live",
+                //         stream: "https://listen.radioking.com/radio/114610/stream/462118"
+                //     },
+                //     "chetFM": {
+                //         name: "93.5 Chet FM",
+                //         stream: "https://ice23.securenetsystems.net/KDJF?playSessionID=1CE4C155-F05D-ADFF-15CD1D9351B467C0"
+                //     },
+                //     "scooter": {
+                //         name: "Scooterist radio",
+                //         stream: "https://listen.radioking.com/radio/214267/stream/257398?1709875088135"
+                //     },
+                //     "1234gr": {
+                //         name: "1234 GR",
+                //         stream: "https://radio1234gr.radioca.st/live"
+                //     },
+                //     "hawk": {
+                //         name: "Hawk classic rock",
+                //         stream: "https://ice6.securenetsystems.net/KRSE?playSessionID=1D6EEF83-C785-2F70-5A76B4CD63C85056"
+                //     },
+                //     "akingFM": {
+                //         name: "classical king FM",
+                //         stream: "https://classicalking.streamguys1.com/king-fm-aac-128k"
+                //     },
+                //     "amvn925": {
+                //         name: "movin' 92.5",
+                //         stream: "https://23093.live.streamtheworld.com/KQMVFM.mp3?dist=hubbard&source=hubbard-web&ttag=web&gdpr=0"
+                //     },
+                //     "aunsung80s": {
+                //         name: "Unsung 80s",
+                //         stream: "https://unsung80s.out.airtime.pro/unsung80s_a"
+                //     },
+                //     "abeat90s": {
+                //         name: "The beat",
+                //         stream: "https://ice10.securenetsystems.net/AM1380?playSessionID=1C5D8230-00FD-2EFE-2AEE4302B829B5F3"
+                //     },
+                //     "a100hitz": {
+                //         name: "100 hitz",
+                //         stream: "https://pureplay.cdnstream1.com/6045_128.mp3"
+                //     },
+                //     "amlelive": {
+                //         name: "MLE live",
+                //         stream: "https://listen.radioking.com/radio/114610/stream/462118"
+                //     },
+                //     "achetFM": {
+                //         name: "93.5 Chet FM",
+                //         stream: "https://ice23.securenetsystems.net/KDJF?playSessionID=1CE4C155-F05D-ADFF-15CD1D9351B467C0"
+                //     },
+                //     "ascooter": {
+                //         name: "Scooterist radio",
+                //         stream: "https://listen.radioking.com/radio/214267/stream/257398?1709875088135"
+                //     },
+                //     "a1234gr": {
+                //         name: "1234 GR",
+                //         stream: "https://radio1234gr.radioca.st/live"
+                //     },
+                //     "ahawk": {
+                //         name: "Hawk classic rock",
+                //         stream: "https://ice6.securenetsystems.net/KRSE?playSessionID=1D6EEF83-C785-2F70-5A76B4CD63C85056"
+                //     },
+                //     "bkingFM": {
+                //         name: "classical king FM",
+                //         stream: "https://classicalking.streamguys1.com/king-fm-aac-128k"
+                //     },
+                //     "bmvn925": {
+                //         name: "movin' 92.5",
+                //         stream: "https://23093.live.streamtheworld.com/KQMVFM.mp3?dist=hubbard&source=hubbard-web&ttag=web&gdpr=0"
+                //     },
+                //     "bunsung80s": {
+                //         name: "Unsung 80s",
+                //         stream: "https://unsung80s.out.airtime.pro/unsung80s_a"
+                //     },
+                //     "bbeat90s": {
+                //         name: "The beat",
+                //         stream: "https://ice10.securenetsystems.net/AM1380?playSessionID=1C5D8230-00FD-2EFE-2AEE4302B829B5F3"
+                //     },
+                //     "b100hitz": {
+                //         name: "100 hitz",
+                //         stream: "https://pureplay.cdnstream1.com/6045_128.mp3"
+                //     },
+                //     "bmlelive": {
+                //         name: "MLE live",
+                //         stream: "https://listen.radioking.com/radio/114610/stream/462118"
+                //     },
+                //     "bchetFM": {
+                //         name: "93.5 Chet FM",
+                //         stream: "https://ice23.securenetsystems.net/KDJF?playSessionID=1CE4C155-F05D-ADFF-15CD1D9351B467C0"
+                //     },
+                //     "bscooter": {
+                //         name: "Scooterist radio",
+                //         stream: "https://listen.radioking.com/radio/214267/stream/257398?1709875088135"
+                //     },
+                //     "b1234gr": {
+                //         name: "1234 GR",
+                //         stream: "https://radio1234gr.radioca.st/live"
+                //     },
+                //     "bhawk": {
+                //         name: "Hawk classic rock",
+                //         stream: "https://ice6.securenetsystems.net/KRSE?playSessionID=1D6EEF83-C785-2F70-5A76B4CD63C85056"
+                //     }
+                // };
+                // resolve(newProfile);
             }
         });
     });
 }
 
 const defaultUserProfile = {
-    level: 1,   // not currently used
-    slides: 2,   // not currently used
+    level: 1,
+    slides: 3,
     animatedBackground: true,
     sustainedNotes: true,
     autoCalibrating: true,
+    lastMessage: 0,
+    queryStats: true,
+    queryInitial: true,
     progress: {
         l1s2: {},
         l1s3: {},
@@ -141,5 +339,47 @@ const defaultUserProfile = {
         l5s2: {},
         l5s3: {},
         l5s4: {}
-    } 
+    },
+    stations: {
+        "kingFM": {
+            name: "classical king FM",
+            stream: "https://classicalking.streamguys1.com/king-fm-aac-128k"
+        },
+        "mvn925": {
+            name: "movin' 92.5",
+            stream: "https://23093.live.streamtheworld.com/KQMVFM.mp3?dist=hubbard&source=hubbard-web&ttag=web&gdpr=0"
+        },
+        "unsung80s": {
+            name: "Unsung 80s",
+            stream: "https://unsung80s.out.airtime.pro/unsung80s_a"
+        },
+        "beat90s": {
+            name: "The beat",
+            stream: "https://ice10.securenetsystems.net/AM1380?playSessionID=1C5D8230-00FD-2EFE-2AEE4302B829B5F3"
+        },
+        "100hitz": {
+            name: "100 hitz",
+            stream: "https://pureplay.cdnstream1.com/6045_128.mp3"
+        },
+        "mlelive": {
+            name: "MLE live",
+            stream: "https://listen.radioking.com/radio/114610/stream/462118"
+        },
+        "chetFM": {
+            name: "93.5 Chet FM",
+            stream: "https://ice23.securenetsystems.net/KDJF?playSessionID=1CE4C155-F05D-ADFF-15CD1D9351B467C0"
+        },
+        "scooter": {
+            name: "Scooterist radio",
+            stream: "https://listen.radioking.com/radio/214267/stream/257398?1709875088135"
+        },
+        "1234gr": {
+            name: "1234 GR",
+            stream: "https://radio1234gr.radioca.st/live"
+        },
+        "hawk": {
+            name: "Hawk classic rock",
+            stream: "https://ice6.securenetsystems.net/KRSE?playSessionID=1D6EEF83-C785-2F70-5A76B4CD63C85056"
+        }
+    }
 };

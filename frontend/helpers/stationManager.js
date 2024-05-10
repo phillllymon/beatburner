@@ -1,3 +1,5 @@
+import { getUserProfile } from "./util.js";
+
 export class StationManager {
     constructor(masterInfo, streamPlayer) {
         this.masterInfo = masterInfo;
@@ -5,6 +7,7 @@ export class StationManager {
         this.radioAudio = new Audio();
         this.radioAudio.crossOrigin = "anonymous";
         this.listening = false;
+        this.canceled = false;
         
         this.chunksA = [];
         this.chunksB = [];
@@ -19,56 +22,60 @@ export class StationManager {
 
         this.recorderA = null;
         this.recorderB = null;
-        
-        this.stations = {
-            "kingFM": {
-                name: "classical king FM",
-                stream: "https://classicalking.streamguys1.com/king-fm-aac-128k"
-            },
-            "mvn925": {
-                name: "movin' 92.5",
-                stream: "https://23093.live.streamtheworld.com/KQMVFM.mp3?dist=hubbard&source=hubbard-web&ttag=web&gdpr=0"
-            },
-            "unsung80s": {
-                name: "Unsung 80s",
-                stream: "https://unsung80s.out.airtime.pro/unsung80s_a"
-            },
-            "beat90s": {
-                name: "The beat",
-                stream: "https://ice10.securenetsystems.net/AM1380?playSessionID=1C5D8230-00FD-2EFE-2AEE4302B829B5F3"
-            },
-            "100hitz": {
-                name: "100 hitz",
-                stream: "https://pureplay.cdnstream1.com/6045_128.mp3"
-            },
-            "mlelive": {
-                name: "MLE live",
-                stream: "https://listen.radioking.com/radio/114610/stream/462118"
-            },
-            "chetFM": {
-                name: "93.5 Chet FM",
-                stream: "https://ice23.securenetsystems.net/KDJF?playSessionID=1CE4C155-F05D-ADFF-15CD1D9351B467C0"
-            },
-            "scooter": {
-                name: "Scooterist radio",
-                stream: "https://listen.radioking.com/radio/214267/stream/257398?1709875088135"
-            },
-            "1234gr": {
-                name: "1234 GR",
-                stream: "https://radio1234gr.radioca.st/live"
-            },
-            "hawk": {
-                name: "Hawk classic rock",
-                stream: "https://ice6.securenetsystems.net/KRSE?playSessionID=1D6EEF83-C785-2F70-5A76B4CD63C85056"
-            }
-        };
 
-        this.stationInfo = this.stations["hawk"];
-        this.activateStationSelection();
+        getUserProfile().then((profile) => {
+            this.stations = profile.stations;
+            this.activateStationSelection();
+        });
+        
+        // this.stations = {
+        //     "kingFM": {
+        //         name: "classical king FM",
+        //         stream: "https://classicalking.streamguys1.com/king-fm-aac-128k"
+        //     },
+        //     "mvn925": {
+        //         name: "movin' 92.5",
+        //         stream: "https://23093.live.streamtheworld.com/KQMVFM.mp3?dist=hubbard&source=hubbard-web&ttag=web&gdpr=0"
+        //     },
+        //     "unsung80s": {
+        //         name: "Unsung 80s",
+        //         stream: "https://unsung80s.out.airtime.pro/unsung80s_a"
+        //     },
+        //     "beat90s": {
+        //         name: "The beat 90s",
+        //         stream: "https://ice10.securenetsystems.net/AM1380?playSessionID=1C5D8230-00FD-2EFE-2AEE4302B829B5F3"
+        //     },
+        //     "100hitz": {
+        //         name: "100 hitz",
+        //         stream: "https://pureplay.cdnstream1.com/6045_128.mp3"
+        //     },
+        //     "mlelive": {
+        //         name: "MLE live",
+        //         stream: "https://listen.radioking.com/radio/114610/stream/462118"
+        //     },
+        //     "chetFM": {
+        //         name: "93.5 Chet FM",
+        //         stream: "https://ice23.securenetsystems.net/KDJF?playSessionID=1CE4C155-F05D-ADFF-15CD1D9351B467C0"
+        //     },
+        //     "scooter": {
+        //         name: "Scooterist radio",
+        //         stream: "https://listen.radioking.com/radio/214267/stream/257398?1709875088135"
+        //     },
+        //     "1234gr": {
+        //         name: "1234 GR",
+        //         stream: "https://radio1234gr.radioca.st/live"
+        //     },
+        //     "hawk": {
+        //         name: "Hawk classic rock",
+        //         stream: "https://ice6.securenetsystems.net/KRSE?playSessionID=1D6EEF83-C785-2F70-5A76B4CD63C85056"
+        //     }
+        // };
     }
 
-    activateStationSelection() {
+    updateStationInfo(stations) {
+        this.stations = stations;
         const stationSelector = document.getElementById("select-station");
+        stationSelector.innerHTML = "";
 
         const keys = Object.keys(this.stations);
         for (let i = 0; i < keys.length; i++) {
@@ -76,11 +83,36 @@ export class StationManager {
             const newOption = document.createElement("option");
             newOption.value = stationKey;
             newOption.innerText = this.stations[stationKey].name;
-            if (stationKey === "hawk") {
+            if (i === keys.length - 1) { // always select last on on list by default
+                this.stationInfo = this.stations[stationKey];
                 newOption.selected = "selected";
             }
             stationSelector.appendChild(newOption);
         };
+    }
+
+    activateStationSelection() {
+        document.getElementById("cancel-radio-connect").addEventListener("click", () => {
+            this.canceled = true;
+            this.listening = false;
+            document.getElementById("connecting-radio").classList.add("hidden");
+            document.getElementById("main-menu").classList.remove("hidden");
+        });
+
+        const stationSelector = document.getElementById("select-station");
+
+        // const keys = Object.keys(this.stations);
+        // for (let i = 0; i < keys.length; i++) {
+        //     const stationKey = keys[i];
+        //     const newOption = document.createElement("option");
+        //     newOption.value = stationKey;
+        //     newOption.innerText = this.stations[stationKey].name;
+        //     if (i === keys.length - 1) { // always select last on on list by default
+        //         this.stationInfo = this.stations[stationKey];
+        //         newOption.selected = "selected";
+        //     }
+        //     stationSelector.appendChild(newOption);
+        // };
 
         stationSelector.addEventListener("change", () => {
             const newCode = stationSelector.value;
@@ -106,6 +138,7 @@ export class StationManager {
             return;
         }
         this.listening = true;
+        this.canceled = false;
 
         document.getElementById("acquiring").style.color = "transparent";
         document.getElementById("initial-received").style.color = "transparent";
@@ -118,51 +151,52 @@ export class StationManager {
         // LIVE STREAM VERSION
 
         const radioPlayer = new Audio(this.stationInfo.stream);
-        // const radioPlayer = new Audio("../songs/godOrDevil.mp3");
-
         radioPlayer.crossOrigin = "anonymous";
 
+        let canPlay = false;
         radioPlayer.addEventListener("canplaythrough", () => {
-
-            const audioCtx = new AudioContext();
-            const radioSourceDelay = audioCtx.createMediaElementSource(radioPlayer);
-
-            const radioDelay = audioCtx.createDelay(4.0);
-            radioDelay.delayTime.setValueAtTime(4.0, radioPlayer.currentTime);
-            radioSourceDelay.connect(radioDelay);
-            radioDelay.connect(audioCtx.destination);
-            
-            // const gain = audioCtx.createGain();
-            // radioSourceDelay.connect(gain);
-            // gain.connect(audioCtx.destination);
-
-            
-            const nowCtx = new AudioContext();
-            const radioSource = nowCtx.createMediaStreamSource(radioPlayer.captureStream());
-            const analyser = nowCtx.createAnalyser();
-            radioSource.connect(analyser);
-            nowCtx.setSinkId({ type: "none" });
-            analyser.connect(nowCtx.destination);
-            analyser.fftSize = 4096;
-            const dataArray = new Uint8Array(analyser.frequencyBinCount);
-            // const nowGain = nowCtx.createGain();
-            // radioSource.connect(nowGain);
-            // nowGain.connect(nowCtx.destination);
-            
+            if (!canPlay && !this.canceled) {
+                canPlay = true;
+                const audioCtx = new AudioContext();
+                const radioSourceDelay = audioCtx.createMediaElementSource(radioPlayer);
     
+                const radioDelay = audioCtx.createDelay(4.0);
+                radioDelay.delayTime.setValueAtTime(4.0, radioPlayer.currentTime);
+                radioSourceDelay.connect(radioDelay);
+                radioDelay.connect(audioCtx.destination);
+                
+                // const gain = audioCtx.createGain();
+                // radioSourceDelay.connect(gain);
+                // gain.connect(audioCtx.destination);
     
-    
-    
-            this.streamPlayer.setData({
-                liveStream: true,
-                player: radioPlayer,
-                analyser: analyser,
-                dataArray: dataArray,
-                // gain: gain,
-                ctx: audioCtx,
-                nowCtx: nowCtx,
-                // nowGain: nowGain
-            });
+                
+                const nowCtx = new AudioContext();
+                const radioSource = nowCtx.createMediaStreamSource(radioPlayer.captureStream());
+                const analyser = nowCtx.createAnalyser();
+                radioSource.connect(analyser);
+                nowCtx.setSinkId({ type: "none" });
+                analyser.connect(nowCtx.destination);
+                analyser.fftSize = 4096;
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                // const nowGain = nowCtx.createGain();
+                // radioSource.connect(nowGain);
+                // nowGain.connect(nowCtx.destination);
+                
+        
+        
+                
+        
+                this.streamPlayer.setData({
+                    liveStream: true,
+                    player: radioPlayer,
+                    analyser: analyser,
+                    dataArray: dataArray,
+                    // gain: gain,
+                    ctx: audioCtx,
+                    nowCtx: nowCtx,
+                    // nowGain: nowGain
+                });
+            }
         });
 
         return;

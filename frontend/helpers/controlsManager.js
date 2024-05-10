@@ -20,10 +20,11 @@ import {
 } from "../data.js";
 
 export class ControlsManager {
-    constructor(masterInfo, player, streamPlayer, animator, fileConverter) {
+    constructor(masterInfo, player, streamPlayer, animator, fileConverter, noteWriter) {
         this.player = player;
         this.animator = animator;
         this.fileConverter = fileConverter;
+        this.noteWriter = noteWriter;
         this.masterInfo = masterInfo;
         this.streamPlayer = streamPlayer;
         this.activateSongSelect();
@@ -36,18 +37,16 @@ export class ControlsManager {
 
     activateSongSelect(chooseDefault = true) {
         document.getElementById("stages").innerText = "";
-        const level = this.animator.notesPerSecond;
-        const slides = this.animator.slides.length;
         const levelNames = {
-            1: "practice",
+            1: "super easy",
             2: "easy",
             3: "medium",
             4: "hard",
-            5: "crazy"
+            5: "crazy hard"
         }
-        document.getElementById("level-sub-title").innerText = `${levelNames[level]} / ${slides} slides`;
-        const levelCode = `l${level}s${slides}`;
         getUserProfile().then((profile) => {
+            const levelCode = `l${profile.level}s${profile.slides}`;
+            document.getElementById("level-sub-title").innerText = `${levelNames[profile.level]} / ${profile.slides} slides`;
             const scores = profile.progress[levelCode];
             const songCodes = Object.keys(scores);
             let stageActive = true;
@@ -57,7 +56,7 @@ export class ControlsManager {
                 stageElement.classList.add("stage");
                 const titleElement = document.createElement("div");
                 titleElement.classList.add("stage-title");
-                titleElement.innerText = `Stage ${i + 1}`;
+                titleElement.innerText = i === songStages.length - 1 ? "Bonus songs" : `Stage ${i + 1}`;
                 stageElement.appendChild(titleElement);
                 document.getElementById("stages").appendChild(stageElement);
                 let allPassed = true;
@@ -128,7 +127,7 @@ export class ControlsManager {
                                     this.player.setSource(`data:audio/x-wav;base64,${str}`);
                                     showSongControlButton("button-play");
                                     document.getElementById("song-label").innerText = this.masterInfo.currentSong;
-                                    killAllNotes(this.masterInfo);
+                                    killAllNotes(this.masterInfo, this.noteWriter);
     
                                 });
                             });
@@ -144,8 +143,8 @@ export class ControlsManager {
                 }
             });
             this.masterInfo.defaultSong = defaultSong;
-            this.masterInfo.songCode = defaultSong;
-            if (chooseDefault) {
+            if (chooseDefault && defaultSong) {
+                this.masterInfo.songCode = defaultSong;
                 document.getElementById("song-to-play").innerText = songData[defaultSong];
             }
         });
@@ -175,7 +174,7 @@ export class ControlsManager {
         //             this.player.setSource(`data:audio/x-wav;base64,${str}`);
         //             showSongControlButton("button-play");
         //             document.getElementById("song-label").innerText = this.masterInfo.currentSong;
-        //             killAllNotes(this.masterInfo);
+        //             killAllNotes(this.masterInfo, this.noteWriter);
 
         //         });
         //     });
@@ -187,7 +186,7 @@ export class ControlsManager {
         //     // this.player.setSource(`./songs/${this.masterInfo.currentSong}.m4a`);
         //     // showSongControlButton("button-play");
         //     // document.getElementById("song-label").innerText = newValue;
-        //     // killAllNotes(this.masterInfo);
+        //     // killAllNotes(this.masterInfo, this.noteWriter);
 
         // });
         
@@ -215,7 +214,7 @@ export class ControlsManager {
                     this.player.pause();
                     this.player.setSource(newSongData);
                     showSongControlButton("button-play");
-                    killAllNotes(this.masterInfo);
+                    killAllNotes(this.masterInfo, this.noteWriter);
                     this.masterInfo.currentSong = e.target.files[0].name;
                     document.getElementById("song-label").innerText = this.masterInfo.currentSong;
                     stopLoading();
@@ -232,7 +231,7 @@ export class ControlsManager {
                         this.player.setSource(newSongData, true, piecesArr);
     
                         showSongControlButton("button-play");
-                        killAllNotes(this.masterInfo);
+                        killAllNotes(this.masterInfo, this.noteWriter);
                         
                         this.masterInfo.currentSong = e.target.files[0].name;
                         document.getElementById("song-label").innerText = this.masterInfo.currentSong;
@@ -249,13 +248,13 @@ export class ControlsManager {
     }
 
     activateSongControls() {
-        setButtonClick("button-play", () => {
+        document.getElementById("button-play").addEventListener("click", () => {
             this.playFunction();
         });
-        setButtonClick("button-pause", () => {
+        document.getElementById("button-pause").addEventListener("click", () => {
             this.pauseFunction();
         });
-        setButtonClick("button-restart", () => {
+        document.getElementById("button-restart").addEventListener("click", () => {
             this.restartFunction()
         });
         this.masterInfo.spaceFunction = () => {
@@ -268,6 +267,10 @@ export class ControlsManager {
             this.streamPlayer.start();
             this.animator.runAnimation({ player: this.streamPlayer, algorithm: this.masterInfo.algorithm });
         } else {
+            if (this.masterInfo.songMode === "demo" && this.masterInfo.songCode) {
+                this.masterInfo.currentSong = songData[this.masterInfo.songCode];
+                document.getElementById("song-label").innerHTML = this.masterInfo.currentSong;
+            }
             this.player.start();
             this.animator.runAnimation({ player: this.player, algorithm: this.masterInfo.algorithm });
         }
@@ -280,7 +283,7 @@ export class ControlsManager {
     pauseFunction() {
         if (this.masterInfo.streaming || this.masterInfo.songMode === "radio") {
             this.streamPlayer.stop();
-            killAllNotes(this.masterInfo);
+            killAllNotes(this.masterInfo, this.noteWriter);
         } else {
             this.player.pause();
         }
@@ -294,7 +297,7 @@ export class ControlsManager {
         this.player.restart();
         this.animator.stopAnimation();
         showSongControlButton("button-play");
-        killAllNotes(this.masterInfo);
+        killAllNotes(this.masterInfo, this.noteWriter);
         this.masterInfo.spaceFunction = () => {
             this.playFunction();
         }
@@ -311,11 +314,14 @@ export class ControlsManager {
                 this.deselectSlides();
                 this.selectSlides(slideSet[1], setNumSlides);
                 slidesButton.classList.add("level-selected");
-                this.activateSongSelect(false);
             })
         });
-        document.getElementById("slides-3").classList.add("level-selected");
-        this.selectSlides(3, setNumSlides);
+        getUserProfile().then((profile) => {
+            document.getElementById(`slides-${profile.slides}`).classList.add("level-selected");
+            this.selectSlides(profile.slides, setNumSlides);
+        });
+
+
     }
 
     deselectSlides() {
@@ -413,6 +419,13 @@ export class ControlsManager {
             slidesContainer.classList.remove("three-wide-slides-container");
             slidesContainer.classList.add("four-wide-slides-container");
         }
+
+        getUserProfile().then((profile) => {
+            profile.slides = n;
+            setUserProfile(profile).then(() => {
+                this.activateSongSelect(false);
+            });
+        });
     }
 
     activateLevelSelector() {
@@ -434,14 +447,22 @@ export class ControlsManager {
                 });
                 this.animator.setNotesPerSecond(levelSet[1]);
                 addElementClass(levelSet[0], "level-selected");
-                this.activateSongSelect(false);
+                getUserProfile().then((profile) => {
+                    profile.level = levelSet[1];
+                    setUserProfile(profile).then(() => {
+                        this.activateSongSelect(false);
+                    });
+                });
             });
         });
-        addElementClass("level-2", "level-selected");
+        getUserProfile().then((profile) => {
+            this.animator.setNotesPerSecond(profile.level);
+            addElementClass(`level-${profile.level}`, "level-selected");
+        });
     }
 
     activateSettings() {
-        setButtonClick("show-settings", () => {
+        document.getElementById("show-settings").addEventListener("click", () => {
             showModal("settings");
         });
         setButtonClick("save-settings", () => {
@@ -467,7 +488,8 @@ export class ControlsManager {
         [
             ["toggle-background", "animatedBackground", "background-title"],
             ["toggle-sustained", "sustainedNotes", "sustained-title"],
-            ["toggle-calibration", "autoCalibrating", "calibration-title"]
+            ["toggle-calibration", "autoCalibrating", "calibration-title"],
+            ["toggle-haptics", "hapticsOnHit", "haptics-title"]
         ].forEach((settingSet) => {
             setButtonClick(settingSet[0], () => {
                 if (this.masterInfo[settingSet[1]]) {

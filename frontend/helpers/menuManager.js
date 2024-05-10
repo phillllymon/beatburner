@@ -2,17 +2,19 @@ import {
     setButtonClick,
     showModal,
     hideModal,
-    showSongControlButton
+    showSongControlButton,
+    killAllNotes
 } from "./util.js";
 import { songData } from "../data.js";
 
 export class MenuManager {
-    constructor(masterInfo, controlsManager, player, stationManager, streamPlayer) {
+    constructor(masterInfo, controlsManager, player, stationManager, streamPlayer, noteWriter) {
         this.masterInfo = masterInfo;
         this.controlsManager = controlsManager;
         this.stationManager = stationManager;
         this.player = player;
         this.streamPlayer = streamPlayer;
+        this.noteWriter = noteWriter;
         this.menus = [
             "source-menu",
             "main-menu",
@@ -33,8 +35,62 @@ export class MenuManager {
         this.activateFeedbackMenu();
         this.activateGiveFeedbackMenu();
 
+        this.activateControlsDrag();
+
         this.hideMenus();
         // this.showMenu("choose-song-menu");
+    }
+
+    activateControlsDrag() {
+        const controlsMenu = document.getElementById("controls-bottom");
+        let dragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        const totalWidth = window.innerWidth;
+        const totalHeight = window.innerHeight;
+        let dragTimeout;
+        controlsMenu.addEventListener("touchstart", (e) => {
+            dragTimeout = setTimeout(() => {
+                dragging = true;
+                const rect = controlsMenu.getBoundingClientRect();
+                offsetX = e.targetTouches[0].clientX - rect.left;
+                offsetY = e.targetTouches[0].clientY - rect.top;
+                controlsMenu.style.opacity = "1";
+            }, 500);
+        });
+        controlsMenu.addEventListener("touchend", () => {
+            dragging = false;
+            clearTimeout(dragTimeout);
+            controlsMenu.style.opacity = "0.5";
+        });
+        document.addEventListener("touchmove", (e) => {
+            if (dragging) {
+                controlsMenu.classList.remove("stuck-to-bottom");
+                let newX = e.changedTouches[0].clientX - offsetX;
+                let newY = e.changedTouches[0].clientY - offsetY;
+                const newRect = controlsMenu.getBoundingClientRect();
+                if (newX < 0) {
+                    newX = 0;
+                }
+                if (newX > totalWidth - (newRect.right - newRect.left)) {
+                    newX = totalWidth - (newRect.right - newRect.left);
+                }
+                if (newY < 0) {
+                    newY = 0;
+                }
+                if (newY > totalHeight - (newRect.bottom - newRect.top)) {
+                    newY = totalHeight - (newRect.bottom - newRect.top);
+                }
+                controlsMenu.style.top = `${newY}px`;
+                controlsMenu.style.left = `${newX}px`;
+                if (e.changedTouches[0].clientX < 0.15 * totalWidth || e.changedTouches[0].clientX > 0.85 * totalWidth) {
+                    controlsMenu.classList.add("controls-vertical");
+                }
+                if (e.changedTouches[0].clientY > 0.85 * totalHeight) {
+                    controlsMenu.classList.remove("controls-vertical");
+                }
+            }
+        });
     }
 
     activateGiveFeedbackMenu() {
@@ -138,10 +194,14 @@ export class MenuManager {
                             this.player.setSource(`data:audio/x-wav;base64,${str}`);
                             showSongControlButton("button-play");
                             document.getElementById("song-label").innerText = this.masterInfo.currentSong;
-                            killAllNotes(this.masterInfo);
+                            killAllNotes(this.masterInfo, this.noteWriter);
                             this.masterInfo.defaultSong = null;
                         });
                     });
+                } else {
+                    if (this.masterInfo.currentSong) {
+                        this.masterInfo.currentSong = songData[this.masterInfo.songCode];
+                    }
                 }
             }
             this.showMenu("main-menu");
@@ -174,15 +234,17 @@ export class MenuManager {
             this.masterInfo.songMode = "radio";
             this.setMainMenuOption("select-station-button");
             this.showMenu("main-menu");
-            this.masterInfo.currentSong = "Unsung 80s";
+            this.masterInfo.currentSong = "Hawk classic rock";
             document.getElementById("close-and-play").classList.remove("hidden");
         });
-        setButtonClick("source-streaming", () => {
+        document.getElementById("source-streaming").addEventListener("click", () => {
             document.getElementById("close-and-play-ghost").classList.add("hidden");
             this.masterInfo.songMode = "stream";
             this.setMainMenuOption("show-stream-modal-button");
-            this.showMenu("main-menu");
-            showModal("stream");
+            // this.showMenu("main-menu");
+            // showModal("stream");
+            document.getElementById("source-menu").classList.add("hidden");
+            document.getElementById("stream-modal").classList.remove("hidden");
             if (this.masterInfo.songMode === "radio") {
                 this.stationManager.stopListening();
             }
@@ -190,7 +252,9 @@ export class MenuManager {
 
         // putting this here just because
         setButtonClick("show-stream-modal-button", () => {
-            showModal("stream");
+            // showModal("stream");
+            document.getElementById("main-menu").classList.add("hidden");
+            document.getElementById("stream-modal").classList.remove("hidden");
         });
     }
 
@@ -202,17 +266,25 @@ export class MenuManager {
     }
 
     activateMenuShowButtons() {
-        setButtonClick("show-menu", () => {
-            this.showMenu("main-menu");
-            this.player.pause();
-            this.streamPlayer.stop();
-            this.player.countdownCanceled = true;
+        document.getElementById("show-menu").addEventListener("click", () => {
+            if (this.masterInfo.songMode && this.masterInfo.songMode !== "tutorial") {
+                this.showMenu("main-menu");
+                this.player.pause();
+                this.streamPlayer.stop();
+                this.player.countdownCanceled = true;
+            }
         });
-        setButtonClick("show-source-menu", () => {
+        document.getElementById("show-source-menu").addEventListener("click", () => {
+            killAllNotes(this.masterInfo, this.noteWriter);
+            document.getElementById("song-label").innerHTML = "";
+            this.masterInfo.currentSong = "";
             this.showMenu("source-menu");
             this.player.pause();
             this.streamPlayer.stop();
             this.stationManager.stopListening();
+        });
+        document.getElementById("back-to-main-menu").addEventListener("click", () => {
+            this.showMenu("main-menu");
         });
     }
 

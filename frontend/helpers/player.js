@@ -1,3 +1,5 @@
+import { showSongControlButton } from "./util.js";
+
 export class Player {
     // delay in ms
     constructor(masterInfo, sourceName, fftSize, onEnd) {
@@ -7,6 +9,7 @@ export class Player {
 
         this.playing1 = false;
         this.playing2 = false;
+        this.paused = false;
         this.arrayPlay = false;
 
         // this.song1.oncanplaythrough = () => {};
@@ -24,6 +27,7 @@ export class Player {
             this.playing2 = false;
             this.timeToStart2 = this.delay;
             this.restart();
+            showSongControlButton("button-play");
             onEnd();
         });
         
@@ -109,18 +113,30 @@ export class Player {
         this.playing1 = true;
         this.timeStarted = performance.now();
         if (this.timeToStart2) {
-            this.song2Timeout = setTimeout(() => {
-                this.song2.play();
-                this.playing2 = true;
-                this.timeToStart2 = false;
-                this.waiting = false;
-            }, this.timeToStart2);
+            setTimeout(() => {this.startSong2()}, this.timeToStart2);
+            // this.song2Timeout = setTimeout(() => {
+            //     if (!this.paused) {
+            //         this.song2.play();
+            //         this.playing2 = true;
+            //         this.timeToStart2 = false;
+            //         this.waiting = false;
+            //     }
+            // }, this.timeToStart2);
             this.waiting = true;
         } else {
             this.song2.play();
             this.playing2 = true;
         }
+        this.paused = false;
+    }
 
+    startSong2() {
+        if (!this.paused) {
+            this.song2.play();
+            this.playing2 = true;
+            this.timeToStart2 = false;
+            this.waiting = false;
+        }
     }
 
     pause() {
@@ -141,11 +157,13 @@ export class Player {
                     this.song1.pause();
                 }
                 this.song1.playing = false;
+                this.song1.pause();
                 clearTimeout(this.song2Timeout);
                 this.timeToStart2 = performance.now() - timeStarted;
             }
         }
         this.countdownCanceled = true;
+        this.paused = true;
     }
 
     restart() {

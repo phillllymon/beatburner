@@ -29,6 +29,7 @@
     top: 0px;
     width: 100%;
     height: 100%;
+    /* transform: translate(0vmin, -1.5vmin); */
     background-color: rgb(255, 231, 188);
     /* margin: auto; */
     box-sizing: border-box;
@@ -89,6 +90,7 @@
     height: 100%;
     animation-name: flash;
     animation-duration: 0.25s;
+    /* animation-duration: 10s; */
     opacity: 0;
 }
 @keyframes flash {
@@ -104,6 +106,8 @@
     left: 0px;
     width: 100%;
     height: 100%;
+    /* transform: translate(0vmin, 1.5vmin); */
+    /* ^moved that to noteColorsMobile.css */
     animation-name: lightup;
     animation-duration: 0.25s;
     opacity: 0.7;

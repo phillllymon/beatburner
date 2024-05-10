@@ -10,6 +10,7 @@ import { Player } from "./helpers/player.js";
 import { StationManager } from "./helpers/stationManager.js";
 import { StreamPlayer } from "./helpers/streamPlayer.js";
 import { FileConverter } from "./helpers/fileConverter.js";
+import { Tutorial } from "./helpers/tutorial.js";
 import {
     setElementText,
     removeElementClass,
@@ -18,18 +19,17 @@ import {
     getUserProfile,
     setUserProfile
 } from "./helpers/util.js";
-import { gameDataConst } from "./data.js";
-
-// import { StatusBar, Style } from '@capacitor/status-bar';
-// StatusBar.setStyle({ style: Style.Dark });
+import { gameDataConst, songAuthors } from "./data.js";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const whoosh = new Audio("./effects/whoosh.m4a");
 const electric = new Audio("./effects/static.m4a");
 const guitar = new Audio("./effects/guitar.m4a");
-const twangs = [
-    new Audio("./effects/twang6.m4a"),
-    new Audio("./effects/twang9.m4a"),
-];
+const twangs = [];
+setTimeout(() => {
+    twangs.push(new Audio("./effects/twang6.m4a"));
+    twangs.push(new Audio("./effects/twang9.m4a"));
+}, 1500);
 
 // initial animation
 let wReady = false;
@@ -56,7 +56,7 @@ let tReady = false;
 // }
 setTimeout(() => {
     initialAnimate();
-}, 500);
+}, 1000);
 // ^animation above
 
 const {
@@ -87,7 +87,7 @@ const targetBounds = {
 handleMobile();
 setTimeout(() => {
     document.getElementById("start-curtain").remove();
-}, 1000);
+}, 1100);
 
 const notes = new Set();
 
@@ -149,10 +149,13 @@ let songStreak = 0;
 let longestStreak = 0;
 
 let radioCode = "mvn925";
-let songMode = "demo";
+// let songMode = "demo";
 let sliderPos = 0;
 
 let audioLoaded = false;
+
+let sendStat = true;
+let hapticsOnHit = true;
 
 const masterInfo = {
     algorithm,
@@ -162,17 +165,19 @@ const masterInfo = {
     autoAdjustment,
     autoCalibrating,
     currentSong,
+    hapticsOnHit,
     maxTailLength,
     minNoteGap,
     mostRecentNotesOrTails,
     notes,
     noteSpeed,
     radioCode,
+    sendStat,
     slideLength,
     sliderPos,
     songAtStart,
     songDelay,
-    songMode,
+    // songMode,
     songNotesHit,
     songNotesMissed,
     songStreak,
@@ -213,9 +218,6 @@ const player = new Player(
     32,
     () => {
         animator.stopAnimation();
-        showSongControlButton("button-restart");
-        // autoAdjustment = autoCalibrating ? -0.05 * travelLength : 0;
-        // masterInfo.autoAdjustment = autoAdjustment;
         if (masterInfo.songStreak > longestStreak) {
             longestStreak = masterInfo.songStreak;
         }
@@ -226,11 +228,28 @@ const player = new Player(
         if (masterInfo.songMode === "demo") {
             reportNewScore(accuracy, masterInfo.currentSong);
         }
+        if (accuracy < 90) {
+            document.getElementById("song-fail").classList.remove("hidden");
+            document.getElementById("song-pass").classList.add("hidden");
+            document.getElementById("feedback-percent").style.color = "red";
+        } else {
+            document.getElementById("song-fail").classList.add("hidden");
+            document.getElementById("song-pass").classList.remove("hidden");
+            document.getElementById("feedback-percent").style.color = "green";
+        }
+        document.getElementById("feedback-title").innerText = masterInfo.currentSong;
+        if (masterInfo.songMode === "demo" && songAuthors[masterInfo.songCode]) {
+            document.getElementById("song-information-bar").innerHTML = songAuthors[masterInfo.songCode];
+            document.getElementById("song-information-bar").classList.remove("hidden");
+        } else {
+            document.getElementById("song-information-bar").innerHTML = "";
+            document.getElementById("song-information-bar").classList.add("hidden");
+        }
+        document.getElementById("feedback-title").innerText = masterInfo.currentSong;
         document.getElementById("feedback-percent").innerText = `Tap accuracy: ${accuracy}%`;
         document.getElementById("feedback-streak").innerText = `Longest streak: ${longestStreak}`;
         document.getElementById("feedback-streak-overall").innerText = `Current streak: ${masterInfo.streak}`;
-        document.getElementById("feedback-title").innerText = masterInfo.currentSong;
-        animateStats("percent-bar", ["feedback-percent", "feedback-streak", "feedback-streak-overall"]);
+        animateStats("percent-bar", ["feedback-percent-title", "feedback-streak", "feedback-streak-overall"]);
         masterInfo.songNotesMissed = 0;
         masterInfo.songNotesHit = 0;
         masterInfo.songStreak = 0;
@@ -251,18 +270,28 @@ const controlsManager = new ControlsManager(
     player,
     streamPlayer,
     animator,
-    fileConverter
+    fileConverter,
+    noteWriter
 );
 const menuManager = new MenuManager(
     masterInfo,
     controlsManager,
     player,
     stationManager,
-    streamPlayer
+    streamPlayer,
+    noteWriter
 );
 const connector = new Connector(
     masterInfo,
     streamPlayer
+);
+const tutorial = new Tutorial(
+    masterInfo,
+    controlsManager,
+    animator,
+    player,
+    noteWriter,
+    addNote
 );
 
 getUserProfile().then((profile) => {
@@ -473,6 +502,13 @@ function activateTapper(tapperId, slideId, leavingClass) {
             target.tail.height = perfectHeight;
         }
         triggerHitNote(slideId, tapperId, hasTail);
+        if (masterInfo.songMode === "tutorial") {
+            tutorial.triggerNoteAttempt(true);
+        }
+    } else {
+        if (masterInfo.songMode === "tutorial") {
+            tutorial.triggerNoteAttempt(false);
+        }
     }
 }
 
@@ -525,7 +561,15 @@ function makeTail(slideId, parentNote) {
 
 let lastNote = null;
 let notesMade = 0;
+
+// // TEMP
+// const notesRecord = [];
+// document.addEventListener("click", () => {
+//     console.log(notesRecord);
+// });
+
 function addNote(slideId, val, marked = false) {
+    // notesRecord.push([slideId, player.song2.currentTime]);
 
     const newNote = document.createElement("div");
     newNote.classList.add("note");
@@ -563,13 +607,35 @@ function addNote(slideId, val, marked = false) {
     document.getElementById(slideId).appendChild(newNote);
 
     lastNote = noteInfo;
-    mostRecentNotesOrTails[slideId] = noteInfo;
-    notesMade += 1;
-    return noteInfo;
+    if (masterInfo.songMode !== "tutorial") {
+        mostRecentNotesOrTails[slideId] = noteInfo;
+        notesMade += 1;
+        return noteInfo;
+    }
+}
+
+const streakLengths = {
+    1: 5,
+    2: 20,
+    3: 50,
+    4: 100,
+    5: 100
+}
+const hitClasses = {
+    1: "hit1",
+    2: "hit2",
+    3: "hit3",
+    4: "hit4",
+    5: "hit4"
 }
 
 let labelInUse = false;
 function triggerHitNote(slideId, tapperId, hasTail) {
+    const streakThreshold = streakLengths[animator.notesPerSecond];
+    const hitClass = hitClasses[animator.notesPerSecond];
+    if (masterInfo.hapticsOnHit) {
+        Haptics.impact({ style: ImpactStyle.Light });
+    }
     if (masterInfo.streaming) {
         streamPlayer.setVolume(1);
     } else if (masterInfo.songMode !== "radio") {
@@ -604,6 +670,7 @@ function triggerHitNote(slideId, tapperId, hasTail) {
         const middleLighted = document.createElement("div");
         middleLighted.classList.add("note-middle-lighted");
         const light = document.createElement("div");
+        light.id = `${slideId}-flash`;
         light.appendChild(lighted);
         light.appendChild(middleLighted);
         document.getElementById(`dummy-${tapperId}`).appendChild(light);
@@ -617,71 +684,89 @@ function triggerHitNote(slideId, tapperId, hasTail) {
     masterInfo.streak += 1;
     masterInfo.songStreak += 1;
     
-    if (masterInfo.streak < 100) {
+    if (masterInfo.streak < streakThreshold + 1) {
         const newHit = document.createElement("div");
-        newHit.classList.add("hit");
+        newHit.classList.add(hitClass);
         document.getElementById("streak-channel").appendChild(newHit);
     }
     
     masterInfo.songNotesHit += 1;
     const songLabel = document.getElementById("song-label");
     
-    const rockLabel = document.getElementById("rock-label");
-    if (masterInfo.streak === 100) {
-        rockLabel.innerHTML = "100 NOTE <br> STREAK!";
-        rockLabel.classList.add("rock-label");
-        labelInUse = true;
-        setTimeout(() => {
-            rockLabel.classList.remove("rock-label");
-            rockLabel.innerHTML = "";
-            labelInUse = false;
-        }, 1300);
-        document.getElementById("streak-channel").classList.add("streak-channel-lit");
-    }
-    // if (streak === 20) {
-    if (masterInfo.streak === 200) {
-        document.getElementById("slides").classList.add("on-fire");
-        // document.getElementById("song-label").classList.add("on-fire");
-        rockLabel.innerHTML = "ON FIRE!";
-        rockLabel.classList.add("rock-label");
-        
-        labelInUse = true;
-        setTimeout(() => {
-            rockLabel.classList.remove("rock-label");
-            rockLabel.innerHTML = "";
-            labelInUse = false;
-        }, 1300);
-    }
-    if (masterInfo.streak > 200) {
-    // if (masterInfo.streak > 20) {
-        if (!labelInUse) {
-            rockLabel.classList.add("static-rock");
-            rockLabel.innerText = masterInfo.streak;
+    if (masterInfo.songMode !== "tutorial") {
+        const rockLabel = document.getElementById("rock-label");
+        // if (masterInfo.streak === 100) {
+        //     rockLabel.innerHTML = "100 NOTE <br> STREAK!";
+        //     rockLabel.classList.add("rock-label");
+        //     labelInUse = true;
+        //     setTimeout(() => {
+        //         rockLabel.classList.remove("rock-label");
+        //         rockLabel.innerHTML = "";
+        //         labelInUse = false;
+        //     }, 1300);
+        // }
+
+        if (masterInfo.streak > streakThreshold) {
+            document.getElementById("streak-number").innerHTML = masterInfo.streak;
         }
-    }
-    if (masterInfo.streak === 1000) {
-        rockLabel.innerHTML = "HOLY SHIT!";
-        // rockLabel.classList.add("rock-label");
-        // rockLabel.classList.add("static-rock");
-        
-        labelInUse = true;
-        // setTimeout(() => {
-        //     rockLabel.innerHTML = "SHIT!";
-        // }, 1500);
-        setTimeout(() => {
-            // rockLabel.classList.remove("rock-label");
-            // rockLabel.innerHTML = "";
-            labelInUse = false;
-        }, 2000);
+        if (masterInfo.streak === streakThreshold) {
+            document.getElementById("streak-container").classList.remove("hidden");
+            document.getElementById("streak-container").classList.add("bulge");
+            document.getElementById("streak-number").innerHTML = masterInfo.streak;
+            document.getElementById("streak-channel").classList.add("streak-channel-lit");
+            document.getElementById("streak-meter").classList.add("streak-meter-lit");
+            whoosh.currentTime = 0.5;
+            whoosh.volume = 0.5;
+            whoosh.play();
+        }
+
+        // if (streak === 20) {
+        if (masterInfo.streak === 200) {
+            document.getElementById("slides").classList.add("on-fire");
+            // document.getElementById("song-label").classList.add("on-fire");
+            rockLabel.innerHTML = "ON FIRE!";
+            rockLabel.classList.add("rock-label");
+            
+            labelInUse = true;
+            setTimeout(() => {
+                rockLabel.classList.remove("rock-label");
+                rockLabel.innerHTML = "";
+                labelInUse = false;
+            }, 1300);
+        }
+        if (masterInfo.streak > 200) {
+        // if (masterInfo.streak > 20) {
+            if (!labelInUse) {
+                rockLabel.classList.add("static-rock");
+                rockLabel.innerText = masterInfo.streak;
+            }
+        }
+        if (masterInfo.streak === 1000) {
+            rockLabel.innerHTML = "HOLY <br> SHIT!";
+            // rockLabel.classList.add("rock-label");
+            // rockLabel.classList.add("static-rock");
+            
+            labelInUse = true;
+            // setTimeout(() => {
+            //     rockLabel.innerHTML = "SHIT!";
+            // }, 1500);
+            setTimeout(() => {
+                // rockLabel.classList.remove("rock-label");
+                // rockLabel.innerHTML = "";
+                labelInUse = false;
+            }, 2000);
+        }
     }
 }
 
 function triggerMissedNote() {
-    twangs[Math.floor(twangs.length * Math.random())].play();
-    if (masterInfo.streaming) {
-        streamPlayer.setVolume(0.3);
-    } else if (masterInfo.songMode !== "radio") {
-        player.setVolume(0.3);
+    if (masterInfo.songMode !== "tutorial") {
+        twangs[Math.floor(twangs.length * Math.random())].play();
+        if (masterInfo.streaming) {
+            streamPlayer.setVolume(0.3);
+        } else if (masterInfo.songMode !== "radio") {
+            player.setVolume(0.3);
+        }
     }
     animator.recordNoteMissed();
     removeElementClass("song-label", "font-bigA");
@@ -690,35 +775,42 @@ function triggerMissedNote() {
     document.getElementById("song-label").classList.remove("on-fire");
 
     document.getElementById("streak-channel").classList.remove("streak-channel-lit");
+    document.getElementById("streak-meter").classList.remove("streak-meter-lit");
     document.getElementById("streak-channel").innerHTML = "";
     
     
     const rockLabel = document.getElementById("rock-label");
-    if (!labelInUse) {
+    if (!labelInUse && masterInfo.songMode !== "tutorial") {
         rockLabel.classList.remove("on-fire");
         rockLabel.classList.remove("rock-label");
     }
-    rockLabel.classList.remove("static-rock");
+    if (masterInfo.songMode !== "tutorial") {
+        rockLabel.classList.remove("static-rock");
+    }
     
+    document.getElementById("streak-container").classList.add("hidden");
+    document.getElementById("streak-container").classList.remove("bulge");
     const theStreak = masterInfo.streak;
     if (theStreak > 25) {
         labelInUse = true;
-        rockLabel.innerHTML = `${theStreak} NOTE <br> STREAK!`;
-        rockLabel.classList.add("rock-label");
-        setTimeout(() => {
-            rockLabel.classList.remove("rock-label");
-            if (theStreak > 50) {
-                rockLabel.innerHTML = "YOU ROCK!";
-                rockLabel.classList.add("rock-label");
-                setTimeout(() => {
-                    rockLabel.classList.remove("rock-label");
-                    rockLabel.innerHTML = "";
+        if (masterInfo.songMode !== "tutorial") {
+            rockLabel.innerHTML = `${theStreak} NOTE <br> STREAK!`;
+            rockLabel.classList.add("rock-label");
+            setTimeout(() => {
+                rockLabel.classList.remove("rock-label");
+                if (theStreak > 50) {
+                    rockLabel.innerHTML = "YOU <br> ROCK!";
+                    rockLabel.classList.add("rock-label");
+                    setTimeout(() => {
+                        rockLabel.classList.remove("rock-label");
+                        rockLabel.innerHTML = "";
+                        labelInUse = false;
+                    }, 1300);
+                } else {
                     labelInUse = false;
-                }, 1300);
-            } else {
-                labelInUse = false;
-            }
-        }, 1300);
+                }
+            }, 1300);
+        }
     }
     if (masterInfo.songStreak > longestStreak) {
         longestStreak = masterInfo.songStreak;
@@ -774,7 +866,7 @@ function setupMobile() {
         masterInfo.slideLength = masterInfo.travelLength * 1.3;
         tReady = true;
         
-    }, 500); // without small delay this was getting missed
+    }, 1000); // without small delay this was getting missed
 
     [
         ["tapper-left", "slide-left", "note-leaving-left", "dummy-tapper-left", "dummy-left", "slide-left", "b-slide-left"],
@@ -797,16 +889,16 @@ function setupMobile() {
     });
 
     document.addEventListener("touchend", (e) => {
-        if (e.target.id === "dummy-left" || e.target.id === "dummy-tapper-left" || e.target.id === "a-slide-left" || e.target.id === "b-slide-left") {
+        if (e.target.id === "dummy-left" || e.target.id === "dummy-tapper-left" || e.target.id === "a-slide-left" || e.target.id === "b-slide-left" || e.target.id === "slide-left-flash" || e.target.id === "slide-left-flash-sustain" || e.target.id === "slide-left-note-lighted") {
             deactivateTapper("tapper-left");
         }
-        if (e.target.id === "dummy-a" || e.target.id === "dummy-tapper-a" || e.target.id === "a-slide-a" || e.target.id === "b-slide-a") {
+        if (e.target.id === "dummy-a" || e.target.id === "dummy-tapper-a" || e.target.id === "a-slide-a" || e.target.id === "b-slide-a" || e.target.id === "slide-a-flash" || e.target.id === "slide-a-flash-sustain" || e.target.id === "slide-a-note-lighted") {
             deactivateTapper("tapper-a");
         }
-        if (e.target.id === "dummy-b" || e.target.id === "dummy-tapper-b" || e.target.id === "a-slide-b" || e.target.id === "b-slide-b") {
+        if (e.target.id === "dummy-b" || e.target.id === "dummy-tapper-b" || e.target.id === "a-slide-b" || e.target.id === "b-slide-b" || e.target.id === "slide-b-flash" || e.target.id === "slide-b-flash-sustain" || e.target.id === "slide-b-note-lighted") {
             deactivateTapper("tapper-b");
         }
-        if (e.target.id === "dummy-right" || e.target.id === "dummy-tapper-right" || e.target.id === "a-slide-right" || e.target.id === "b-slide-right") {
+        if (e.target.id === "dummy-right" || e.target.id === "dummy-tapper-right" || e.target.id === "a-slide-right" || e.target.id === "b-slide-right" || e.target.id === "slide-right-flash" || e.target.id === "slide-right-flash-sustain" || e.target.id === "slide-right-note-lighted") {
             deactivateTapper("tapper-right");
         }
     });
@@ -817,29 +909,61 @@ function setupMobile() {
 }
 
 
+// initialQuery
+getUserProfile().then((profile) => {
+    if (profile.queryInitial) {
+        fetch("https://beatburner.com/api/statusQuery.php", { method: "POST" }).then((res) => {
+            
+            res.json().then((r) => {
+                if (r.message === "success") {
+                    masterInfo.sendStat = r.data.queryStats;
+                    profile.queryStats = r.data.queryStats;
+                    profile.queryInitial = r.data.queryInitial;
+                    profile.stations = r.data.stations;
+                    if (r.data.messageId > profile.lastMessage) {
+                        showMessage(r.data.message);
+                        profile.lastMessage = r.data.messageId;
+                    }
+                    setUserProfile(profile).then(() => {
+                        stationManager.updateStationInfo(profile.stations);
+                    });
+                }
+            });
+        }).catch((e) => {
+            console.log(e.message);
+        });
+    }
+});
 
-// stats
-const session_id = Math.floor((Math.random() * 1000000000000000)).toString();
+// TEMP!!! - TODO: make modal for this
+function showMessage(message) {
+    alert(message);
+}
 
-setTimeout(sendStat, 30000);
-setInterval(() => {
-    sendStat();
-}, 180000); // update every 3 minutes
-// }, 10000);
+// stats - commented out to assure google we collect no user data
+// const session_id = Math.floor((Math.random() * 1000000000000000)).toString();
 
-function sendStat() {
-    fetch("https://beatburner.com/api/session.php", {
-        method: "POST",
-        body: JSON.stringify({
-            session: session_id,
-            mode: masterInfo.songMode
-        })
-    });
+// setTimeout(sendStatHome, 30000);
+// setInterval(() => {
+//     sendStatHome();
+// }, 180000); // update every 3 minutes
+
+
+function sendStatHome() {
+    if (masterInfo.sendStat) {
+        fetch("https://beatburner.com/api/session.php", {
+            method: "POST",
+            body: JSON.stringify({
+                session: session_id,
+                mode: masterInfo.songMode
+            })
+        });
+    }
 }
 
 // animateStats("percent-bar-inner-container", ["feedback-percent", "feedback-streak", "feedback-streak-overall"]);
 function animateStats(percentBar, stats) {
-    const timeStep = 1000;
+    const timeStep = 800;
     const startTime = performance.now();
     stats.forEach((id) => {
         document.getElementById(id).style.opacity = "0";
@@ -924,28 +1048,29 @@ function initialAnimate() {
 
 function lightUp(tapperId) {
     const lighted = document.createElement("div");
-        lighted.classList.add("note-lighted");
-        const middleLighted = document.createElement("div");
-        middleLighted.classList.add("note-middle-lighted");
-        const light = document.createElement("div");
-        light.appendChild(lighted);
-        light.appendChild(middleLighted);
-        document.getElementById(`dummy-${tapperId}`).appendChild(light);
-        light.classList.add("flash");
-        setTimeout(() => {
-            light.remove();
-        }, 1000);
-
+    lighted.classList.add("note-lighted");
+    const middleLighted = document.createElement("div");
+    middleLighted.classList.add("note-middle-lighted");
+    const light = document.createElement("div");
+    light.appendChild(lighted);
+    light.appendChild(middleLighted);
+    document.getElementById(`dummy-${tapperId}`).appendChild(light);
+    light.classList.add("flash");
+    setTimeout(() => {
+        light.remove();
+    }, 1000);
 }
 
 
-            // const lighted = document.createElement("div");
-            // lighted.classList.add("note-lighted");
-            // const middleLighted = document.createElement("div");
-            // middleLighted.classList.add("note-middle-lighted");
-            // const light = document.createElement("div");
-            // light.appendChild(lighted);
-            // light.appendChild(middleLighted);
-            // document.getElementById(`dummy-tapper-right`).appendChild(light);
-            // light.classList.add("flash");
-            // light.id = `${"slide-right"}-flash-sustain`;
+// const theNotes = [];
+// document.addEventListener("keydown", (e) => {
+//     const slide = {
+//         KeyJ: "slide-right",
+//         KeyS: "slide-left",
+//         KeyC: "slide-a"
+//     }[e.code];
+//     theNotes.push([player.song2.currentTime, slide]);
+//     if (e.code === "KeyP") {
+//         console.log(theNotes);
+//     }
+// });

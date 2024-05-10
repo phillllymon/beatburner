@@ -72,17 +72,17 @@ export class BackgroundAnimator {
             
             left.style.background = `linear-gradient(
                 to left,
-                rgba(${colsToUse[1]}, 0) 0%,
-                rgba(${colsToUse[1]}, 1) 100%)`;
+                rgba(${colsToUse[0]}, 0) 0%,
+                rgba(${colsToUse[0]}, 1) 100%)`;
             right.style.background = `linear-gradient(
                 to right,
-                rgba(${colsToUse[1]}, 0) 0%,
-                rgba(${colsToUse[1]}, 1) 100%)`;
-            document.getElementById("fog-mobile-top").style.backgroundColor = `rgb(${colsToUse[1]})`;
+                rgba(${colsToUse[0]}, 0) 0%,
+                rgba(${colsToUse[0]}, 1) 100%)`;
+            document.getElementById("fog-mobile-top").style.backgroundColor = `rgb(${colsToUse[0]})`;
             document.getElementById("fog-mobile-gradient").style.background = `linear-gradient(
                 to top,
-                rgba(${colsToUse[1]}, 0) 0%,
-                rgba(${colsToUse[1]}, 1) 100%)`;
+                rgba(${colsToUse[0]}, 0) 0%,
+                rgba(${colsToUse[0]}, 1) 100%)`;
 
             let total = 0;
 

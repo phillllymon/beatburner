@@ -65,13 +65,13 @@
 }
 
 .menu-red .left-arrow {
-    border-right: 2.5vh solid var(--redShadow);
+    border-right: 2.5vh solid var(--redBackground);
 }
 .menu-green .left-arrow {
-    border-right: 2.5vh solid var(--greenShadow);
+    border-right: 2.5vh solid var(--greenBackground);
 }
 .menu-purple .left-arrow {
-    border-right: 2.5vh solid var(--purpleShadow);
+    border-right: 2.5vh solid var(--purpleBackground);
 }
 
 .menu-red .menu-choice {

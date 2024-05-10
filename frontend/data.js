@@ -24,19 +24,93 @@ export const gameDataConst = {
 
 export const songStages = [
     [
-        "aintOverYou",
-        "goodLook",
+        "lifeIBelieve", // medium 90.9
+        "innerPeace", // medium *best 89
+        "getThatFeeling", // intense 94.9
+        "handle", // intense 88
+        "thinkingOfYou", // medium 87.5
+    ],
+    [    
+        "words", // mellow country 94.2
+        "hypeMeUp", // intense 96.2
+        "heartBlueBlack", // medium country 94.5
+        "paleCityGirl", // intense nostalgic 93.9
+        "rockItTonight", // medium oldie 91.9
+    ],
+    [  
+        "indian", // intense 95.4
+        "neverBackDown", // medium *best 90.1
+        "womanWithTheWind", // medium countryish 93.6
+        "liveInMyHead", // medium happy 92.2
+        "moneyMoney", // intense rap 91.6
+    ],
+    [ 
+        "aLifeLikeThis", // medium bouncy 92
+        "echoesOfThePast", // medium western 90.4
+        "neverBeBlue", // meduim happy french 89.2
+        "schoolGirlCrush", // medium 90.4
+        "temptation", // intense countryish 89.7
     ],
     [
-        "maniaMaster",
-        "myHeart"
+        "hotHotFire", // intense 95.9
+        "animal", // medium ska 94.7
+        "myHeartIsAllYours", // medium happy 96.9 
+        "itDoesntMatter", // intense 89.5
+        "myHeart", // abstract 88.6
+    ],
+    [
+        "prettyThing", // mellow happy 87.2
+        "intoTheNight", // Brent 90.4
+        "rascalBack", // medium country 88.7
+        "whispersOfTheWreck", // mellow 95
+        "inevitable", // medium spanish 82.7
+        "echoesOfRebellion", // medium 90.7
+        "discoBeat",
+        "shareLove"
     ]
-]
+];
+
+export const songAuthors = {
+    "discoBeat": `Clarx <a href="https://www.youtube.com/watch?v=_H5UO3c4YtM">NCS</a>`,
+    "echoesOfRebellion": "R Harris",
+    "getThatFeeling": "Ikoliks",
+    "heartBlueBlack": "Assaf Ayalon",
+    "hypeMeUp": "IamDayLight, Curtis Cole, Paper Plastic",
+    "inevitable": "Donnor & Tie",
+    "lifeIBelieve": "Jon Worthy and the Bends",
+    "liveInMyHead": "Eldar Kedem",
+    "neverBackDown": "Ben Goldstein feat. Moon",
+    "neverBeBlue": "Dan Zeitune",
+    "paleCityGirl": "Indiana Bradley",
+    "prettyThing": "Crosstown Traffic",
+    "rascalBack": "Ben Bostick",
+    "schoolGirlCrush": "Brunch with Bunny",
+    "shareLove": "Buddha Kid",
+    // "shouldBeMe": "Kyle Cox",
+    "whispersOfTheWreck": "R Harris",
+    "words": "Assaf Ayalon",
+    "aLifeLikeThis": "River Lume",
+    "echoesOfThePast": "Max Hixon",
+    "hotHotFire": "MILANO",
+    "moneyMoney": "MILANO",
+    "rockItTonight": "MILANO",
+    "animal": "Title Holder",
+    "handle": "Van Stee",
+    "indian": "Taheda",
+    "innerPeace": "Yotam Ben Horin",
+    "itDoesntMatter": "Title Holder",
+    "myHeartIsAllYours": "Steven Beddall",
+    "thinkingOfYou": "SOURWAH",
+    "temptation": "Ride Free",
+    "womanWithTheWind": "Ben Strawn",
+    // "cactusFlower": "Southern Call",
+    "intoTheNight": "Brent Henderson",
+    "myHeart": `Different Heaven & EH!DE <a href="https://www.youtube.com/watch?v=jK2aIUmmdP4">NCS</a>`
+}
 
 export const songData = {
     "agressiveMetal": "Aggressive Metal",
     "aHumanBeing": "A Human Being",
-    "aintOverYou": "Ain't Over You",
     "anthemOfRain": "Anthem of Rain",
     "bigWhiteLimousine": "Big White Limousine",
     "blahBlahBlah": "Blah Blah Blah",
@@ -44,6 +118,7 @@ export const songData = {
     "canvasOfDreams": "Canvas of Dreams",
     "cosmicCaravan": "Cosmic Caravan",
     "cricket": "Cricket",
+    "discoBeat": "Disco",
     "disfigure": "Disfigure",
     "doItAgain": "Do It Again",
     "echoesOfRebellion": "Echoes of Rebellion",
@@ -53,13 +128,12 @@ export const songData = {
     "getThatFeeling": "Get That Feeling",
     "glowOfTheMoon": "In the Glow of the Moon",
     "godOrDevil": "God or the Devil",
-    "goodLook": "Good Look",
     "happierWithoutYou": "Happier Without You",
     "heartBlueBlack": "My Heart is Blue Black",
     "hypeMeUp": "Hype Me Up",
     "inevitable": "Inevitable",
     "keepYou": "Keep You",
-    "likeIBelieve": "A Life I Believe",
+    "lifeIBelieve": "A Life I Believe",
     "littleGirl": "Little Girl",
     "liveInMyHead": "Live In My Head",
     "maniaMaster": "Mania Master",
@@ -95,5 +169,31 @@ export const songData = {
     "unbreakable": "Unbreakable",
     "wayYouMove": "Way You Move",
     "whispersOfTheWreck": "Whispers of the Wreck",
-    "words": "Words"
+    "words": "Words",
+    "aLifeLikeThis": "A Life Like This",
+    "aThousandTimes": "A Thousand Times",
+    "echoesOfThePast": "Echoes of the Past",
+    "hotHotFire": "Hot Hot Fire",
+    "low": "Low",
+    "moneyMoney": "Money Money",
+    "motherOfLife": "Mother of Life",
+    "rockItTonight": "Rock It Tonight",
+    "safariSurf": "Safari Surf",
+    "saturdaySpecial": "Saturday Special",
+    "animal": "Animal",
+    "cactusFlower": "Cactus Flower",
+    "circusStory": "Russian Circus Story",
+    "emptyApartment": "Empty Apartment",
+    "handle": "Handle",
+    "indian": "Indian",
+    "innerPeace": "Inner Peace",
+    "itDoesntMatter": "It Doesn't Matter",
+    "myHeartIsAllYours": "My Heart is All Yours",
+    "nowhere": "Nowhere",
+    "rockwell": "Rockwell",
+    "springRain": "Spring Rain",
+    "thinkingOfYou": "Thinking of You",
+    "temptation": "Temptation",
+    "womanWithTheWind": "Woman with the Wind",
+    "intoTheNight": "Into the Night"
 }

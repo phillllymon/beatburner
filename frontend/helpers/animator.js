@@ -1,5 +1,6 @@
 import { 
-    averageOf
+    averageOf,
+    getUserProfile
 } from "./util.js";
 
 export class Animator {
@@ -20,6 +21,10 @@ export class Animator {
         this.allSlides = masterInfo.allSlides;
         this.slides = [this.allSlides[0], this.allSlides[1], this.allSlides[3]];
         this.notesPerSecond = 2; // starting level note per second
+        getUserProfile().then((profile) => {
+            this.notesPerSecond = profile.level;
+            this.setNumSlides(profile.slides);
+        });
         this.targetTails = masterInfo.targetTails;
         this.targets = masterInfo.targets;
         this.targetBounds = masterInfo.targetBounds;
@@ -102,15 +107,38 @@ export class Animator {
     }
 
     animate(params) {
+        const now = performance.now();
+        if (this.masterInfo.songMode === "tutorial") {
+            const dt = now - this.time;
+            this.time = now;
+            moveNotes(
+                this.masterInfo.notes,
+                this.masterInfo.noteSpeed,
+                this.slides,
+                this.targetTails,
+                this.targets,
+                this.masterInfo.targetBounds,
+                this.triggerMissedNote,
+                this.recents,
+                this.masterInfo.slideLength,
+                dt,
+                this
+            );
+    
+            if (this.animating) {
+                requestAnimationFrame(() => this.animate(params));
+            }
+            return;
+        }
         const {
             player,
             algorithm,
         } = params;
 
-        const now = performance.now();
         const timesToUse = [];
 
         if (now - this.lastTime > 35 || !this.masterInfo.useShortSteps) {
+            // console.log("SLOW" + Math.random());
             timesToUse.push(now);
             this.lastTime = now;
         } else {
@@ -165,11 +193,17 @@ function updateMeter(notesHit, notesMissed) {
     if (percent < 2) {
         percent = 2;
     }
-    if (percent > 98) {
+    if (percent > 98 && notesHit > 10) {
         percent = 100;
         document.getElementById("skilz-channel").classList.add("skilz-channel-lit");
+        document.getElementById("skilz-meter").classList.add("skilz-meter-lit");
+        document.getElementById("perfect").classList.remove("hidden");
+        document.getElementById("perfect-container").classList.add("perfect-slide-left");
     } else {
         document.getElementById("skilz-channel").classList.remove("skilz-channel-lit");
+        document.getElementById("skilz-meter").classList.remove("skilz-meter-lit");
+        document.getElementById("perfect").classList.add("hidden");
+        document.getElementById("perfect-container").classList.remove("perfect-slide-left");
     }
     document.getElementById("skilz-ball").style.top = `${100 - percent}%`;
 

@@ -267,8 +267,14 @@
 
 #skilz-meter {
     top: 90vh;
+    /* top: 80vh; */
 }
 #streak-meter {
     top: 90vh;
+    /* top: 80vh; */
+}
+
+.flash-sustain {
+    transform: translate(0vmin, 1.5vmin);
 }
 

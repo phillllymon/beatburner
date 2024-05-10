@@ -19,7 +19,6 @@ export class Connector {
         this.nextReceiveMessage = 0;
 
         document.getElementById("connect-stream-button").addEventListener("click", () => {
-            console.log("Trying to connect");
             setMessage("attempting to connect");
             const streamId = document.getElementById("enter-stream-id").value;
             this.connect(streamId);
@@ -27,7 +26,7 @@ export class Connector {
 
         document.getElementById("cancel-stream-button").addEventListener("click", () => {
             document.getElementById("stream-modal").classList.add("hidden");
-            document.getElementById("modal-background").classList.add("hidden");
+            document.getElementById("main-menu").classList.remove("hidden");
         });
 
         // unsure if necessary

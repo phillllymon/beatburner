@@ -1,11 +1,12 @@
 /* top section for opening animation */
 .slides {
     animation-name: rotateUp;
-    animation-duration: 2s;
+    animation-duration: 2.5s;
 }
 
 @keyframes rotateUp {
     0%      {transform: rotateX(180deg); opacity: 0}
+    20%      {transform: rotateX(180deg); opacity: 0}
     100%    {transform: rotateX(20deg); opacity: 1}
 }
 
@@ -26,6 +27,7 @@
 
 .slide {
     width: 50vw;
+    /* opacity: 0; */
 }
 
 .clear-slide {
@@ -39,19 +41,20 @@
     border-left: 3vh solid orange;
     border-right: 3vh solid orange;
 }
-/* 
+
 .dummy-tapper {
-    border: 1.5vh solid transparent;
-} */
+    transform: translate(-50%, -1.5vmin);
+}
 
 #tappers-inner-container {
     position: absolute;
     top: 127vh;
     animation-name: slideUp;
-    animation-duration: 3s;
+    animation-duration: 3.5s;
 }
 @keyframes slideUp {
     0%      {top: 150vh; opacity: 0;}
+    20%      {top: 150vh; opacity: 0;}
     60%      {top: 150vh; opacity: 0;}
     90%    {opacity: 1;}
     100%    {top: 127vh; opacity: 1;}
@@ -260,5 +263,14 @@
 
 .menu {
     width: 90vw;
+}
+
+.controls-bottom {
+    position: fixed;
+    left: 0%;
+    top: 56%;
+    flex-direction: column;
+    transform: none;
+    opacity: 0.5;
 }
 

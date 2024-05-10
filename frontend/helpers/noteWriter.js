@@ -24,11 +24,11 @@ export class NoteWriter {
         this.lastAlls = [];
         this.mostRecentNotes = masterInfo.mostRecentNotesOrTails;
 
-        this.numToneVals = 30;
-        this.recentToneVals = [80];
+        this.numToneVals = 5;
+        // this.recentToneVals = [80];
         // this.recentToneVals = [20, 50, 80];
         // this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80];
-        // this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80];
+        this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80];
         // this.recentToneVals = [
         //     20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80,
         //     20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80,
@@ -45,9 +45,41 @@ export class NoteWriter {
 
         this.lastArrs = [];
 
+        this.rawArrs = [];
+        // this.highestFreqs = []; // [idx, val]
+
         // EXPERIMENTAL
         this.gap = 200;
 
+        this.resetData();
+        // // DETAIL EXPERIMENT
+        // this.times = [];
+        // this.collectArrays = [];
+        // this.collectTimeArrays = [];
+        // this.timeArrayVariances = [];
+        // this.startTime = performance.now();
+        // this.lastTime = performance.now();
+        // this.stepTime = 5; // ms to collapse data
+        // this.arrLength = 2048;
+        
+
+        // // precise - hills in moment get taller
+        // this.aveHillHeights = [];
+        // this.tallestTowers = [];
+        // this.toneVals = [];
+        // this.peakOffset = 0;
+
+        // // precise better - same but with running total
+        // this.prev = false;
+        // this.low = false;
+        // this.lowIdx = false;
+        // this.dir = 1;
+
+        // which algorithm?
+        this.doPreciseBetter = true;
+    }
+
+    resetData() {
         // DETAIL EXPERIMENT
         this.times = [];
         this.collectArrays = [];
@@ -70,23 +102,23 @@ export class NoteWriter {
         this.low = false;
         this.lowIdx = false;
         this.dir = 1;
-
-        // which algorithm?
-        this.doPreciseBetter = true;
     }
 
-    writeTails(theseTallestTowers, slideIds, futureTallestTowers) {
-        if (this.recentToneVals.length < 16) {
+    writeTails(theseTallestTowers, slideIds, futureTallestTowers, notesPerSecond) {
+        if (this.recentToneVals.length < 5 || notesPerSecond < 2) {
             return;
         }
-
+        
         slideIds.forEach((slideId) => {
 
             
             const lastNote = this.mostRecentNotes[slideId];
             if (lastNote) {
 
-                const reachDist = 8; // larger number means more sustained notes
+                let reachDist = 8; // larger number means more sustained notes
+                if (this.masterInfo.songMode === "radio") {
+                    reachDist = 4;
+                }
                 let noteValToUse = lastNote.val;
                 if (noteValToUse.length > 8) {
                     noteValToUse = noteValToUse.slice(Math.floor(0.25 * noteValToUse.length), Math.floor(0.75 * noteValToUse.length));
@@ -99,7 +131,8 @@ export class NoteWriter {
                     theseTowerLocations.add(tower[1]);
                 });
                 let towersFound = 0;
-                const towersNeeded = Math.ceil(noteValToUse.length / 6);
+                // const towersNeeded = Math.ceil(noteValToUse.length / 6);
+                const towersNeeded = Math.ceil(noteValToUse.length / 1);
                 noteValToUse.forEach((tower) => {
                     const loc = tower[1];
                     let towerFound = false;
@@ -234,6 +267,8 @@ export class NoteWriter {
             
             // FOR NO COLLECT ARRAY!!!!
             const arrToUse = dataArray;
+            // const arrToUse = timeArray;
+
             const timeArrToUse = timeArray;
             this.timeArrayVariances.push(Math.max(...timeArrToUse) - Math.min(...timeArrToUse));
             
@@ -248,8 +283,19 @@ export class NoteWriter {
                 let low = prev;
                 let dir = 1;
                 const peaks = []; // will be populated with [val, i] ordered by val
+
+                // FOR highestFreqs
+                // let maxVal = 0;
+                // let maxValIdx = 0;
+
                 arrToUse.forEach((val, i) => {
                     if (val > 0) {
+
+                        // FOR higestFreqs
+                        // if (val > maxVal) {
+                        //     maxVal = val;
+                        //     maxValIdx = 0;
+                        // }
         
                         if (val > prev) {   // going up
                             if (dir === -1) {
@@ -274,13 +320,16 @@ export class NoteWriter {
                     prev = val;
                 });
 
-                peaks.sort((a, b) => {
-                    if (a[0] > b[0]) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
-                });
+                // FOR higestFreqs
+                // this.highestFreqs.push([maxValIdx, maxVal]);
+
+                // peaks.sort((a, b) => {
+                //     if (a[0] > b[0]) {
+                //         return 1;
+                //     } else {
+                //         return -1;
+                //     }
+                // });
                 
                 const cutoffIdx = peaks.length * 0.9;
                 const highPeaks = peaks.slice(cutoffIdx, peaks.length);
@@ -308,15 +357,55 @@ export class NoteWriter {
                 }
                 this.toneVals.push(aveDiff);
 
-                this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
+                // this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
+                //     return peak[0];
+                // }))); // put latest average peak height into this.aveHillHeights
+
+                // MAX INSTEAD OF AVE hill height
+                this.aveHillHeights.push(Math.max(...highPeaks.map((peak) => {
                     return peak[0];
                 }))); // put latest average peak height into this.aveHillHeights
+
+                // EQUALIZER TEMP!!!!
+                // const equals = [
+                //     Math.max(...arrToUse.slice(0, 512)),
+                //     Math.max(...arrToUse.slice(512, 1024)),
+                //     Math.max(...arrToUse.slice(1024, 1536)),
+                //     Math.max(...arrToUse.slice(1536, 2048))
+                //     // arrAverage(arrToUse.slice(0, 512)),
+                //     // arrAverage(arrToUse.slice(512, 1024)),
+                //     // arrAverage(arrToUse.slice(1024, 1536)),
+                //     // arrAverage(arrToUse.slice(1536, 2048))
+                // ];
+                // this.lastEquals.push(equals);
+                this.rawArrs.push(arrToUse);
+                // END TEMP - but see this.lastEquals below
                 
+
                 if (this.aveHillHeights.length > this.times.length) {
                     this.aveHillHeights.shift();
                     this.timeArrayVariances.shift();
                     this.tallestTowers.shift();
                     this.toneVals.shift();
+                    // this.lastEquals.shift(); /////////// TEMP
+                    this.rawArrs.shift(); /////////// TEMP
+                    // this.highestFreqs.shift();
+                }
+
+                // FOR highestFreqs
+                // let highestPeakVal = 0;
+                // let highestPeakIdx = 0;
+                // this.highestFreqs.forEach((peakArr) => {
+                //     if (peakArr[1] > highestPeakVal) {
+                //         highestPeakVal = peakArr[1];
+                //         highestPeakIdx = peakArr[0];
+                //     }
+                // });
+                
+                let zoomInFactor = 4;
+                // let zoomInFactor = 6;
+                if (this.times[this.times.length - 1] - this.times.length[0] < 3900 || this.times.length < 100) {
+                    zoomInFactor = 1;
                 }
 
                 // now look for time hills to trigger notes
@@ -327,7 +416,14 @@ export class NoteWriter {
                 let timeDir = 1;
                 let timeLow = timePrev;
                 let timeLowIdx = 0;
-                for (let i = 1; i < this.aveHillHeights.length; i++) {
+
+                const legLength = Math.floor(this.aveHillHeights.length / (2 * zoomInFactor));
+                const startIdx = Math.floor(this.aveHillHeights.length / 2 - legLength);
+                const endIdx = Math.floor(this.aveHillHeights.length / 2 + legLength);
+
+
+                // for (let i = 1; i < this.aveHillHeights.length; i++) {
+                for (let i = startIdx; i < endIdx; i++) {
                     const thisVal = this.aveHillHeights[i];
                     if (thisVal > timePrev) {   // going up
                         if (timeDir === -1) {
@@ -342,24 +438,17 @@ export class NoteWriter {
                             const hillHeight = timePrev - timeLow;
                             // if (hills.length === 0 || hillHeight > hills[0][0]) {
                             if (hillHeight > 0) {
-                                
-                                // fast push & sort
-                                
 
-                                // slow push & sort
-                                hills.push([hillHeight, timeLowIdx]); // i - idx is to get toneVal from peak
-                                hillPeakIdxs[timeLowIdx] = i - timeLowIdx;
-                                // hills.sort((a, b) => {
-                                //     if (a[0] > b[0]) {
-                                //         return 1;
-                                //     } else {
-                                //         return -1;
-                                //     }
-                                // });
                                 
-                                // if (hills.length > maxHills) {
-                                //     hills.shift();
-                                // }
+                                // const prominance = this.timeArrayVariances[i] - this.timeArrayVariances[timeLowIdx];
+                                // hills.push([hillHeight, timeLowIdx, prominance]); // prominance by loudness at top of hill vs bottom
+
+                                hills.push([hillHeight, timeLowIdx, this.timeArrayVariances[i]]); // timeArrayVariances for loudness for prominance
+                                // hills.push([hillHeight, timeLowIdx, this.rawArrs[i][highestPeakIdx]]); // prominance by prominance of most prominant frequency
+                                // hills.push([hillHeight, timeLowIdx, this.timeArrayVariances[i] * hillHeight]); // loudness * height
+
+                                
+                                hillPeakIdxs[timeLowIdx] = i - timeLowIdx;
                             }
                         }
                         timeLow = thisVal;
@@ -371,7 +460,8 @@ export class NoteWriter {
 
                 // SORT HILLS JUST ONCE, after they're all gathered
                 hills.sort((a, b) => {
-                    if (a[0] > b[0]) {
+                    // if (a[0] > b[0]) {
+                    if (a[2] > b[2]) { /////// TEMP TEMP TEMP TEMP - use prominance
                         return 1;
                     } else {
                         return -1;
@@ -392,25 +482,55 @@ export class NoteWriter {
                 if (peakIdx) {
                     this.peakOffset = hillPeakIdxs[midIdx];
                 }
+
                 // noteValToUse = this.tallestTowers[midIdx + this.peakOffset].slice(
                 //     this.tallestTowers[midIdx + this.peakOffset].length - 10, 
                 //     this.tallestTowers[midIdx + this.peakOffset].length - 0
                 // );
                 noteValToUse = this.tallestTowers[midIdx + this.peakOffset];
-                toneValToUse = this.toneVals[peakIdx];
+                toneValToUse = arrAverage(this.tallestTowers[midIdx + this.peakOffset].map((sub) => {
+                    return sub[0];
+                }));
+                
+                // toneValToUse = this.toneVals[peakIdx]; // TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
+                // if (this.rawArrs[peakIdx]) {
+                //     // toneValToUse = weightedAve(this.rawArrs[peakIdx].slice(0, 2048));
+                //     // average indices of top 10 
+
+                //     // toneValToUse = Math.max(...this.rawArrs[peakIdx].slice(150, 2048));
+                //     // // attempt to do ^that for real;
+                //     let max = 0;
+                //     let maxIdx = 0;
+                //     this.rawArrs[peakIdx].forEach((val, i) => {
+                //         if (val > max) {
+                //             max = val;
+                //             maxIdx = i;
+                //         }
+                //     });
+                //     toneValToUse = maxIdx;
+                // } else {
+                //     toneValToUse = 1;
+                // }
+
+
+
+                
 
                 
                 const timePerStep = 4000 / this.tallestTowers.length;
                 let numFutureSteps = Math.ceil(200 / timePerStep);
 
+
                 if (this.masterInfo.sustainedNotes) {
                     this.writeTails(
                         this.tallestTowers[midIdx + this.peakOffset],
                         slideIds, 
-                        this.tallestTowers.slice(midIdx + this.peakOffset + 1, midIdx + this.peakOffset + 1 + numFutureSteps)
+                        this.tallestTowers.slice(midIdx + this.peakOffset + 1, midIdx + this.peakOffset + 1 + numFutureSteps),
+                        notesPerSecond
                     );
                 } 
                 
+                // too quiet
                 if (this.timeArrayVariances[midIdx] < 15) {
                     return;
                 }
@@ -422,14 +542,53 @@ export class NoteWriter {
                 const v = this.aveHillHeights[this.aveHillHeights.length - 1];
                 const fraction = 1.0 * (v - minV) / range;
                 
-                const cutoff = {
-                    1: 0.95,
-                    2: 0.75,
-                    3: 0.5,
-                    4: 0,
-                    5: 0
+                // const cutoff = {
+                //     1: 0.95,
+                //     2: 0.75,
+                //     3: 0.5,
+                //     4: 0,
+                //     5: 0
+                // }[notesPerSecond];
+
+                let cutoff = {
+                    1: 0.93,
+                    2: 0.82,
+                    3: 0.75,
+                    4: 0.5,
+                    5: 0.25
                 }[notesPerSecond];
-                if (hills.slice(Math.floor(cutoff * hills.length), hills.length - 1).map((hill) => {
+
+                // for zoomInFactor
+                // cutoff = 1 - ((1.0 - cutoff) / zoomInFactor);
+
+                if (slideIds.length === 3) {
+                    let cutoffDiff = 1 - cutoff;
+                    cutoffDiff *= 0.75;
+                    cutoff = 1 - cutoffDiff;
+                }
+                if (slideIds.length === 2) {
+                    let cutoffDiff = 1 - cutoff;
+                    cutoffDiff *= 0.5;
+                    cutoff = 1 - cutoffDiff;
+                }
+
+                // number version (instead of fraction version)
+                let numNotes = {
+                    1: 4,
+                    2: 7,
+                    3: 10,
+                    4: 15,
+                    5: 20
+                }[notesPerSecond];
+                if (slideIds.length === 3) {
+                    numNotes *= 0.75;
+                }
+                if (slideIds.length === 2) {
+                    numNotes *= 0.5;
+                }
+
+                if (hills.slice(Math.floor(hills.length - numNotes), hills.length - 1).map((hill) => {
+                // if (hills.slice(Math.floor(cutoff * hills.length), hills.length - 1).map((hill) => {
                     return hill[1];
                 }).includes(midIdx)) {
                     makeNote = true;
@@ -444,15 +603,6 @@ export class NoteWriter {
                 if (this.lastAlls.length > this.times.length) {
                     this.lastAlls.shift();
                 }
-
-                // if (this.lastAlls.length > 20) {
-                //     this.backgroundAnimator.animateBackground([
-                //         Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 2048, arrToUse.length - 1536)), 1.5),
-                //         Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 1536, arrToUse.length - 1024)), 1.5),
-                //         Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 1024, arrToUse.length - 512)), 1.5),
-                //         Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 512, arrToUse.length - 256)), 1.5)
-                //     ]);
-                // }
 
                 const thisBackArr = [
                     Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 2048, arrToUse.length - 1536)), 1.5),
@@ -472,18 +622,33 @@ export class NoteWriter {
                 }
                 this.backgroundAnimator.animateBackground(backArrToUse);
 
+                // FOR highestFreqs
+                // const stepsEachSide = 30;
+                // if (this.rawArrs.length > 2 * stepsEachSide + 50) {
+                //     const littleArrToUse = this.rawArrs.slice(midIdx - stepsEachSide, midIdx + stepsEachSide);
+                //     let maxIdx = 0;
+                //     let maxVal = 0;
+                //     littleArrToUse.forEach((subArr, i) => {
+                //         const freqVal = subArr[highestPeakIdx];
+                //         if (freqVal > maxVal) {
+                //             maxVal = freqVal;
+                //             maxIdx = i;
+                //         }
+                //     });
+                //     if (maxIdx === Math.floor(littleArrToUse.length / 2)) {
+                //         marked = true;
+                //         makeNote = true;
+                //     } else {
+                //         makeNote = false;
+                //     }
+                // }
+                
+                
+                
                 
             }
 
-            // if (makeNote) {
-            //     this.timesSinceLast.unshift(this.timeSinceLast);
-            //     this.timesSinceLast.pop();
-            //     this.timeSinceLast = 0;
-            // } else {
-            //     this.timeSinceLast = performance.now() - this.last;
-            //     this.timesSinceLast[3] = this.timeSinceLast;
-            // }
-            // this.backgroundAnimator.animateBackground(this.timesSinceLast);
+            
             
             if (makeNote) {
 
@@ -515,6 +680,74 @@ export class NoteWriter {
         while (toneVal > sortedTones[i]) {
             i += 1;
         }
+
+        // TEMP!!!!!
+        // if (numSlides === 4 && this.lastEquals.length > 10) {
+        //     const midIdx = Math.floor(this.lastEquals.length / 2);
+        //     const midEquals = this.lastEquals[midIdx];
+        //     const lastEquals = this.lastEquals[midIdx - 1];
+            
+            
+            
+        //     const totals = this.noteArrs.map((arr) => {
+        //         let sum = 0;
+        //         arr.forEach((ele) => {
+        //             sum += ele;
+        //         });
+        //         return sum;
+        //     });
+
+        //     // const minTotal = Math.min(...totals);
+        //     // const factors = totals.map((n) => {
+        //     //     if (minTotal === 0) {
+        //     //         return n;
+        //     //     }
+        //     //     return n / minTotal;
+        //     // });
+
+        //     const diffs = midEquals.map((n, i) => {
+        //         return (1.0 * n - lastEquals[i]) / n;
+        //     });
+            
+        //     const diffsToUse = diffs.map((n, i) => {
+        //         let num = n;
+        //         for (let j = 0; j < totals[i]; j++) {
+        //             num *= 0.5;
+        //         }
+        //         return num;
+        //     });
+
+        //     let idx = 0;
+        //     let max = diffsToUse[0];
+        //     diffsToUse.forEach((diff, i) => {
+        //         if (diff > max) {
+        //             idx = i;
+        //             max = diff;
+        //         }
+        //     });
+
+        //     this.nums[idx] += 1;
+        //     if (Math.random() < 0.05) {
+        //         console.log(this.nums.map(ele => ele));
+        //     }
+
+        //     this.noteArrs.forEach((arr, i) => {
+        //         if (i === idx) {
+        //             arr.push(0);
+        //         } else {
+        //             arr.push(1);
+        //         }
+        //         arr.shift();
+        //     });
+        //     return [
+        //         "slide-left",
+        //         "slide-a",
+        //         "slide-b",
+        //         "slide-right"
+        //     ][idx];
+        // }
+        // END TEMP!!!!
+
         if (numSlides === 4 && this.recentToneVals.length > 7) {
             const max = Math.max(...this.recentToneVals);
             const min = Math.min(...this.recentToneVals);
@@ -527,17 +760,6 @@ export class NoteWriter {
                 return "slide-a";
             }
             if (toneVal < (3 * stepSize) + min) {
-                return "slide-b";
-            }
-            return "slide-right";
-            
-            if (i < this.recentToneVals.length / 4) {
-                return "slide-left";
-            }
-            if (i < this.recentToneVals.length / 2) {
-                return "slide-a";
-            }
-            if (i < 3 * this.recentToneVals.length / 4) {
                 return "slide-b";
             }
             return "slide-right";
@@ -611,15 +833,15 @@ export class NoteWriter {
         let noteMade = false;
 
         let gap = this.gap;
-        if (notesPerSecond > 4) {
+        // if (notesPerSecond > 4) {
             gap *= 0.75;
-        }
-        if (notesPerSecond === 2) {
-            gap *= 1.5;
-        }
-        if (notesPerSecond === 1) {
-            gap *= 2;
-        }
+        // }
+        // if (notesPerSecond === 2) {
+        //     gap *= 1.5;
+        // }
+        // if (notesPerSecond === 1) {
+        //     gap *= 2;
+        // }
 
         if (slideToUse) { // make sure note wasn't triggered in slide we're not currently using
             const now = performance.now();

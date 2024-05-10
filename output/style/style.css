@@ -191,6 +191,7 @@
     flex-direction: row;
     border-left: 0.5vmin outset rgb(199, 129, 0);
     border-right: 0.5vmin outset rgb(199, 129, 0);
+    /* opacity: 0; */
 }
 
 .three-wide-slides-container {
@@ -225,7 +226,7 @@
     position: absolute;
     top: 0vmin;
     left: 50%;
-    transform: translate(-50%, 0px);
+    transform: translate(-50%, 0vmin);
     width: 80%;
     height: 100%;
     margin: auto;

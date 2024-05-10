@@ -39,17 +39,17 @@ export class StreamPlayer {
 
     getDetailedFreqArray() {
         if (this.liveStream) {
-            this.liveAnalyser.smoothingTimeConstant = 0.85;
+            this.liveAnalyser.smoothingTimeConstant = 0.0;
             this.liveAnalyser.getByteFrequencyData(this.liveDataArray);
             return this.liveDataArray.map(ele => ele);
         }
         if (this.silentPlayer) {
-            this.analyser.smoothingTimeConstant = 0.85;
+            this.analyser.smoothingTimeConstant = 0.0;
             this.analyser.getByteFrequencyData(this.dataArray);
             return this.dataArray.map(ele => ele);
         }
         else {
-            this.current.analyser.smoothingTimeConstant = 0.85;
+            this.current.analyser.smoothingTimeConstant = 0.0;
             this.current.analyser.getByteFrequencyData(this.current.dataArray);
             return this.current.dataArray.map(ele => ele);
         }
@@ -170,7 +170,6 @@ export class StreamPlayer {
     }
 
     setData(data, blobStream = false) {
-        console.log("data received");
         if (!this.started) {
             document.getElementById("initial-received").style.color = "gray";
         }
@@ -182,6 +181,10 @@ export class StreamPlayer {
                 document.getElementById("now-streaming").style.color = "gray";
                 setTimeout(() => {
                     document.getElementById("connecting-radio").classList.add("hidden");
+                    document.getElementById("button-play").classList.add("pulse");
+                    setTimeout(() => {
+                        document.getElementById("button-play").classList.remove("pulse");
+                    }, 10000);
                 }, 1000);
             }, 2000);
 

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="style/style.css">
     <link id="background-css" rel="stylesheet" href="style/background.css">
     <link rel="stylesheet" href="style/menu.css">
+    <link rel="stylesheet" href="style/tutorial.css">
     <link rel="stylesheet" href="style/buttons.css">
     <link rel="stylesheet" href="style/stream.css">
     <link rel="stylesheet" href="style/animate.css">
@@ -46,23 +47,40 @@
                 <div class="menu-title">
                     Connecting...
                 </div>
-                <div id="acquiring" class="menu-choice">
+                <div id="acquiring" class="menu-choice connect-status">
                     Stream acquired
                 </div>
-                <div id="initial-received" class="menu-choice">
+                <div id="initial-received" class="menu-choice connect-status">
                     Initial data received 
                 </div>
-                <div id="now-streaming" class="menu-choice">
+                <div id="now-streaming" class="menu-choice connect-status">
                     Streaming
+                </div>
+                <div id="cancel-radio-connect" class="menu-choice">
+                    Cancel
                 </div>
             </div>
             <div id="feedback" class="menu">
                 <div id="feedback-title" class="feedback-title"></div>
+                <div id="song-information-bar"></div>
                 <div class="feedback-item">
                     <div id="percent-bar-container">
                         <div id="percent-bar-inner-container"><div id="percent-bar"></div></div>
                     </div>
-                    <div id="feedback-percent"></div>
+                    <div id="feedback-percent-title" class="percent-title-container">
+                        <div id="feedback-percent"></div>
+                        <div id="song-pass" class="song-mark song-mark-left">
+                            <div class="song-mark">
+                                <div class="green-check"></div>
+                            </div>
+                        </div>
+                        <div id="song-fail" class="song-mark song-mark-left">
+                            <div class="song-mark">
+                                <div class="red-x-a"></div>
+                                <div class="red-x-b"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="feedback-streak" class="feedback-item"></div>
                 <div id="feedback-streak-overall" class="feedback-item"></div>
@@ -75,8 +93,11 @@
                 <div class="menu-title">
                     Game mode
                 </div>
+                <div id="source-tutorial" class="menu-choice">
+                    Tutorial
+                </div>
                 <div id="source-demo-songs" class="menu-choice">
-                    Demo songs
+                    Built-in songs
                 </div>
                 <div id="source-upload" class="menu-choice">
                     Upload music
@@ -109,16 +130,16 @@
                     Select station
                     <select id="select-station" class="select"></select>
                 </div>
-                <div id="show-stream-modal-button" class="menu-title">
+                <div id="show-stream-modal-button" class="menu-choice">
                     Connect stream
                 </div>
                 <br>
                 <div class="menu-title">Difficulty</div>
-                <div id="level-1" class="level">practice</div>
+                <div id="level-1" class="level">super easy</div>
                 <div id="level-2" class="level">easy</div>
                 <div id="level-3" class="level">medium</div>
                 <div id="level-4" class="level">hard</div>
-                <div id="level-5" class="level">crazy</div>
+                <div id="level-5" class="level">crazy hard</div>
                 <br>
                 <div class="menu-title">Slides</div>
                 <div id="slides-2" class="level">2</div>
@@ -129,6 +150,8 @@
                 <div id="close-and-play-ghost" class="primary-button primary-button-ghost">loading...</div>
             </div>
             <div id="choose-song-menu" class="menu menu-green hidden">
+                <div id="back-to-main-menu" class="primary-button"><div class="left-arrow"></div><div>Back</div></div>
+                <br>
                 <div class="menu-title">
                     Choose song
                 </div>
@@ -138,7 +161,7 @@
                 <div id="stages" class="inset-text">
                 </div>
             </div>
-            <div id="stream-modal" class="hidden">    
+            <div id="stream-modal" class="menu menu-purple hidden">    
                 This is an experimental feature!
                 <br>
                 <br>
@@ -157,12 +180,13 @@
                 <br>
                 <br>
                 <input type="text" id="enter-stream-id" placeholder="stream id"/>
-                <button id="connect-stream-button">Connect</button>
                 <br>
                 <br>
                 <div id="stream-status">not connected</div>
                 <br>
-                <button id="cancel-stream-button">Cancel</button>
+                <br>
+                <div id="connect-stream-button" class="menu-choice">Connect</div>
+                <div id="cancel-stream-button" class="menu-choice">Cancel</div>
             </div>
             <div id="settings-modal" class="hidden">
                 <div class="top-bar">
@@ -260,6 +284,23 @@
                         Autocalibration continually adjusts note timing as you play to account
                         for factors like song style, headphone lag, or when it makes sense for you
                         to tap.
+                    </div>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-item-bar">
+                        <div id="haptics-title" class="settings-item-title">
+                            Haptic feedback
+                        </div>
+                        <div class="settings-toggle">
+                            <div>OFF</div>
+                            <div id="toggle-haptics" class="toggle-switch">
+                                <div id="toggle-haptics-ball" class="toggle-ball"></div>
+                            </div>
+                            <div>ON</div>
+                        </div>
+                    </div>
+                    <div class="settings-description">
+                        Haptic feedback vibrates the phone slightly when you get a note.
                     </div>
                 </div>
                 <div class="settings-item">
@@ -370,7 +411,7 @@
                                     <div id="dummy-tapper-left-container" class="clear-slide">
                                         <div id="dummy-tapper-left" class="dummy-tapper">
                                             <div class="flash">
-                                                <div class="note-lighted"></div>
+                                                <div id="slide-left-note-lighted" class="note-lighted"></div>
     
                                                 <div class="note-middle-lighted"></div>
                                             </div>
@@ -379,7 +420,7 @@
                                     <div id="dummy-tapper-a-container" class="clear-slide">
                                         <div id="dummy-tapper-a" class="dummy-tapper">
                                             <div class="flash">
-                                                <div class="note-lighted"></div>
+                                                <div id="slide-a-note-lighted" class="note-lighted"></div>
     
                                                 <div class="note-middle-lighted"></div>
                                             </div>
@@ -388,7 +429,7 @@
                                     <div id="dummy-tapper-b-container" class="clear-slide">
                                         <div id="dummy-tapper-b" class="dummy-tapper">
                                             <div class="flash">
-                                                <div class="note-lighted"></div>
+                                                <div id="slide-b-note-lighted" class="note-lighted"></div>
     
                                                 <div class="note-middle-lighted"></div>
                                             </div>
@@ -397,7 +438,7 @@
                                     <div id="dummy-tapper-right-container" class="clear-slide">
                                         <div id="dummy-tapper-right" class="dummy-tapper">
                                             <div class="flash">
-                                                <div class="note-lighted"></div>
+                                                <div id="slide-right-note-lighted" class="note-lighted"></div>
     
                                                 <div class="note-middle-lighted"></div>
                                             </div>
@@ -406,12 +447,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="skilz-meter">
+                        <div id="skilz-meter" class="skilz-meter">
+                            <div id="skilz-green"></div>
+                            <div id="skilz-red"></div>
                             <div id="skilz-channel" class="skilz-channel">
                                 <div id="skilz-ball"></div>
                             </div>
                         </div>
-                        <div id="streak-meter">
+                        <div id="streak-meter" class="streak-meter">
                             <div id="streak-channel" class="skilz-channel">
                             </div>
                         </div>
@@ -431,7 +474,34 @@
                 <div id="rock-label"></div>
                 
                 <div id="song-label" class="song-label"></div>
-                <div id="controls-left">
+                <div id="controls-bottom" class="controls-bottom stuck-to-bottom">
+                    <div id="button-play" class="control-button-bottom">
+                        <div id="play-arrow"></div>
+                    </div>
+                    <div id="button-pause" class="control-button-bottom">
+                        <div class="pause-rectangle"></div>
+                        <div class="pause-rectangle"></div>
+                    </div>
+                    <div id="button-restart" class="control-button-bottom">
+                        <div id="restart-rectangle"></div>
+                        <div id="restart-arrow"></div>
+                    </div>
+                    <div id="show-settings" class="control-button-bottom">
+                        <div id="teeth1" class="gear-teeth"></div>
+                        <div id="teeth2" class="gear-teeth"></div>
+                        <div id="teeth3" class="gear-teeth"></div>
+                        <div id="teeth4" class="gear-teeth"></div>
+                        <div id="teeth5" class="gear-teeth"></div>
+                        <div id="outer-gear-circle"></div>
+                        <div id="inner-gear-circle"></div>
+                    </div>
+                    <div id="show-menu" class="show-menu control-button-bottom">
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                    </div>
+                </div>
+                <!-- <div id="controls-left">
                     <div id="button-restart" class="control-button">
                         <div id="restart-rectangle"></div>
                         <div id="restart-arrow"></div>
@@ -443,8 +513,8 @@
                         <div class="pause-rectangle"></div>
                         <div class="pause-rectangle"></div>
                     </div>
-                </div>
-                <div id="controls-right">
+                </div> -->
+                <!-- <div id="controls-right">
                     <div id="show-settings" class="control-button">
                         <div id="teeth1" class="gear-teeth"></div>
                         <div id="teeth2" class="gear-teeth"></div>
@@ -459,12 +529,98 @@
                         <div class="hamburger-rectangle"></div>
                         <div class="hamburger-rectangle"></div>
                     </div>
-                </div>
+                </div> -->
                 
             </div>
         </div>
     </center>
-    <div id="start-curtain"><br><br><br><br><br>Loading</div>
+    <div id="start-curtain"><br><br><br><br><br>Beatburner</div>
+    <div id="close-tutorial" class="close-tutorial tutorial-button hidden">Exit tutorial</div>
+    <div id="perfect-container" class="perfect-container">
+        <div id="perfect" class="perfect hidden">Perfect!</div>
+    </div>
+    <div id="streak-container" class="streak-container hidden">
+        <div id="streak-label" class="streak-label">STREAK</div>
+        <div id="streak-number" class="streak-number">55</div>
+    </div>
+    <div id="tutorial-step-1" class="tutorial-step hidden">
+        Notes come down the slides like this.
+    </div>
+    <div id="tutorial-step-2" class="tutorial-step hidden">
+        Your job is to tap just as each note passes through the light bar here.
+        <br>
+        <br>
+        <div id="tutorial-3-button" class="tutorial-button">Next</div>
+    </div>
+    <div id="tap-smudge" class="tap-smudge hidden"></div>
+    <div id="tutorial-step-3" class="tutorial-step hidden">
+        You can either tap directly on the note, or down here on the slide. Either way,
+        be sure to tap just as the note is inside the light bar.
+        <br>
+        <br>
+        <div id="tutorial-4-button" class="tutorial-button">Try it</div>
+    </div>
+    <div id="tutorial-step-5" class="tutorial-step hidden">
+        You're a natural! Ready for real music?
+        <br>
+        <br>
+        <div id="tutorial-6-button" class="tutorial-button">Play song</div>
+    </div>
+    <div id="tutorial-step-7" class="tutorial-step hidden">
+        <div id="step-7-text">
+        </div>
+        <br>
+        <br>
+        <div class="tutorial-button-bar">
+            <div id="repeat-tutorial-song-button" class="tutorial-button">Retry</div>
+            <div id="tutorial-8-button" class="tutorial-button">Continue</div>
+        </div>
+    </div>
+    <div id="tutorial-step-8" class="tutorial-step hidden">
+        Well done!
+        <br>
+        <br>
+        When you've finished the built-in songs, come back and take advantage of the other game modes
+        that let you play with any music you want!
+        <br>
+        <br>
+        <!-- <div id="tutorial-9-button" class="tutorial-button">Next</div> -->
+        <div id="tutorial-12-button" class="tutorial-button">Done</div>
+    </div>
+    <div id="tutorial-step-9" class="tutorial-step hidden">
+        This meter shows how many notes you've gotten in a row.
+        <br>
+        <br>
+        Try to fill it up with 100 notes!
+        <br>
+        <br>
+        <div id="tutorial-10-button" class="tutorial-button">Next</div>
+    </div>
+    <div id="tutorial-step-10" class="tutorial-step hidden">
+        If this bottom menu is in your way, just hold your finger on
+        it for a second and drag it anywhere you like.
+        <br>
+        <br>
+        <div id="tutorial-11-button" class="tutorial-button">Next</div>
+    </div>
+    <div id="tutorial-step-11" class="tutorial-step hidden">
+        That's about it! You probably want to start with the built-in songs.
+        <br>
+        <br>
+        Be sure to check out the other modes that let you play
+        with any music you want.
+        <br>
+        <br>
+        <div id="tutorial-12-button" class="tutorial-button">Done</div>
+    </div>
+    <div id="tutorial-arrow" class="tutorial-arrow hidden">
+        <div class="tutorial-arrow-container">
+            <div class="tutorial-arrow-shaft"></div>
+            <div class="tutorial-arrow-point-container">
+                <div class="tutorial-arrow-point-inner"></div>
+            </div>
+        </div>
+    </div>
     
     <script type="text/javascript" src="./main.js"></script>
 </body>
