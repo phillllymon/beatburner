@@ -1,6 +1,7 @@
 import { 
     averageOf,
-    getUserProfile
+    getUserProfile,
+    killAllNotes
 } from "./util.js";
 
 export class Animator {
@@ -72,37 +73,41 @@ export class Animator {
     recordNoteHit() {
         this.notesHit += 1;
         this.noteResults.push(true);
-        while (this.noteResults.length > 50) {
+        while (this.noteResults.length > 75) {
             if (this.noteResults.shift()) {
                 this.notesHit -= 1;
             } else {
                 this.notesMissed -= 1;
             }
         }
-        updateMeter(this.notesHit, this.notesMissed);
+        updateMeter(this.notesHit, this.notesMissed, this.masterInfo);
     }
 
     recordNoteMissed() {
         this.notesMissed += 2;
         this.noteResults.push(false);
         this.noteResults.push(false);
-        while (this.noteResults.length > 50) {
+        while (this.noteResults.length > 75) {
             if (this.noteResults.shift()) {
                 this.notesHit -= 1;
             } else {
                 this.notesMissed -= 1;
             }
         }
-        updateMeter(this.notesHit, this.notesMissed);
+        updateMeter(this.notesHit, this.notesMissed, this.masterInfo);
     }
 
     runAnimation(params) {
         this.time = performance.now();
         this.animating = true;
         this.animate(params);
+
+        // exp
+        this.slideStartTime = performance.now();
     }
 
     stopAnimation() {
+        killAllNotes(this.masterInfo, this.noteWriter);
         this.animating = false;
     }
 
@@ -185,7 +190,7 @@ export class Animator {
 }
 
 
-function updateMeter(notesHit, notesMissed) {
+function updateMeter(notesHit, notesMissed, masterInfo) {
     let fraction = 1.0 * notesHit / (notesHit + notesMissed);
 
 
@@ -197,8 +202,10 @@ function updateMeter(notesHit, notesMissed) {
         percent = 100;
         document.getElementById("skilz-channel").classList.add("skilz-channel-lit");
         document.getElementById("skilz-meter").classList.add("skilz-meter-lit");
-        document.getElementById("perfect").classList.remove("hidden");
-        document.getElementById("perfect-container").classList.add("perfect-slide-left");
+        if (masterInfo.animations) {
+            document.getElementById("perfect").classList.remove("hidden");
+            document.getElementById("perfect-container").classList.add("perfect-slide-left");
+        }
     } else {
         document.getElementById("skilz-channel").classList.remove("skilz-channel-lit");
         document.getElementById("skilz-meter").classList.remove("skilz-meter-lit");
@@ -255,7 +262,25 @@ function moveNotes(
     obj
 ) {
 
-    const movement = 1.0 * noteSpeed * (dt / 1000);
+    const realMovement = 1.0 * noteSpeed * (dt / 1000);
+    // exp ^real
+    const now = performance.now();
+    const elapsedTime = now - obj.slideStartTime;
+    // console.log("elapsed: " + elapsedTime);
+    const totalTravelTime = 1.0 * obj.masterInfo.songDelay / 2.0;
+    // console.log("travelTime: " + totalTravelTime);
+    let travelFraction = 0;
+    if (elapsedTime > 1) {
+        travelFraction = 1.0 * elapsedTime / totalTravelTime; // will quickly go above 1
+    }
+    // console.log("fraction: " + travelFraction);
+    const desiredPos = 1.0 * travelFraction * obj.masterInfo.travelLength;
+    // console.log("desiredPos: " + desiredPos);
+    const movement = desiredPos - obj.masterInfo.sliderPos;
+    // console.log("movement: " + movement);
+    // console.log("sliderPos: " + obj.masterInfo.sliderPos);
+
+
     
     // shorten targetTails
     theSlides.forEach((slideId) => {
@@ -285,19 +310,7 @@ function moveNotes(
         }
     });
     
-    // -------- periodically reset slider
-    // if (sliderPos > 100000) {
-    //     for (const note of notes) {
-    //         document.getElementById("slider").style.top = `${sliderPos}px`;
-    //         note.note.style.top = `${note.position}px`;
-    //         if (note.tail) {
-    //             note.tail.note.style.top = `${note.tail.position}px`;
-    //         }
-    //     }
-    //     sliderPos = 0;
-    // }
-
-    // try switching slider instead
+    // switch sliders
     if (obj.masterInfo.sliderPos > 100000) {
         
         
@@ -324,6 +337,9 @@ function moveNotes(
         }, 2000);
         
         obj.masterInfo.sliderPos = 0;
+
+        // exp
+        obj.slideStartTime = performance.now();
     }
 
     // move slider

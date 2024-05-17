@@ -24,45 +24,47 @@ export const gameDataConst = {
 
 export const songStages = [
     [
-        "lifeIBelieve", // medium 90.9
+        "liveInMyHead", // medium happy 92.2
+        "blahBlahBlah",
         "innerPeace", // medium *best 89
-        "getThatFeeling", // intense 94.9
-        "handle", // intense 88
-        "thinkingOfYou", // medium 87.5
+        "burningBayou",
+        "getThatFeeling" // intense 94.9
     ],
     [    
-        "words", // mellow country 94.2
+        "lifeIBelieve", // medium 90.9
+        "thinkingOfYou", // medium 87.5
+        "rascalBack", // medium country 88.7
         "hypeMeUp", // intense 96.2
-        "heartBlueBlack", // medium country 94.5
         "paleCityGirl", // intense nostalgic 93.9
-        "rockItTonight", // medium oldie 91.9
     ],
     [  
         "indian", // intense 95.4
         "neverBackDown", // medium *best 90.1
         "womanWithTheWind", // medium countryish 93.6
-        "liveInMyHead", // medium happy 92.2
+        "wayYouMove",
         "moneyMoney", // intense rap 91.6
     ],
     [ 
-        "aLifeLikeThis", // medium bouncy 92
         "echoesOfThePast", // medium western 90.4
+        "aLifeLikeThis", // medium bouncy 92
         "neverBeBlue", // meduim happy french 89.2
         "schoolGirlCrush", // medium 90.4
         "temptation", // intense countryish 89.7
     ],
     [
-        "hotHotFire", // intense 95.9
+        "handle", // intense 88
         "animal", // medium ska 94.7
         "myHeartIsAllYours", // medium happy 96.9 
         "itDoesntMatter", // intense 89.5
-        "myHeart", // abstract 88.6
+        "rockItTonight", // medium oldie 91.9
     ],
     [
         "prettyThing", // mellow happy 87.2
+        "hotHotFire", // intense 95.9
+        "words", // mellow country 94.2
+        "heartBlueBlack", // medium country 94.5
         "intoTheNight", // Brent 90.4
-        "rascalBack", // medium country 88.7
-        "whispersOfTheWreck", // mellow 95
+        // "whispersOfTheWreck", // mellow 95
         "inevitable", // medium spanish 82.7
         "echoesOfRebellion", // medium 90.7
         "discoBeat",
@@ -71,6 +73,8 @@ export const songStages = [
 ];
 
 export const songAuthors = {
+    "blahBlahBlah": "Camille de la Cruz",
+    "burningBayou": "Assaf Ayalon",
     "discoBeat": `Clarx <a href="https://www.youtube.com/watch?v=_H5UO3c4YtM">NCS</a>`,
     "echoesOfRebellion": "R Harris",
     "getThatFeeling": "Ikoliks",
@@ -85,6 +89,7 @@ export const songAuthors = {
     "prettyThing": "Crosstown Traffic",
     "rascalBack": "Ben Bostick",
     "schoolGirlCrush": "Brunch with Bunny",
+    "wayYouMove": "Ben Wagner",
     "shareLove": "Buddha Kid",
     // "shouldBeMe": "Kyle Cox",
     "whispersOfTheWreck": "R Harris",

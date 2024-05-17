@@ -81,7 +81,6 @@ export class Connector {
             mailboxChecks += 1;
             if (mailboxChecks > 30) {
                 clearInterval(checkInterval);
-                console.log("timed out");
                 setMessage("could not connect");
             }
             if (this.channel.readyState === "open") {
@@ -95,7 +94,6 @@ export class Connector {
     }
 
     getMessages() {
-        console.log("looking for a message");
         const nextMessageKey = `${this.streamId}fromHost${this.nextReceiveMessage}`;
         getFromDatabase(nextMessageKey).then((message) => {
             if (message) {
@@ -116,10 +114,8 @@ export class Connector {
         if (this.channel) {
             if (this.channel.readyState === "open") {
                 setMessage("connected");
-                console.log("Channel now OPEN");
             } else {
                 setMessage("disconnected");
-                console.log("Channel now CLOSED");
             }
         }
     }
@@ -136,7 +132,6 @@ export class Connector {
     }
     
     handleReceiveMessage(e) {
-        console.log("data received");
         this.streamPlayer.setData(e.data);
     }
 }
@@ -157,7 +152,6 @@ function handleReceiveMessage(e, streamPlayer) {
         hideModal("stream");
         document.masterInfo.streaming = true;
     } else {
-        console.log("other message woo!");
         document.streamPlayer.setData(e.data);
     }
 }

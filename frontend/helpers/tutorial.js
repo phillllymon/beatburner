@@ -1,5 +1,6 @@
 import {
     getUserProfile,
+    setUserProfile,
     killAllNotes
 } from "./util.js";
 
@@ -33,34 +34,34 @@ export class Tutorial {
             [4.888844, 'slide-left'],
             [5.451498, 'slide-left'],
             [6.268138, 'slide-a'],
-            [6.980142, 'slide-left'],
+            // [6.980142, 'slide-left'],
             [6.987352, 'slide-a'],
             [8.352035, 'slide-right'],
-            [8.358885, 'slide-a'],
+            // [8.358885, 'slide-a'],
             [8.825848, 'slide-right'],
-            [9.200945, 'slide-left'],
+            // [9.200945, 'slide-left'],
             [9.208735, 'slide-right'],
             [9.891026, 'slide-right'],
             [9.924831, 'slide-a'],
             [10.621651, 'slide-a'],
-            [10.629568, 'slide-left'],
+            // [10.629568, 'slide-left'],
             [11.383086, 'slide-left'],
             [12.181558, 'slide-left'],
-            [12.752709, 'slide-right'],
+            // [12.752709, 'slide-right'],
             [12.771304, 'slide-left'],
-            [13.565134, 'slide-right'],
+            // [13.565134, 'slide-right'],
             [13.58432, 'slide-a'],
             [14.199451, 'slide-a'],
             [14.200682, 'slide-left'],
             [14.686029, 'slide-a'],
             [15.077, 'slide-right'],
             [15.675686, 'slide-right'],
-            [16.110811, 'slide-a'],
+            // [16.110811, 'slide-a'],
             [16.119929, 'slide-left'],
             [16.508924, 'slide-left'],
             [17.253228, 'slide-left'],
             [17.677042, 'slide-right'],
-            [18.069906, 'slide-right'],
+            // [18.069906, 'slide-right'],
             [18.665896, 'slide-a'],
             [19.041213, 'slide-right'],
             [19.408597, 'slide-left'],
@@ -68,9 +69,9 @@ export class Tutorial {
             [20.10311, 'slide-left'],
             [20.551235, 'slide-left'],
             [20.879712, 'slide-right'],
-            [20.899284, 'slide-left'],
+            // [20.899284, 'slide-left'],
             [21.570719, 'slide-left'],
-            [22.004532, 'slide-left'],
+            // [22.004532, 'slide-left'],
             [22.017696, 'slide-a'],
             [22.403017, 'slide-left'],
             [23.010386, 'slide-a'],
@@ -78,38 +79,38 @@ export class Tutorial {
             [23.80235, 'slide-left'],
             [24.520093, 'slide-a'],
             [24.961103, 'slide-a'],
-            [24.968926, 'slide-left'],
+            // [24.968926, 'slide-left'],
             [25.335092, 'slide-left'],
             [25.880481, 'slide-right'],
             [26.416421, 'slide-right'],
             [26.818142, 'slide-a'],
             [27.329045, 'slide-left'],
-            [27.336278, 'slide-a'],
+            // [27.336278, 'slide-a'],
             [27.839089, 'slide-left'],
             [27.847059, 'slide-a'],
             [28.193594, 'slide-left'],
             [28.977664, 'slide-left'],
-            [28.977979, 'slide-a'],
+            // [28.977979, 'slide-a'],
             [29.383244, 'slide-right'],
             [29.391985, 'slide-a'],
             [29.722685, 'slide-a'],
-            [29.740602, 'slide-right'],
+            // [29.740602, 'slide-right'],
             [30.819628, 'slide-a'],
             [31.119825, 'slide-left'],
             [31.876483, 'slide-right'],
-            [31.886171, 'slide-left'],
+            // [31.886171, 'slide-left'],
             [32.269131, 'slide-right'],
             [32.636287, 'slide-left'],
-            [32.646182, 'slide-a'],
-            [33.251759, 'slide-right'],
+            // [32.646182, 'slide-a'],
+            // [33.251759, 'slide-right'],
             [33.258386, 'slide-a'],
             [33.687021, 'slide-right'],
-            [33.693368, 'slide-a'],
+            // [33.693368, 'slide-a'],
             [34.102092, 'slide-right'],
             [34.637631, 'slide-a'],
             [34.825343, 'slide-left'],
             [35.202356, 'slide-right'],
-            [35.526062, 'slide-left'],
+            // [35.526062, 'slide-left'],
             [35.543482, 'slide-right'],
             [36.229869, 'slide-a'],
             [36.702039, 'slide-a'],
@@ -117,12 +118,12 @@ export class Tutorial {
             [37.59896, 'slide-left'],
             [37.782288, 'slide-a'],
             [38.152062, 'slide-a'],
-            [38.463139, 'slide-left'],
+            // [38.463139, 'slide-left'],
             [38.480706, 'slide-a'],
             [39.166, 'slide-left'],
             [39.60085, 'slide-right'],
             [39.903795, 'slide-left'],
-            [40.525273, 'slide-left'],
+            // [40.525273, 'slide-left'],
             [40.711821, 'slide-left'],
             [41.138345, 'slide-left'],
             [42.049796, 'slide-left'],
@@ -132,17 +133,17 @@ export class Tutorial {
             [43.436948, 'slide-right'],
             [43.447235, 'slide-left'],
             [43.977588, 'slide-a'],
-            [44.301956, 'slide-a'],
+            // [44.301956, 'slide-a'],
             [44.30976, 'slide-right'],
             [45.458284, 'slide-left'],
             [46.470486, 'slide-right'],
             [46.898406, 'slide-left'],
-            [47.228253, 'slide-left'],
+            // [47.228253, 'slide-left'],
             [47.236151, 'slide-a'],
             [47.911318, 'slide-left'],
             [48.355652, 'slide-a'],
             [48.711462, 'slide-left'],
-            [49.257221, 'slide-left'],
+            // [49.257221, 'slide-left'],
             [49.265738, 'slide-a'],
             [49.816343, 'slide-left'],
             [50.205555, 'slide-right'],
@@ -154,24 +155,24 @@ export class Tutorial {
             [53.074742, 'slide-right'],
             [54.200097, 'slide-left'],
             [54.569704, 'slide-left'],
-            [55.231494, 'slide-a'],
+            // [55.231494, 'slide-a'],
             [55.23889, 'slide-left'],
             [55.723891, 'slide-left'],
-            [56.0555, 'slide-a'],
+            // [56.0555, 'slide-a'],
             [56.055633, 'slide-left'],
             [56.578485, 'slide-left'],
             [56.749268, 'slide-left'],
-            [57.1294, 'slide-a'],
+            // [57.1294, 'slide-a'],
             [57.156046, 'slide-right'],
             [58.092507, 'slide-a'],
             [58.252219, 'slide-right'],
-            [58.621207, 'slide-left'],
+            // [58.621207, 'slide-left'],
             [58.647402, 'slide-right'],
-            [58.954711, 'slide-a'],
+            // [58.954711, 'slide-a'],
             [58.963944, 'slide-left'],
             [59.704233, 'slide-left'],
             [60.130858, 'slide-left'],
-            [61.047767, 'slide-right'],
+            // [61.047767, 'slide-right'],
             [61.056442, 'slide-left'],
             [61.528066, 'slide-right'],
             [61.891473, 'slide-left'],
@@ -182,9 +183,9 @@ export class Tutorial {
             [64.106267, 'slide-left'],
             [64.489571, 'slide-left'],
             [64.829666, 'slide-left'],
-            [65.940065, 'slide-right'],
+            // [65.940065, 'slide-right'],
             [65.956729, 'slide-left'],
-            [66.304467, 'slide-right'],
+            // [66.304467, 'slide-right'],
             [66.322777, 'slide-left'],
             [67.370048, 'slide-right'],
             [67.733991, 'slide-a'],
@@ -192,9 +193,9 @@ export class Tutorial {
             [68.467931, 'slide-left'],
             [68.869097, 'slide-right'],
             [69.224845, 'slide-right'],
-            [69.882824, 'slide-right'],
+            // [69.882824, 'slide-right'],
             [69.890504, 'slide-a'],
-            [70.329246, 'slide-left'],
+            // [70.329246, 'slide-left'],
             [70.331709, 'slide-a'],
             [70.683683, 'slide-right'],
             [70.693289, 'slide-a'],
@@ -587,7 +588,7 @@ export class Tutorial {
             
             this.discoAudio.addEventListener("ended", () => {
                 this.playing = false;
-                if (this.masterInfo.streak < 25) {
+                if (this.masterInfo.streak < 10) {
                     this.discoAudio.currentTime = 0;
                     this.nextNoteIdx = 0;
                     this.discoAudio.play();
@@ -663,6 +664,9 @@ export class Tutorial {
                 let text = `Nice job! You had an accuracy of ${percent}%`;
                 if (percent < 90) {
                     text = `Hey, not bad. Your accuracy was ${percent}%. Want to retry and go for ${Math.min(90, percent + 20)}%?`;
+                    if (percent < 60) {
+                        text = `Your accuracy was ${percent}%. I bet you can do better.`;
+                    }
                 } else {
                     document.getElementById("repeat-tutorial-song-button").classList.add("hidden");
                 }
@@ -756,7 +760,7 @@ export class Tutorial {
     }
     animateDisco(audio, notes) {
         if (this.playingSong) {
-            if (this.masterInfo.streak > 25) {
+            if (this.masterInfo.streak > 10) {
                 this.triggerTutorialStep(5);
             }
             if (audio.volume < 1) {
@@ -872,5 +876,15 @@ export class Tutorial {
                 this.masterInfo.autoCalibrating = profile.autoCalibrating;
             });
         }, 300);
+        getUserProfile().then((profile) => {
+            profile.level = 1;
+            this.animator.setNotesPerSecond(profile.level);
+            ["level-1", "level-2", "level-3", "level-4", "level-5"].forEach((level) => {
+                document.getElementById(level).classList.remove("level-selected");
+            });
+            document.getElementById("level-1").classList.add("level-selected");
+            this.controlsManager.activateSongSelect();
+            setUserProfile(profile);
+        });
     }
 }

@@ -110,7 +110,7 @@
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
     color: orange;
     z-index: 4;
-    padding: 15px;
+    /* padding: 15px; */
     opacity: 0.3;
     text-shadow: 0px 0px 10px lightgray;
 }
@@ -127,7 +127,7 @@
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
     color: orange;
     z-index: 4;
-    padding: 15px;
+    /* padding: 15px; */
     opacity: 0.4;
     animation-name: youRock;
     animation-duration: 500ms;
@@ -589,5 +589,36 @@
 }
 
 .exp-active {
+    background-color: blue;
+}
+
+.equalizer {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    height: 50%;
+    width: 2500px;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#equalizer-box {
+    position: absolute;
+    left: 50%;
+    height: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid black;
+    width: 2048px;
+    height: 260px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    background-color: white;
+}
+.equ-col {
+    width: 1px;
     background-color: blue;
 }

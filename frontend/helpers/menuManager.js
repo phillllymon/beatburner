@@ -175,6 +175,7 @@ export class MenuManager {
 
     activateSourceMenuButtons() {
         setButtonClick("source-demo-songs", () => {
+            this.masterInfo.canEnterCode = false;
             this.masterInfo.songMode = "demo";
             this.setMainMenuOption("choose-song-button");
             if (!this.masterInfo.audioLoaded) {
@@ -210,6 +211,7 @@ export class MenuManager {
             }
         });
         setButtonClick("source-upload", () => {
+            this.masterInfo.canEnterCode = false;
             this.masterInfo.songMode = "upload";
             this.setMainMenuOption("upload-song-button");
 
@@ -230,6 +232,7 @@ export class MenuManager {
             }
         });
         setButtonClick("source-radio", () => {
+            this.masterInfo.canEnterCode = false;
             document.getElementById("close-and-play-ghost").classList.add("hidden");
             this.masterInfo.songMode = "radio";
             this.setMainMenuOption("select-station-button");
@@ -238,6 +241,7 @@ export class MenuManager {
             document.getElementById("close-and-play").classList.remove("hidden");
         });
         document.getElementById("source-streaming").addEventListener("click", () => {
+            this.masterInfo.canEnterCode = false;
             document.getElementById("close-and-play-ghost").classList.add("hidden");
             this.masterInfo.songMode = "stream";
             this.setMainMenuOption("show-stream-modal-button");
@@ -275,6 +279,7 @@ export class MenuManager {
             }
         });
         document.getElementById("show-source-menu").addEventListener("click", () => {
+            this.masterInfo.canEnterCode = true;
             killAllNotes(this.masterInfo, this.noteWriter);
             document.getElementById("song-label").innerHTML = "";
             this.masterInfo.currentSong = "";

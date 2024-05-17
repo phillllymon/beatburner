@@ -489,7 +489,10 @@ export class ControlsManager {
             ["toggle-background", "animatedBackground", "background-title"],
             ["toggle-sustained", "sustainedNotes", "sustained-title"],
             ["toggle-calibration", "autoCalibrating", "calibration-title"],
-            ["toggle-haptics", "hapticsOnHit", "haptics-title"]
+            ["toggle-haptics", "hapticsOnHit", "haptics-title"],
+            ["toggle-animations", "animations", "animations-title"],
+            ["toggle-effects", "effects", "effects-title"],
+            ["toggle-double", "double", "double-title"]
         ].forEach((settingSet) => {
             setButtonClick(settingSet[0], () => {
                 if (this.masterInfo[settingSet[1]]) {
@@ -504,10 +507,10 @@ export class ControlsManager {
                     document.getElementById(`${settingSet[0]}-ball`).classList.remove("toggle-ball-off");
                     document.getElementById(settingSet[2]).style.opacity = "1";
                 }
-                getUserProfile().then((profile) => {
-                    profile[settingSet[1]] = this.masterInfo[settingSet[1]];
-                    setUserProfile(profile);
-                });
+                // getUserProfile().then((profile) => {
+                //     profile[settingSet[1]] = this.masterInfo[settingSet[1]];
+                //     setUserProfile(profile);
+                // });
             });
         });
         const resetButton = document.getElementById("reset-button");
@@ -518,6 +521,10 @@ export class ControlsManager {
             } else {
                 resetButton.disabled = true;
             }
+        });
+        const freqSelector = document.getElementById("select-sustained-frequency");
+        freqSelector.addEventListener("change", () => {
+            this.masterInfo.sustainedNotesFrequency = freqSelector.value;
         });
         resetButton.addEventListener("click", () => {
             getUserProfile().then((profile) => {

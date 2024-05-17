@@ -19,41 +19,55 @@ import {
     getUserProfile,
     setUserProfile
 } from "./helpers/util.js";
-import { gameDataConst, songAuthors } from "./data.js";
+import { gameDataConst, songAuthors, songStages } from "./data.js";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const whoosh = new Audio("./effects/whoosh.m4a");
 const electric = new Audio("./effects/static.m4a");
 const guitar = new Audio("./effects/guitar.m4a");
+const twang1 = new Audio();
+const twang2 = new Audio();
 const twangs = [];
-setTimeout(() => {
-    twangs.push(new Audio("./effects/twang6.m4a"));
-    twangs.push(new Audio("./effects/twang9.m4a"));
-}, 1500);
+twangs.push(twang1);
+twangs.push(twang2);
 
-// initial animation
-let wReady = false;
-let eReady = false;
-let gReady = false;
-let tReady = false;
-// whoosh.oncanplaythrough = () => {
-//     wReady = true;
-//     if (wReady && eReady && gReady && tReady) {
-//         initialAnimate();
-//     }
-// }
-// electric.oncanplaythrough = () => {
-//     eReady = true;
-//     if (wReady && eReady && gReady && tReady) {
-//         initialAnimate();
-//     }
-// }
-// guitar.oncanplaythrough = () => {
-//     gReady = true;
-//     if (wReady && eReady && gReady && tReady) {
-//         initialAnimate();
-//     }
-// }
+let i1 = 0;
+let play1 = false;
+twang1.oncanplaythrough = () => {
+    // document.getElementById("song-label").innerHTML = "PLAY 1";
+    play1 = true;
+};
+const twang1Interval = setInterval(() => {
+    if (i1 > 5) {
+        clearTimeout(twang1Interval);
+    }
+    twang1.setAttribute("src", "./effects/twang6.m4a");
+    setTimeout(() => {
+        if (play1) {
+            clearTimeout(twang1Interval);
+        }
+    }, 4000);
+    i1 += 1;
+}, 5000);
+let i2 = 0;
+let play2 = false;
+twang2.oncanplaythrough = () => {
+    // document.getElementById("song-label").innerHTML = "PLAY 2";
+    play2 = true;
+};
+const twang2Interval = setInterval(() => {
+    if (i2 > 5) {
+        clearTimeout(twang2Interval);
+    }
+    twang2.setAttribute("src", "./effects/twang9.m4a");
+    setTimeout(() => {
+        if (play2) {
+            clearTimeout(twang2Interval);
+        }
+    }, 4000);
+    i2 += 1;
+}, 5000);
+
 setTimeout(() => {
     initialAnimate();
 }, 1000);
@@ -156,15 +170,24 @@ let audioLoaded = false;
 
 let sendStat = true;
 let hapticsOnHit = true;
+let animations = true;
+let effects = true;
+let double = true;
+let sustainedNotesFrequency = "few";
+let canEnterCode = true;
 
 const masterInfo = {
     algorithm,
     allSlides,
     animatedBackground,
+    animations,
     audioLoaded,
     autoAdjustment,
     autoCalibrating,
+    canEnterCode,
     currentSong,
+    double,
+    effects,
     hapticsOnHit,
     maxTailLength,
     minNoteGap,
@@ -184,6 +207,7 @@ const masterInfo = {
     streak,
     streaming,
     sustainedNotes,
+    sustainedNotesFrequency,
     tapperKeys,
     targets,
     targetBounds,
@@ -294,23 +318,23 @@ const tutorial = new Tutorial(
     addNote
 );
 
-getUserProfile().then((profile) => {
-    if (!profile.animatedBackground) {
-        masterInfo.animatedBackground = false;
-        document.getElementById("toggle-background-ball").classList.add("toggle-ball-off");
-        document.getElementById("background-title").style.opacity = "0.5";
-    }
-    if (!profile.sustainedNotes) {
-        masterInfo.sustainedNotes = false;
-        document.getElementById("toggle-sustained-ball").classList.add("toggle-ball-off");
-        document.getElementById("sustained-title").style.opacity = "0.5";
-    }
-    if (!profile.autoCalibrating) {
-        masterInfo.autoCalibrating = false;
-        document.getElementById("toggle-calibration-ball").classList.add("toggle-ball-off");
-        document.getElementById("calibration-title").style.opacity = "0.5";
-    }
-});
+// getUserProfile().then((profile) => {
+//     if (!profile.animatedBackground) {
+//         masterInfo.animatedBackground = false;
+//         document.getElementById("toggle-background-ball").classList.add("toggle-ball-off");
+//         document.getElementById("background-title").style.opacity = "0.5";
+//     }
+//     if (!profile.sustainedNotes) {
+//         masterInfo.sustainedNotes = false;
+//         document.getElementById("toggle-sustained-ball").classList.add("toggle-ball-off");
+//         document.getElementById("sustained-title").style.opacity = "0.5";
+//     }
+//     if (!profile.autoCalibrating) {
+//         masterInfo.autoCalibrating = false;
+//         document.getElementById("toggle-calibration-ball").classList.add("toggle-ball-off");
+//         document.getElementById("calibration-title").style.opacity = "0.5";
+//     }
+// });
 
 
 document.isFullscreen = false;
@@ -434,6 +458,9 @@ function deactivateTapper(tapperId) {
 }
 
 function activateTapper(tapperId, slideId, leavingClass) {
+    if (masterInfo.canEnterCode) {
+        triggerCode(slideId);
+    }
     activeTappers[tapperId] = true;
     let closest = 500;
     let numNotes = 0;
@@ -568,9 +595,9 @@ let notesMade = 0;
 //     console.log(notesRecord);
 // });
 
-function addNote(slideId, val, marked = false) {
+function addNote(slideId, val, marked = false, timeOffset = 0) {
     // notesRecord.push([slideId, player.song2.currentTime]);
-
+    
     const newNote = document.createElement("div");
     newNote.classList.add("note");
     if (marked === true) {
@@ -580,13 +607,22 @@ function addNote(slideId, val, marked = false) {
     if (marked && marked !== true) {
         newNote.style.backgroundColor = marked;
     }
-
+    
     let startPos = -1.0 * autoAdjustment; // should be zero initially
+    if (timeOffset > 0) {
+        const travelTime = masterInfo.travelLength / 2.0;
+        const fraction = 1.0 * timeOffset / travelTime;
+        const distOffset = fraction * masterInfo.travelLength;
+        startPos += distOffset;
+    }
     
     // match previous note if super close    
-    if (lastNote && !lastNote.isTail && lastNote.position < 0.05 * (masterInfo.travelLength + autoAdjustment)) {
-        // newNote.style.backgroundColor = "green";
-        startPos = lastNote.position;
+    if (lastNote && !lastNote.isTail && Math.abs(lastNote.position - startPos) < 0.05 * (masterInfo.travelLength + autoAdjustment)) {
+        if (masterInfo.double) {
+            startPos = lastNote.position;
+        } else {
+            return false;
+        }
     }
     
     newNote.style.top = `${(-1.0 * masterInfo.sliderPos) + startPos}px`; // FOR SLIDER
@@ -711,13 +747,15 @@ function triggerHitNote(slideId, tapperId, hasTail) {
         }
         if (masterInfo.streak === streakThreshold) {
             document.getElementById("streak-container").classList.remove("hidden");
-            document.getElementById("streak-container").classList.add("bulge");
+            if (masterInfo.animations) {
+                document.getElementById("streak-container").classList.add("bulge");
+            }
             document.getElementById("streak-number").innerHTML = masterInfo.streak;
             document.getElementById("streak-channel").classList.add("streak-channel-lit");
             document.getElementById("streak-meter").classList.add("streak-meter-lit");
-            whoosh.currentTime = 0.5;
-            whoosh.volume = 0.5;
-            whoosh.play();
+            // whoosh.currentTime = 0.5;
+            // whoosh.volume = 0.5;
+            // whoosh.play();
         }
 
         // if (streak === 20) {
@@ -742,7 +780,7 @@ function triggerHitNote(slideId, tapperId, hasTail) {
             }
         }
         if (masterInfo.streak === 1000) {
-            rockLabel.innerHTML = "HOLY <br> SHIT!";
+            rockLabel.innerHTML = "HOLY<br>SHIT!";
             // rockLabel.classList.add("rock-label");
             // rockLabel.classList.add("static-rock");
             
@@ -760,7 +798,7 @@ function triggerHitNote(slideId, tapperId, hasTail) {
 }
 
 function triggerMissedNote() {
-    if (masterInfo.songMode !== "tutorial") {
+    if (masterInfo.songMode !== "tutorial" && masterInfo.effects) {
         twangs[Math.floor(twangs.length * Math.random())].play();
         if (masterInfo.streaming) {
             streamPlayer.setVolume(0.3);
@@ -799,7 +837,7 @@ function triggerMissedNote() {
             setTimeout(() => {
                 rockLabel.classList.remove("rock-label");
                 if (theStreak > 50) {
-                    rockLabel.innerHTML = "YOU <br> ROCK!";
+                    rockLabel.innerHTML = "YOU<br>ROCK!";
                     rockLabel.classList.add("rock-label");
                     setTimeout(() => {
                         rockLabel.classList.remove("rock-label");
@@ -858,7 +896,9 @@ function setupMobile() {
         masterInfo.travelLength = gameDataConst.mobile.travelLength * viewHeight;
         masterInfo.autoAdjustment = 0.05 * masterInfo.travelLength;
 
-        const newNoteSpeed = Math.floor(masterInfo.travelLength / ( (masterInfo.songDelay / 1000) / 2 ));
+        // const newNoteSpeed = Math.floor(masterInfo.travelLength / ( (masterInfo.songDelay / 1000) / 2 ));
+        const newNoteSpeed = 1.0 * masterInfo.travelLength / ( (masterInfo.songDelay / 1000.0) / 2.0 );
+        
         masterInfo.targetBounds.top = gameDataConst.mobile.targetBounds.top * masterInfo.travelLength;
         masterInfo.targetBounds.bottom = gameDataConst.mobile.targetBounds.bottom * masterInfo.travelLength;
         masterInfo.noteSpeed = newNoteSpeed;
@@ -911,9 +951,9 @@ function setupMobile() {
 
 // initialQuery
 getUserProfile().then((profile) => {
+    // profile.queryInitial = true; // use this to recover from situation where no stations show up
     if (profile.queryInitial) {
         fetch("https://beatburner.com/api/statusQuery.php", { method: "POST" }).then((res) => {
-            
             res.json().then((r) => {
                 if (r.message === "success") {
                     masterInfo.sendStat = r.data.queryStats;
@@ -932,6 +972,8 @@ getUserProfile().then((profile) => {
         }).catch((e) => {
             console.log(e.message);
         });
+    } else {
+        stationManager.updateStationInfo(profile.stations);
     }
 });
 
@@ -1059,6 +1101,61 @@ function lightUp(tapperId) {
     setTimeout(() => {
         light.remove();
     }, 1000);
+}
+
+const code = [
+    "slide-left",
+    "slide-right",
+    "slide-left",
+    "slide-right",
+    "slide-a",
+    "slide-b",
+    "slide-left",
+    "slide-b",
+    "slide-a",
+    "slide-right"
+];
+let codeIdx = 0;
+function triggerCode(slideId) {
+    if (slideId === code[codeIdx]) {
+        codeIdx += 1;
+        if (!code[codeIdx]) {
+            const progress = {};
+            [
+                "l1s2",
+                "l1s3",
+                "l1s4",
+                "l2s2",
+                "l2s3",
+                "l2s4",
+                "l3s2",
+                "l3s3",
+                "l3s4",
+                "l4s2",
+                "l4s3",
+                "l4s4",
+                "l5s2",
+                "l5s3",
+                "l5s4"
+            ].forEach((ele) => {
+                const songList = {};
+                songStages.forEach((stage) => {
+                    stage.forEach((song) => {
+                        songList[song] = 90;
+                    });
+                });
+                progress[ele] = songList;
+            });
+            getUserProfile().then((profile) => {
+                profile.progress = progress;
+                setUserProfile(profile).then(() => {
+                    controlsManager.activateSongSelect(false);
+                });
+            });
+        }
+    } else {
+        codeIdx = 0;
+    }
 }
 
 

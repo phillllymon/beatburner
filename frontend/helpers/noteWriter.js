@@ -104,87 +104,50 @@ export class NoteWriter {
         this.dir = 1;
     }
 
-    writeTails(theseTallestTowers, slideIds, futureTallestTowers, notesPerSecond) {
+    writeTails(theseTallestTowers, slideIds, futureTallestTowers, notesPerSecond, timeArrayVariance) {
         if (this.recentToneVals.length < 5 || notesPerSecond < 2) {
             return;
         }
-        
+
+        const reach = {
+            "few": 5,
+            "medium": 10,
+            "many": 15
+        } [this.masterInfo.sustainedNotesFrequency];
+
         slideIds.forEach((slideId) => {
 
-            
             const lastNote = this.mostRecentNotes[slideId];
             if (lastNote) {
 
-                let reachDist = 8; // larger number means more sustained notes
-                if (this.masterInfo.songMode === "radio") {
-                    reachDist = 4;
-                }
-                let noteValToUse = lastNote.val;
-                if (noteValToUse.length > 8) {
-                    noteValToUse = noteValToUse.slice(Math.floor(0.25 * noteValToUse.length), Math.floor(0.75 * noteValToUse.length));
-                }
+                let noteTowerIdx = lastNote.val;
+                let currIdx = noteTowerIdx;
 
                 let yesToTail = false;
 
-                const theseTowerLocations = new Set();
-                theseTallestTowers.forEach((tower) => {
-                    theseTowerLocations.add(tower[1]);
-                });
-                let towersFound = 0;
-                // const towersNeeded = Math.ceil(noteValToUse.length / 6);
-                const towersNeeded = Math.ceil(noteValToUse.length / 1);
-                noteValToUse.forEach((tower) => {
-                    const loc = tower[1];
-                    let towerFound = false;
-                    const locArr = [];
-                    for (let i = 0; i < reachDist; i++) {
-                        locArr.push(loc - i);
-                        locArr.push(loc + i);
-                    }
-                    locArr.forEach((closeNum) => {
-                        if (theseTowerLocations.has(closeNum)) {
-                            towerFound = true;
-                            theseTowerLocations.delete(closeNum);
-                            theseTowerLocations.add(loc);
-                        }
-                    });
-                    if (towerFound) {
-                        towersFound += 1;
-                    }
-                });
-
-                let futurePass = false;
+                let futurePass = true;
                 if (lastNote.isTail) {
                     futurePass = true;
                 } else {
                     futurePass = true;
-                    futureTallestTowers.forEach((tallestTowersArr) => {
-                        const futureTowerLocations = new Set();
-                        tallestTowersArr.forEach((tower) => {
-                            futureTowerLocations.add(tower[1]);
-                        });
-                        let towersFound = 0;
-                        noteValToUse.forEach((tower) => {
-                            const loc = tower[1];
-                            let towerFound = false;
-                            const locArr = [];
-                            for (let i = 0; i < reachDist; i++) {
-                                locArr.push(loc - i);
-                                locArr.push(loc + i);
-                            }
-                            locArr.forEach((closeNum) => {
-                                if (futureTowerLocations.has(closeNum)) {
-                                    towerFound = true;
-                                    futureTowerLocations.delete(closeNum);
-                                    futureTowerLocations.add(loc);
+                    //check if ANY tallest tower has the note's idx
+                    let theDiff = 4000;
+                    futureTallestTowers.forEach((towerArr) => {
+                        let foundHere = false;
+                        let thisIdx = currIdx;
+                        towerArr.forEach((tower) => {
+                            const thisDiff = Math.abs(tower[1] - thisIdx);
+                            if (thisDiff < reach) {
+                                foundHere = true;
+                                if (thisDiff < theDiff) {
+                                    theDiff = thisDiff;
+                                    currIdx = tower[1];
                                 }
-                            });
-                            if (towerFound) {
-                                towersFound += 1;
                             }
                         });
-                        if (towersFound < towersNeeded) {
+                        if (!foundHere) {
                             futurePass = false;
+                            
                         }
                     });
                 }
@@ -196,11 +159,19 @@ export class NoteWriter {
                     }
                 }
 
-                if (towersFound >= towersNeeded && futurePass && notTooLong) {
-                    yesToTail = true;
-                }
+                let dist = 4000;
+                theseTallestTowers.forEach((tower) => {
+                    const thisDist = Math.abs(noteTowerIdx - tower[1]);
+                    if (thisDist < reach) {
+                        yesToTail = true;
+                        if (thisDist < dist) {
+                            dist = thisDist;
+                            lastNote.val = tower[1];
+                        }
+                    }
+                });
 
-                if (yesToTail) {
+                if (yesToTail && futurePass && notTooLong) {
                     const now = performance.now();
                     if (slideIds.length === 4) {
                         if (this.leftSlides.includes(slideId)) {
@@ -241,6 +212,134 @@ export class NoteWriter {
                     }
                     this.mostRecentNotes[slideId] = null;
                 }
+
+                // OLD OLD OLD OLD OLD
+                // let reachDist = 8; // larger number means more sustained notes
+                // if (this.masterInfo.songMode === "radio") {
+                //     reachDist = 4;
+                // }
+                // let noteValToUse = lastNote.val;
+                // if (noteValToUse.length > 8) {
+                //     noteValToUse = noteValToUse.slice(Math.floor(0.25 * noteValToUse.length), Math.floor(0.75 * noteValToUse.length));
+                // }
+
+                // let yesToTail = false;
+
+                // const theseTowerLocations = new Set();
+                // theseTallestTowers.forEach((tower) => {
+                //     theseTowerLocations.add(tower[1]);
+                // });
+                // let towersFound = 0;
+                // // const towersNeeded = Math.ceil(noteValToUse.length / 6);
+                // const towersNeeded = Math.ceil(noteValToUse.length / 1);
+                // noteValToUse.forEach((tower) => {
+                //     const loc = tower[1];
+                //     let towerFound = false;
+                //     const locArr = [];
+                //     for (let i = 0; i < reachDist; i++) {
+                //         locArr.push(loc - i);
+                //         locArr.push(loc + i);
+                //     }
+                //     locArr.forEach((closeNum) => {
+                //         if (theseTowerLocations.has(closeNum)) {
+                //             towerFound = true;
+                //             theseTowerLocations.delete(closeNum);
+                //             theseTowerLocations.add(loc);
+                //         }
+                //     });
+                //     if (towerFound) {
+                //         towersFound += 1;
+                //     }
+                // });
+
+                // let futurePass = false;
+                // if (lastNote.isTail) {
+                //     futurePass = true;
+                // } else {
+                //     futurePass = true;
+                //     futureTallestTowers.forEach((tallestTowersArr) => {
+                //         const futureTowerLocations = new Set();
+                //         tallestTowersArr.forEach((tower) => {
+                //             futureTowerLocations.add(tower[1]);
+                //         });
+                //         let towersFound = 0;
+                //         noteValToUse.forEach((tower) => {
+                //             const loc = tower[1];
+                //             let towerFound = false;
+                //             const locArr = [];
+                //             for (let i = 0; i < reachDist; i++) {
+                //                 locArr.push(loc - i);
+                //                 locArr.push(loc + i);
+                //             }
+                //             locArr.forEach((closeNum) => {
+                //                 if (futureTowerLocations.has(closeNum)) {
+                //                     towerFound = true;
+                //                     futureTowerLocations.delete(closeNum);
+                //                     futureTowerLocations.add(loc);
+                //                 }
+                //             });
+                //             if (towerFound) {
+                //                 towersFound += 1;
+                //             }
+                //         });
+                //         if (towersFound < towersNeeded) {
+                //             futurePass = false;
+                //         }
+                //     });
+                // }
+
+                // let notTooLong = true;
+                // if (lastNote.isTail) {
+                //     if (lastNote.totalHeight > 1.5 * this.masterInfo.travelLength) {
+                //         notTooLong = false;
+                //     }
+                // }
+
+                // if (towersFound >= towersNeeded && futurePass && notTooLong) {
+                //     yesToTail = true;
+                // }
+
+                // if (yesToTail) {
+                //     const now = performance.now();
+                //     if (slideIds.length === 4) {
+                //         if (this.leftSlides.includes(slideId)) {
+                //             this.lastLeft = now;
+                //             this.lastAll[slideId] = now;
+                //             this.makeTail(slideId, lastNote);
+                //         } else {
+                //             this.lastRight = now;
+                //             this.lastAll[slideId] = now;
+                //             this.makeTail(slideId, lastNote);
+                //         }
+                //     } else if (slideIds.length === 3) {
+                //         if (slideId === this.rightId) {
+                //             this.lastRight = now;
+                //             this.lastAll[slideId] = now;
+                //             this.makeTail(slideId, lastNote);                             
+                //         } else if (slideId === this.leftId) {                                
+                //             this.lastLeft = now;
+                //             this.lastAll[slideId] = now;
+                //             this.makeTail(slideId, lastNote);                                
+                //         } else {                                
+                //             this.lastMid = now;
+                //             this.lastAll[slideId] = now;
+                //             this.makeTail(slideId, lastNote);                                
+                //         }
+                //     } else {
+                //         this.lastAll[slideId] = now;
+                //         this.makeTail(slideId, lastNote);
+                //     }
+                // } else {
+                //     // check for tail too short - delete tail entirely
+                //     if (lastNote.isTail && lastNote.totalHeight < 0.1 * this.masterInfo.travelLength) {
+                //         lastNote.cloud.remove();
+                //         lastNote.note.remove();
+                //         lastNote.parentNote.tail = null;
+
+                //         // lastNote.parentNote.note.innerHTML = closest;
+                //     }
+                //     this.mostRecentNotes[slideId] = null;
+                // }
             }
         });
         
@@ -248,7 +347,19 @@ export class NoteWriter {
 
     writeNotes(dataArray, timeArray, slideIds, notesPerSecond, timeOffset = 0) {
         
-        // console.log(dataArray.map(ele => ele));
+        // show equalizer
+        // document.getElementById("equalizer").classList.remove("hidden");
+        // document.getElementById("equalizer").classList.add("equalizer");
+        // const box = document.getElementById("equalizer-box");
+        // const equArr = dataArray;
+        // box.innerHTML = "";
+        // equArr.forEach((ele) => {
+        //     const col = document.createElement("div");
+        //     col.classList.add("equ-col");
+        //     col.style.height = `${ele}px`;
+        //     box.appendChild(col);
+        // });
+        // return;
         
         const now = performance.now() - timeOffset;
         // if (now - this.lastTime > this.stepTime) {
@@ -487,10 +598,19 @@ export class NoteWriter {
                 //     this.tallestTowers[midIdx + this.peakOffset].length - 10, 
                 //     this.tallestTowers[midIdx + this.peakOffset].length - 0
                 // );
-                noteValToUse = this.tallestTowers[midIdx + this.peakOffset];
+                // noteValToUse = Math.max(...this.tallestTowers[midIdx + this.peakOffset]);
                 toneValToUse = arrAverage(this.tallestTowers[midIdx + this.peakOffset].map((sub) => {
-                    return sub[0];
+                    return sub[1];
                 }));
+                let highest = 0;
+                let highIdx = 0;
+                this.tallestTowers[midIdx + this.peakOffset].forEach((tower) => {
+                    if (tower[0] > highest) {
+                        highest = tower[0];
+                        highIdx = tower[1];
+                    }
+                })
+                noteValToUse = highIdx;
                 
                 // toneValToUse = this.toneVals[peakIdx]; // TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
                 // if (this.rawArrs[peakIdx]) {
@@ -526,7 +646,10 @@ export class NoteWriter {
                         this.tallestTowers[midIdx + this.peakOffset],
                         slideIds, 
                         this.tallestTowers.slice(midIdx + this.peakOffset + 1, midIdx + this.peakOffset + 1 + numFutureSteps),
-                        notesPerSecond
+                        // this.toneVals.slice(midIdx + this.peakOffset + 1, midIdx + this.peakOffset + 1 + numFutureSteps),
+                        // Math.max(...this.tallestTowers.map(ele => ele[1])),
+                        notesPerSecond,
+                        this.timeArrayVariances[midIdx]
                     );
                 } 
                 
@@ -574,7 +697,7 @@ export class NoteWriter {
 
                 // number version (instead of fraction version)
                 let numNotes = {
-                    1: 4,
+                    1: 5,
                     2: 7,
                     3: 10,
                     4: 15,
@@ -659,11 +782,13 @@ export class NoteWriter {
                     slideToUse: slideToRequest,
                     slideIds: slideIds,
                     noteVal: noteValToUse,
+                    // noteVal: toneValToUse,
                     toneVal: toneValToUse,
                     addNote: this.addNote,
                     marked: marked,
                     mobile: true,
-                    notesPerSecond: notesPerSecond
+                    notesPerSecond: notesPerSecond,
+                    timeOffset: timeOffset
                 });
             }
         // }
@@ -674,79 +799,36 @@ export class NoteWriter {
         const sortedTones = this.recentToneVals.map((val) => {
             return val;
         }).sort();
-        
-        // exp - also involves having 16 recents instead of only 3 - see constructor
-        let i = 0;
-        while (toneVal > sortedTones[i]) {
-            i += 1;
+
+        // TEMP - revisit old algorithm A
+        if (numSlides === 4) {
+            const recents = this.recentToneVals.slice(this.recentToneVals.length - 3, this.recentToneVals.length).sort();
+            if (toneVal < recents[0]) {
+                return "slide-left";
+            }
+            if (toneVal < recents[1]) {
+                return "slide-a";
+            }
+            if (toneVal < recents[2]) {
+                return "slide-b";
+            }
+            return "slide-right";
         }
-
-        // TEMP!!!!!
-        // if (numSlides === 4 && this.lastEquals.length > 10) {
-        //     const midIdx = Math.floor(this.lastEquals.length / 2);
-        //     const midEquals = this.lastEquals[midIdx];
-        //     const lastEquals = this.lastEquals[midIdx - 1];
-            
-            
-            
-        //     const totals = this.noteArrs.map((arr) => {
-        //         let sum = 0;
-        //         arr.forEach((ele) => {
-        //             sum += ele;
-        //         });
-        //         return sum;
-        //     });
-
-        //     // const minTotal = Math.min(...totals);
-        //     // const factors = totals.map((n) => {
-        //     //     if (minTotal === 0) {
-        //     //         return n;
-        //     //     }
-        //     //     return n / minTotal;
-        //     // });
-
-        //     const diffs = midEquals.map((n, i) => {
-        //         return (1.0 * n - lastEquals[i]) / n;
-        //     });
-            
-        //     const diffsToUse = diffs.map((n, i) => {
-        //         let num = n;
-        //         for (let j = 0; j < totals[i]; j++) {
-        //             num *= 0.5;
-        //         }
-        //         return num;
-        //     });
-
-        //     let idx = 0;
-        //     let max = diffsToUse[0];
-        //     diffsToUse.forEach((diff, i) => {
-        //         if (diff > max) {
-        //             idx = i;
-        //             max = diff;
-        //         }
-        //     });
-
-        //     this.nums[idx] += 1;
-        //     if (Math.random() < 0.05) {
-        //         console.log(this.nums.map(ele => ele));
-        //     }
-
-        //     this.noteArrs.forEach((arr, i) => {
-        //         if (i === idx) {
-        //             arr.push(0);
-        //         } else {
-        //             arr.push(1);
-        //         }
-        //         arr.shift();
-        //     });
-        //     return [
-        //         "slide-left",
-        //         "slide-a",
-        //         "slide-b",
-        //         "slide-right"
-        //     ][idx];
-        // }
-        // END TEMP!!!!
+        if (numSlides === 3) {
+            const recents = this.recentToneVals.slice(this.recentToneVals.length - 2, this.recentToneVals.length).sort();
+            if (toneVal < recents[0]) {
+                return "slide-left";
+            }
+            if (toneVal > recents[1]) {
+                return "slide-right";
+            }
+            return "slide-a";
+        }
+        if (toneVal < this.recentToneVals[this.recentToneVals.length - 1]) {
+            return "slide-left";
+        }
+        return "slide-right";
+        // end TEMP
 
         if (numSlides === 4 && this.recentToneVals.length > 7) {
             const max = Math.max(...this.recentToneVals);
@@ -828,7 +910,8 @@ export class NoteWriter {
             addNote,
             marked,
             mobile,
-            notesPerSecond
+            notesPerSecond,
+            timeOffset
         } = params;
         let noteMade = false;
 
@@ -844,7 +927,7 @@ export class NoteWriter {
         // }
 
         if (slideToUse) { // make sure note wasn't triggered in slide we're not currently using
-            const now = performance.now();
+            const now = performance.now() - timeOffset;
             if (now - this.lastAll[slideToUse] > this.masterInfo.minNoteGap) {
                 if (mobile && slideIds.length > 2) {
                     // const gap = (1.0 / notesPerSecond) * 1000;
@@ -860,7 +943,7 @@ export class NoteWriter {
                         const rightTime = now - this.lastRight;
                         if (slideToUse === this.rightId) {
                             if (leftTime > gap || midTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.sideWithNotes = slideToUse;
                                 this.lastRight = now;
@@ -868,7 +951,7 @@ export class NoteWriter {
                             }
                         } else if (slideToUse === this.leftId) {
                             if (midTime > gap || rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.sideWithNotes = slideToUse;
                                 this.lastLeft = now;
@@ -876,7 +959,7 @@ export class NoteWriter {
                             }
                         } else {
                             if (leftTime > gap || rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.lastMid = now;
                                 this.lastAll[slideToUse] = now;
@@ -887,14 +970,14 @@ export class NoteWriter {
                         const rightTime = now - this.lastRight;
                         if (this.leftSlides.includes(slideToUse)) {
                             if (leftTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.lastLeft = now;
                                 this.lastAll[slideToUse] = now;
                             }
                         } else { // we're on the right side
                             if (rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.lastRight = now;
                                 this.lastAll[slideToUse] = now;
@@ -907,21 +990,21 @@ export class NoteWriter {
                         const rightTime = now - this.lastRight;
                         if (this.leftSlides.includes(slideToUse)) {
                             if (leftTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.lastLeft = now;
                                 this.lastAll[slideToUse] = now;
                             }
                         } else { // we're on the right side
                             if (rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked);
+                                addNote(slideToUse, noteVal, marked, timeOffset);
                                 noteMade = true;
                                 this.lastRight = now;
                                 this.lastAll[slideToUse] = now;
                             }
                         }
                     } else {
-                        addNote(slideToUse, noteVal, marked);
+                        addNote(slideToUse, noteVal, marked, timeOffset);
                         noteMade = true;
                         this.lastAll[slideToUse] = now;
                     }
@@ -929,7 +1012,7 @@ export class NoteWriter {
             }
         }
 
-        // if (noteMade) {
+        if (noteMade) {
             // if (!this.lastValTime || performance.now() - this.lastValTime > (gap - 1)) {
                 this.recentToneVals.push(toneVal);
                 this.lastValTime = performance.now();
@@ -937,7 +1020,7 @@ export class NoteWriter {
                     this.recentToneVals.shift();
                 }
             // }
-        // }
+        }
 
     }
 }
