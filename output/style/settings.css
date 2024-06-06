@@ -5,7 +5,7 @@
     width: 90vw;
     transform: translate(-50%, 0px);
     background-color: lightgray;
-    z-index: 5;
+    z-index: 1001;
     max-height: 99vh;
     font-family: sans-serif;
     /* overflow-y: auto; */

@@ -22,51 +22,55 @@ import {
 import { gameDataConst, songAuthors, songStages } from "./data.js";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
-const whoosh = new Audio("./effects/whoosh.m4a");
-const electric = new Audio("./effects/static.m4a");
-const guitar = new Audio("./effects/guitar.m4a");
+const whoosh = new Audio();
+const electric = new Audio();
+const guitar = new Audio();
+
 const twang1 = new Audio();
 const twang2 = new Audio();
+
 const twangs = [];
 twangs.push(twang1);
 twangs.push(twang2);
 
-let i1 = 0;
-let play1 = false;
-twang1.oncanplaythrough = () => {
-    // document.getElementById("song-label").innerHTML = "PLAY 1";
-    play1 = true;
-};
-const twang1Interval = setInterval(() => {
-    if (i1 > 5) {
-        clearTimeout(twang1Interval);
-    }
-    twang1.setAttribute("src", "./effects/twang6.m4a");
-    setTimeout(() => {
-        if (play1) {
-            clearTimeout(twang1Interval);
-        }
-    }, 4000);
-    i1 += 1;
-}, 5000);
-let i2 = 0;
-let play2 = false;
-twang2.oncanplaythrough = () => {
-    // document.getElementById("song-label").innerHTML = "PLAY 2";
-    play2 = true;
-};
-const twang2Interval = setInterval(() => {
-    if (i2 > 5) {
-        clearTimeout(twang2Interval);
-    }
-    twang2.setAttribute("src", "./effects/twang9.m4a");
-    setTimeout(() => {
-        if (play2) {
-            clearTimeout(twang2Interval);
-        }
-    }, 4000);
-    i2 += 1;
-}, 5000);
+[
+    [whoosh, "whoosh"],
+    [electric, "static"],
+    [guitar, "guitar"],
+    [twang1, "twang1"],
+    [twang2, "twang2"]
+].forEach((ele) => {
+    fetch(`./effects/${ele[1]}.txt`).then((res) => {
+        res.text().then((str) => {
+            ele[0].setAttribute("src", `data:audio/x-wav;base64,${str}`);
+        });
+    });
+})
+
+// fetch(`./effects/twang1.txt`).then((res) => {
+//     res.text().then((str) => {
+//         twang1.setAttribute("src", `data:audio/x-wav;base64,${str}`);
+//     });
+// });
+// fetch(`./effects/twang2.txt`).then((res) => {
+//     res.text().then((str) => {
+//         twang2.setAttribute("src", `data:audio/x-wav;base64,${str}`);
+//     });
+// });
+
+// makeAudioByRepeat("./effects/twang6.m4a").then((res) => {
+//     if (res) {
+//         twangs.push(res);
+//     }
+// });
+// makeAudioByRepeat("./effects/twang9.m4a").then((res) => {
+//     if (res) {
+//         twangs.push(res);
+//     }
+// });
+
+
+
 
 setTimeout(() => {
     initialAnimate();
@@ -174,6 +178,7 @@ let animations = true;
 let effects = true;
 let double = true;
 let sustainedNotesFrequency = "few";
+let doubleFrequency = "few";
 let canEnterCode = true;
 
 const masterInfo = {
@@ -187,6 +192,7 @@ const masterInfo = {
     canEnterCode,
     currentSong,
     double,
+    doubleFrequency,
     effects,
     hapticsOnHit,
     maxTailLength,
@@ -252,7 +258,14 @@ const player = new Player(
         if (masterInfo.songMode === "demo") {
             reportNewScore(accuracy, masterInfo.currentSong);
         }
-        if (accuracy < 90) {
+        const passingScore = {
+            1: 75,
+            2: 80,
+            3: 85,
+            4: 90,
+            5: 95
+        }[animator.notesPerSecond];
+        if (accuracy < passingScore) {
             document.getElementById("song-fail").classList.remove("hidden");
             document.getElementById("song-pass").classList.add("hidden");
             document.getElementById("feedback-percent").style.color = "red";
@@ -297,18 +310,21 @@ const controlsManager = new ControlsManager(
     fileConverter,
     noteWriter
 );
+let connector = new Connector(
+    masterInfo,
+    streamPlayer,
+    replaceConnector
+);
 const menuManager = new MenuManager(
     masterInfo,
     controlsManager,
     player,
     stationManager,
     streamPlayer,
-    noteWriter
+    noteWriter,
+    connector
 );
-const connector = new Connector(
-    masterInfo,
-    streamPlayer
-);
+
 const tutorial = new Tutorial(
     masterInfo,
     controlsManager,
@@ -317,6 +333,15 @@ const tutorial = new Tutorial(
     noteWriter,
     addNote
 );
+
+function replaceConnector() {
+    connector = new Connector(
+        masterInfo,
+        streamPlayer,
+        replaceConnector
+    );
+    menuManager.connector = connector;
+}
 
 // getUserProfile().then((profile) => {
 //     if (!profile.animatedBackground) {
@@ -595,7 +620,7 @@ let notesMade = 0;
 //     console.log(notesRecord);
 // });
 
-function addNote(slideId, val, marked = false, timeOffset = 0) {
+function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false) {
     // notesRecord.push([slideId, player.song2.currentTime]);
     
     const newNote = document.createElement("div");
@@ -616,10 +641,12 @@ function addNote(slideId, val, marked = false, timeOffset = 0) {
         startPos += distOffset;
     }
     
+    let newNoteAligned = false;
     // match previous note if super close    
-    if (lastNote && !lastNote.isTail && Math.abs(lastNote.position - startPos) < 0.05 * (masterInfo.travelLength + autoAdjustment)) {
-        if (masterInfo.double) {
+    if (lastNote && !lastNote.killed && !lastNote.isTail && Math.abs(lastNote.position - startPos) < 0.05 * (masterInfo.travelLength + autoAdjustment)) {
+        if (masterInfo.double && canDouble && !lastNote.aligned && animator.notesPerSecond > 1) {
             startPos = lastNote.position;
+            newNoteAligned = true;
         } else {
             return false;
         }
@@ -635,7 +662,8 @@ function addNote(slideId, val, marked = false, timeOffset = 0) {
         val: val,   // val in the array that triggered the note to be created
         isTail: false,
         tail: null,
-        seen: false
+        seen: false,
+        aligned: newNoteAligned
     };
 
     notes.add(noteInfo);
@@ -677,28 +705,6 @@ function triggerHitNote(slideId, tapperId, hasTail) {
     } else if (masterInfo.songMode !== "radio") {
         player.setVolume(1);
     }
-    const cloudId = {
-        "slide-left": "cloud-left",
-        "slide-a": "cloud-a",
-        "slide-b": "cloud-b",
-        "slide-right": "cloud-right"
-    }[slideId];
-    // const cloud = document.getElementById(cloudId);
-    // cloud.classList.remove("hidden");
-    // cloud.classList.add("cloud");
-    // setTimeout(() => {
-    //     cloud.classList.remove("cloud");
-    //     cloud.classList.add("hidden");
-    // }, 300);
-
-    // const noteLeaving = document.createElement("div");
-    // noteLeaving.classList.add("note");
-    // noteLeaving.classList.add(leavingClass);
-    // document.getElementById(tapperId).appendChild(noteLeaving);
-
-    // setTimeout(() => {
-    //     noteLeaving.remove();
-    // }, 600);
 
     if (!hasTail) {
         const lighted = document.createElement("div");
@@ -714,6 +720,7 @@ function triggerHitNote(slideId, tapperId, hasTail) {
         setTimeout(() => {
             light.remove();
         }, 1000);
+        
     }
     
     animator.recordNoteHit();
@@ -904,7 +911,6 @@ function setupMobile() {
         masterInfo.noteSpeed = newNoteSpeed;
         masterInfo.maxTailLength = 1.0 * gameDataConst.mobile.maxTailLength * masterInfo.travelLength;
         masterInfo.slideLength = masterInfo.travelLength * 1.3;
-        tReady = true;
         
     }, 1000); // without small delay this was getting missed
 
@@ -952,6 +958,54 @@ function setupMobile() {
 // initialQuery
 getUserProfile().then((profile) => {
     // profile.queryInitial = true; // use this to recover from situation where no stations show up
+    
+    // get settings out of profile
+    [
+        ["toggle-background", "animatedBackground", "background-title"],
+        ["toggle-sustained", "sustainedNotes", "sustained-title"],
+        ["toggle-calibration", "autoCalibrating", "calibration-title"],
+        ["toggle-haptics", "hapticsOnHit", "haptics-title"],
+        ["toggle-animations", "animations", "animations-title"],
+        ["toggle-effects", "effects", "effects-title"],
+        ["toggle-double", "double", "double-title"]
+    ].forEach((settingSet) => {
+        // must explicitly look for undefined because value could be false
+        if (profile[settingSet[1]] !== undefined) {
+            if (profile[settingSet[1]]) {
+                masterInfo[settingSet[1]] = true;
+                document.getElementById(`${settingSet[0]}-ball`).classList.remove("toggle-ball-off");
+                document.getElementById(settingSet[2]).style.opacity = "1";
+            } else { // value is false
+                masterInfo[settingSet[1]] = false;
+                document.getElementById(`${settingSet[0]}-ball`).classList.add("toggle-ball-off");
+                document.getElementById(settingSet[2]).style.opacity = "0.5";
+                if (settingSet[0] === "toggle-calibration") {
+                    masterInfo.autoAdjustment = 0;
+                }
+            }
+        } else { // was an old style profile - add setting now
+            profile[settingSet[1]] = masterInfo[settingSet[1]];
+        }
+    });
+    // retrieve frequency values for sustained notes and doubles
+    [
+        ["select-sustained-frequency", "sustainedNotesFrequency"],
+        ["select-double-frequency", "doubleFrequency"]
+    ].forEach((settingSet) => {
+        if (profile[settingSet[1]]) {
+            masterInfo[settingSet[1]] = profile[settingSet[1]];
+            const select = document.getElementById(settingSet[0]);
+            select.childNodes.forEach((option) => {
+                option.selected = false;
+                if (option.value === masterInfo[settingSet[1]]) {
+                    option.selected = true;
+                }
+            });
+        } else {
+            profile[settingSet[1]] = masterInfo[settingSet[1]];
+        }
+    });
+
     if (profile.queryInitial) {
         fetch("https://beatburner.com/api/statusQuery.php", { method: "POST" }).then((res) => {
             res.json().then((r) => {
@@ -967,6 +1021,8 @@ getUserProfile().then((profile) => {
                     setUserProfile(profile).then(() => {
                         stationManager.updateStationInfo(profile.stations);
                     });
+                } else {
+                    setUserProfile(profile);
                 }
             });
         }).catch((e) => {
@@ -974,6 +1030,7 @@ getUserProfile().then((profile) => {
         });
     } else {
         stationManager.updateStationInfo(profile.stations);
+        setUserProfile(profile);
     }
 });
 

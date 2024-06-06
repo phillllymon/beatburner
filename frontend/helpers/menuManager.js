@@ -8,13 +8,14 @@ import {
 import { songData } from "../data.js";
 
 export class MenuManager {
-    constructor(masterInfo, controlsManager, player, stationManager, streamPlayer, noteWriter) {
+    constructor(masterInfo, controlsManager, player, stationManager, streamPlayer, noteWriter, connector) {
         this.masterInfo = masterInfo;
         this.controlsManager = controlsManager;
         this.stationManager = stationManager;
         this.player = player;
         this.streamPlayer = streamPlayer;
         this.noteWriter = noteWriter;
+        this.connector = connector;
         this.menus = [
             "source-menu",
             "main-menu",
@@ -255,7 +256,8 @@ export class MenuManager {
         });
 
         // putting this here just because
-        setButtonClick("show-stream-modal-button", () => {
+        // setButtonClick("show-stream-modal-button", () => {
+        document.getElementById("show-stream-modal-button").addEventListener("click", () => {
             // showModal("stream");
             document.getElementById("main-menu").classList.add("hidden");
             document.getElementById("stream-modal").classList.remove("hidden");
@@ -285,8 +287,9 @@ export class MenuManager {
             this.masterInfo.currentSong = "";
             this.showMenu("source-menu");
             this.player.pause();
-            this.streamPlayer.stop();
+            this.streamPlayer.stopStream();
             this.stationManager.stopListening();
+            this.connector.closeConnection();
         });
         document.getElementById("back-to-main-menu").addEventListener("click", () => {
             this.showMenu("main-menu");

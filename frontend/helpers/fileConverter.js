@@ -6,42 +6,6 @@ import {
 export class FileConverter {
     constructor() {
         this.barPos = 0;
-
-        // reuse experiment
-        // this.player = new Audio();
-        // this.piecePlayers = [];
-        // this.recorders = [];
-        // this.pieces = [];
-        // this.streams = [];
-        // this.contexts = [];
-        // for (let i = 0; i < 30; i++) {
-        //     const piecePlayer = new Audio();
-        //     const pieceCtx = new AudioContext();
-        //     const dest = pieceCtx.createMediaStreamDestination();
-        //     const recorder = new MediaRecorder(dest.stream);
-        //     // const stream = pieceCtx.createMediaElementSource(piecePlayer);
-        //     // stream.connect(dest);
-        //     this.piecePlayers.push(piecePlayer);
-        //     this.contexts.push(pieceCtx);
-        //     this.recorders.push(recorder);
-        //     // this.streams.push(stream);
-
-        //     const pieceAudio = new Audio();
-        //     const newCtx = new AudioContext();
-        //     const newSource = newCtx.createMediaElementSource(pieceAudio);
-        //     const newAnalyser = newCtx.createAnalyser();
-        //     newSource.connect(newAnalyser);
-        //     newCtx.setSinkId({ type: "none" });
-        //     newAnalyser.connect(newCtx.destination);
-        //     newAnalyser.fftSize = 4096;
-        //     const newArray = new Uint8Array(newAnalyser.frequencyBinCount);
-        //     this.pieces.push({
-        //         audio: pieceAudio,
-        //         startTime: null,
-        //         analyser: newAnalyser,
-        //         array: newArray
-        //     });
-        // }
     }
 
     startBarAnimate(endPos, time) {
@@ -56,16 +20,6 @@ export class FileConverter {
                 clearInterval(animateInterval);
             }
         }, 500);
-
-
-        // this.endPos = endPos;
-        // const startAnimateTime = performance.now();
-        
-        // this.endTime = startAnimateTime + time;
-        // this.animating = true;
-        // this.lastTime = startAnimateTime;
-        
-        // this.animateBar();
     }
 
     animateBar() {

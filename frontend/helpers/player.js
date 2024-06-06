@@ -1,4 +1,5 @@
 import { showSongControlButton } from "./util.js";
+import { setLoading, setLoadingPercent, stopLoading } from "./util.js";
 
 export class Player {
     // delay in ms
@@ -6,11 +7,13 @@ export class Player {
         this.masterInfo = masterInfo;
         this.song1 = new Audio();
         this.song2 = new Audio();
+        this.onEnd = onEnd;
 
         this.playing1 = false;
         this.playing2 = false;
         this.paused = false;
         this.arrayPlay = false;
+        this.delayPlay = false;
 
         // this.song1.oncanplaythrough = () => {};
 
@@ -45,17 +48,6 @@ export class Player {
         this.detailedAnalyser.fftSize = 4096;
         this.detailedDataArray = new Uint8Array(this.detailedAnalyser.frequencyBinCount);
 
-        // mp3 experiment
-        // const detailedAudioSource = detailedAudioCtx.createMediaElementSource(this.song1);
-        // const dest = detailedAudioCtx.createMediaStreamDestination();
-        // this.detailedAnalyser = detailedAudioCtx.createAnalyser();
-        // detailedAudioSource.connect(this.detailedAnalyser);
-        // detailedAudioCtx.setSinkId({ type: "none" });
-        // this.detailedAnalyser.connect(detailedAudioCtx.destination);
-        // // this.detailedAnalyser.smoothingTimeConstant = 0;
-        // this.detailedAnalyser.fftSize = 4096;
-        // this.detailedDataArray = new Uint8Array(this.detailedAnalyser.frequencyBinCount);
-        // end experiment
 
         // For delayed frequency array requests
         this.freqArrays = [];
@@ -64,6 +56,7 @@ export class Player {
 
     setPlayerReady(callback) {
         this.song1.oncanplaythrough = callback;
+        this.readyCallback = callback;
     }
 
     countdown() {
@@ -100,7 +93,124 @@ export class Player {
         }, 4000);
     }
 
+    switchRecorder() {
+        console.log("switching recorder");
+        const oldRecorder = this.currentRecorder === "A" ? this.recorderA : this.recorderB;
+        const newRecorder = this.currentRecorder === "A" ? this.recorderB : this.recorderA;
+        newRecorder.start();
+        if (this.currentRecorder === "A") {
+            this.delayPlayRecordStartTimes.B = this.uploadSilent.currentTime;
+        } else {
+            this.delayPlayRecordStartTimes.A = this.uploadSilent.currentTime;
+        }
+        oldRecorder.stop();
+        setTimeout(() => {
+            if (this.playingOnDelay) {
+                this.switchRecorder();
+            }
+        }, 4000);
+        this.currentRecorder = this.currentRecorder === "A" ? "B" : "A";
+    }
+
+    startDelayRecording() {
+        this.uploadSilent.play();
+        if (this.currentRecorder === "A") {
+            this.recorderA.start();
+            this.delayPlayRecordStartTimes.A = this.uploadSilent.currentTime;
+        } else {
+            this.recorderB.start();
+            this.delayPlayRecordStartTimes.B = this.uploadSilent.currentTime;
+        }
+        setTimeout(() => {
+            if (this.playingOnDelay) {
+                this.switchRecorder();
+            }
+        }, 4000);
+        this.playingOnDelay = true;
+        
+
+
+        // this.uploadLoud.play();
+        console.log("HERE!");
+    }
+
+    playNextDelayPiece() {
+        if (this.delayPlayQueue.length > 0) {
+            console.log("pulling next piece from queue of " + this.delayPlayQueue.length);
+            this.delayPieceObj = this.delayPlayQueue.shift();
+            const ctx = new AudioContext();
+            const src = ctx.createMediaElementSource(this.delayPieceObj.audio);
+            this.delayAnalyser = ctx.createAnalyser();
+            src.connect(this.delayAnalyser);
+            ctx.setSinkId({ type: "none" });
+            this.delayAnalyser.connect(ctx.destination);
+            this.delayAnalyser.fftSize = 4096;
+            this.delayDataArray = new Uint8Array(this.delayAnalyser.frequencyBinCount);
+            this.delayPieceObj.audio.play();
+            this.playingDelayPieces = true;
+            setTimeout(() => {
+                if (this.playingOnDelay) {
+                    this.playNextDelayPiece();
+                    console.log("play next piece");
+                }
+            }, 1000.0 * (this.delayPieceObj.endTime - this.delayPieceObj.startTime));
+        } else {
+            console.log("QUEUE EMPTY");
+        }
+    }
+
+    startDelayPlaying() {
+        setLoading("loading");
+        this.masterInfo.pauseDisabled = true;
+        setTimeout(() => {
+            setLoadingPercent(18 + (4 * Math.random()));
+            setTimeout(() => {
+                setLoadingPercent(38 + (4 * Math.random()));
+                setTimeout(() => {
+                    setLoadingPercent(58 + (4 * Math.random()));
+                    setTimeout(() => {
+                        setLoadingPercent(88 + (4 * Math.random()));
+                        setTimeout(() => {
+                            setLoadingPercent(100);
+                        }, 900 + (200 * Math.random()));
+                    }, 900 + (200 * Math.random()));
+                }, 900 + (200 * Math.random()));
+            }, 900 + (200 * Math.random()));
+        }, 900 + (200 * Math.random()));
+        setTimeout(() => {
+            this.playNextDelayPiece();
+            setTimeout(() => {
+                this.uploadLoud.play();
+                this.delaySongStarted = true;
+                this.masterInfo.pauseDisabled = false;
+            }, 4000);
+            this.countdown();
+            stopLoading();
+        }, 5000); // 4000 to record 1st piece then 1s buffer to get ready to play
+    }
+
     start() {
+        if (this.delayPlay) {
+            if (this.delayPaused) {
+                // TODO - deal with delayPlay pause
+                const delayTimeMS = 1000.0 * (this.delayPieceObj.endTime - this.delayPieceObj.startTime - this.delayPieceObj.audio.currentTime);
+                console.log(delayTimeMS);
+                this.startDelayRecording();
+                this.uploadLoud.play();
+                this.delayPieceObj.audio.play();
+                setTimeout(() => {
+                    this.playNextDelayPiece();
+                }, delayTimeMS);
+                
+                this.playingOnDelay = true;
+                this.delayPaused = false;
+            } else {
+                this.currentRecorder = "A";
+                this.startDelayRecording();
+                this.startDelayPlaying();
+            }
+            return;
+        }
         if (this.masterInfo.songAtStart) {
             this.countdown();
         }
@@ -114,14 +224,6 @@ export class Player {
         this.timeStarted = performance.now();
         if (this.timeToStart2) {
             setTimeout(() => {this.startSong2()}, this.timeToStart2);
-            // this.song2Timeout = setTimeout(() => {
-            //     if (!this.paused) {
-            //         this.song2.play();
-            //         this.playing2 = true;
-            //         this.timeToStart2 = false;
-            //         this.waiting = false;
-            //     }
-            // }, this.timeToStart2);
             this.waiting = true;
         } else {
             this.song2.play();
@@ -140,7 +242,26 @@ export class Player {
     }
 
     pause() {
-        if (this.playing2) {
+        if (this.delayPlay) {
+            if (this.delaySongStarted) {
+                this.delayPaused = true;
+                this.playingOnDelay = false;
+                this.uploadLoud.pause();
+                console.log(this.delayPieceObj);
+                console.log(this.delayPlayQueue);
+                if (this.delayPieceObj) {
+                    this.delayPieceObj.audio.pause();
+                }
+                this.uploadSilent.pause();
+                if (this.currentRecorder === "A") {
+                    this.recorderA.stop();
+                    this.currentRecorder = "B";
+                } else {
+                    this.recorderB.stop();
+                    this.currentRecorder = "A";
+                }
+            }
+        } else if (this.playing2) {
             this.song2.pause();
             this.playing2 = false;
             if (this.arrayPlay) {
@@ -167,7 +288,28 @@ export class Player {
     }
 
     restart() {
-        if (this.arrayPlay) {
+        if (this.delayPlay) {
+            this.delaySongStarted = false;
+            this.delayPaused = false;
+            this.playingOnDelay = false;
+            this.recorderA.stop();
+            this.recorderB.stop();
+            this.uploadLoud.pause();
+            this.uploadLoud.currentTime = 0;
+            this.uploadSilent.pause();
+            this.uploadSilent.currentTime = 0;
+            if (this.delayPieceObj) {
+                this.delayPieceObj.audio.pause();
+            }
+            this.currentRecorder = "A";
+            this.delayPlayRecordStartTimes = {
+                A: 0,
+                B: 0
+            };
+            while (this.delayPlayQueue.length > 0) {
+                this.delayPlayQueue.shift();
+            }
+        } else if (this.arrayPlay) {
             this.songPiece.audio.pause();
             this.arrayPos = 0;
             this.songPiece = this.piecesArray[this.arrayPos];
@@ -199,8 +341,81 @@ export class Player {
         }
     }
 
-    setSource(songData, arrayPlay = false, arrayData = false) {
-        if (arrayPlay) {
+    setSource(songData, arrayPlay = false, arrayData = false, delayPlay = false) {
+        if (delayPlay) { // for mp3 uploads - it plays the mp3 silently, records it in segments, uses the segments for analyser, & plays mp3 outloud on delay
+            this.restart();
+            this.delayPlay = true;
+            this.uploadSilent = new Audio(songData);
+            this.uploadLoud = new Audio(songData);
+            this.uploadLoud.addEventListener("ended", () => {
+                this.onEnd();
+                this.restart();
+            });
+            let canPlay = false;
+            this.currentRecorder = "A";
+            this.delayPlayRecordStartTimes = {
+                A: 0,
+                B: 0
+            };
+            this.uploadSilent.oncanplaythrough = () => {
+                if (!canPlay) {
+                    canPlay = true;
+                    this.delayPlayQueue = []; // populate with objects {audio, startTime, endTime}
+                    const ctx = new AudioContext();
+                    const dest = ctx.createMediaStreamDestination();
+                    const stream = ctx.createMediaElementSource(this.uploadSilent);
+                    // ctx.setSinkId({ type: "none" });
+                    stream.connect(dest);
+                    this.recorderA = new MediaRecorder(dest.stream);
+                    this.recorderB = new MediaRecorder(dest.stream);
+
+                    const chunks = [];
+                    this.recorderA.ondataavailable = (e) => {
+                        chunks.push(e.data);
+                    };
+                    this.recorderB.ondataavailable = (e) => {
+                        chunks.push(e.data);
+                    };
+                    this.recorderA.onstop = () => {
+                        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+                        while (chunks.length > 0) {
+                            chunks.shift();
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (readerE) => {
+                            const resStr = btoa(readerE.target.result);
+                            const audio = new Audio(`data:audio/x-wav;base64,${resStr}`);
+                            this.delayPlayQueue.push({
+                                startTime: this.delayPlayRecordStartTimes.A,
+                                endTime: this.uploadSilent.currentTime,
+                                audio: audio
+                            });
+                        };
+                        reader.readAsBinaryString(blob);
+                    };
+                    this.recorderB.onstop = () => {
+                        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+                        while (chunks.length > 0) {
+                            chunks.shift();
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (readerE) => {
+                            const resStr = btoa(readerE.target.result);
+                            const audio = new Audio(`data:audio/x-wav;base64,${resStr}`);
+                            this.delayPlayQueue.push({
+                                startTime: this.delayPlayRecordStartTimes.B,
+                                endTime: this.uploadSilent.currentTime,
+                                audio: audio
+                            });
+                        };
+                        reader.readAsBinaryString(blob);
+                    };
+                    document.getElementById("close-and-play").classList.remove("hidden");
+                    document.getElementById("close-and-play-ghost").classList.add("hidden");
+                }
+            };
+        } else if (arrayPlay) {
+            this.delayPlay = false;
             if (arrayData) {
                 this.arrayPlay = true;
                 this.arrayPos = 0; // current piece in the array
@@ -236,6 +451,7 @@ export class Player {
                 this.songPiece = null;
             }
         } else {
+            this.delayPlay = false;
             this.arrayPlay = false;
             this.restart();
             this.song1.setAttribute("src", songData);
@@ -257,13 +473,17 @@ export class Player {
     // for DETAILED EXPERIMENT
     getDetailedFreqArray() {
         if (this.arrayPlay) {
-            this.songPiece.analyser.smoothingTimeConstant = 0;
-            // this.songPiece.analyser.smoothingTimeConstant = 0.0;
+            // this.songPiece.analyser.smoothingTimeConstant = 0;
+            this.songPiece.analyser.smoothingTimeConstant = 0.0;
             this.songPiece.analyser.getByteFrequencyData(this.songPiece.array);
             return this.songPiece.array.map(ele => ele);
+        } else if (this.delayPlay && this.delayAnalyser) {
+            this.delayAnalyser.smoothingTimeConstant = 0.0
+            this.delayAnalyser.getByteFrequencyData(this.delayDataArray);
+            return this.delayDataArray.map(ele => ele);
         } else {
-            this.detailedAnalyser.smoothingTimeConstant = 0;
-            // this.detailedAnalyser.smoothingTimeConstant = 0.0;
+            // this.detailedAnalyser.smoothingTimeConstant = 0;
+            this.detailedAnalyser.smoothingTimeConstant = 0.0;
             this.detailedAnalyser.getByteFrequencyData(this.detailedDataArray);
             return this.detailedDataArray.map(ele => ele);
         }
@@ -273,6 +493,10 @@ export class Player {
             this.songPiece.analyser.smoothingTimeConstant = 0;
             this.songPiece.analyser.getByteTimeDomainData(this.songPiece.array);
             return this.songPiece.array.map(ele => ele);
+        } else if (this.delayPlay && this.delayAnalyser) {
+            this.delayAnalyser.smoothingTimeConstant = 0.0
+            this.delayAnalyser.getByteTimeDomainData(this.delayDataArray);
+            return this.delayDataArray.map(ele => ele);
         } else {
             this.detailedAnalyser.smoothingTimeConstant = 0;
             this.detailedAnalyser.getByteTimeDomainData(this.detailedDataArray);
@@ -312,11 +536,23 @@ export class Player {
     }
 
     setVolume(val) {
-        this.song2.volume = val;
+        if (this.delayPlay) {
+            this.uploadLoud.volume = val;
+        } else {
+            this.song2.volume = val;
+        }
     }
 
     calibrateLag(delay = this.delay) {
         const delayInSeconds = 1.0 * delay / 1000;
+        
+        if (this.delayPlay) {
+            if (this.playingDelayPieces && this.delayPieceObj && this.uploadLoud.currentTime > 0) {
+                this.delayPieceObj.audio.currentTime = delayInSeconds + this.uploadLoud.currentTime - this.delayPieceObj.startTime;
+            }
+            return;
+        }
+
         if (this.arrayPlay) {
             if (this.playing2 && this.songPiece.audio.currentTime < 0.5 * this.songPiece.audio.duration) {
                 this.songPiece.audio.currentTime = this.song2.currentTime + delayInSeconds - this.songPiece.startTime;

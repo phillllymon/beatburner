@@ -3,7 +3,8 @@ import {
 } from "./util.js";
 
 export class Connector {
-    constructor(masterInfo, streamPlayer) {
+    constructor(masterInfo, streamPlayer, selfDestruct) {
+        this.selfDestruct = selfDestruct;
         this.masterInfo = masterInfo;
         document.masterInfo = masterInfo; // bad hack TODO: fix this
         this.streamPlayer = streamPlayer;
@@ -47,6 +48,8 @@ export class Connector {
         this.connection.addEventListener("icegatheringstatechange", (e) => {
             console.log("ICE gathering state change: " + e.target.iceGatheringState);
         });
+
+        this.clipMode = false;
     }
 
     dealWithMessage(message) {
@@ -71,24 +74,33 @@ export class Connector {
                 });
             });
         }
+        if (messageObj.type === "switch") {
+            this.clipMode = true;
+            this.runClipMode();
+        }
     }
 
     connect(streamId) {
         this.streamId = streamId;
         let mailboxChecks = 0;
         const checkInterval = setInterval(() => {
+            if (this.clipMode) {
+                clearInterval(checkInterval);
+            }
             this.getMessages();
             mailboxChecks += 1;
             if (mailboxChecks > 30) {
                 clearInterval(checkInterval);
                 setMessage("could not connect");
-            }
-            if (this.channel.readyState === "open") {
-                setMessage("connected to source");
-                setTimeout(() => {
-                    setMessage("listening for music");
-                }, 1000);
-                clearInterval(checkInterval);
+                this.closeConnection();
+            } else {
+                if (this.channel.readyState === "open") {
+                    setMessage("connected to source");
+                    setTimeout(() => {
+                        setMessage("listening for music");
+                    }, 1000);
+                    clearInterval(checkInterval);
+                }
             }
         }, 2000);
     }
@@ -134,6 +146,50 @@ export class Connector {
     handleReceiveMessage(e) {
         this.streamPlayer.setData(e.data);
     }
+
+    closeConnection() {
+        // if (this.channel && this.channel.readyState === "open") {
+            this.connection.close();
+        // }
+        this.streamPlayer.stopStream();
+        document.getElementById("enter-stream-id").value = "";
+        setMessage("not connected");
+        this.selfDestruct();
+        this.closed = true;
+        console.log("STATUS: " + this.channel.readyState);
+        setTimeout(() => {
+            console.log("STATUS LATE: " + this.channel.readyState);
+        }, 2000);
+    }
+
+    runClipMode() {
+        this.clipNum = 0;
+        const clipInterval = setInterval(() => {
+            if (this.closed) {
+                clearInterval(clipInterval);
+            }
+            fetch("https://beatburner.com/api/getClip.php", {
+                method: "POST",
+                body: JSON.stringify({
+                    clipId: `8248125clip${this.clipNum}`
+                })
+            }).then((res) => {
+                res.json().then((r) => {
+                    if (r.message === "success") {
+                        const dataObj = {
+                            str: r.clip,
+                            time: 10000,
+                            clipMode: true
+                        };
+                        this.streamPlayer.setData(JSON.stringify(dataObj));
+                        this.clipNum += 1;
+                    } else {
+                        this.clipNum = 0;
+                    }
+                });
+            });
+        }, 8000);
+    }
 }
 
 // for unknown reasons, could not get this to work without being an outside function and 
@@ -148,7 +204,7 @@ function handleReceiveMessage(e, streamPlayer) {
         document.getElementById("song-label").innerText = "awaiting music";
         setTimeout(() => {
             document.getElementById("song-label").innerText = "keep your shirt on";
-        }, 2000);
+        }, 3000);
         hideModal("stream");
         document.masterInfo.streaming = true;
     } else {

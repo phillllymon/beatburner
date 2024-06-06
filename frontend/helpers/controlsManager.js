@@ -44,8 +44,16 @@ export class ControlsManager {
             4: "hard",
             5: "crazy hard"
         }
+        const passingScores = {
+            1: 75,
+            2: 80,
+            3: 85,
+            4: 90,
+            5: 95
+        };
         getUserProfile().then((profile) => {
             const levelCode = `l${profile.level}s${profile.slides}`;
+            const passingScore = passingScores[profile.level];
             document.getElementById("level-sub-title").innerText = `${levelNames[profile.level]} / ${profile.slides} slides`;
             const scores = profile.progress[levelCode];
             const songCodes = Object.keys(scores);
@@ -73,7 +81,7 @@ export class ControlsManager {
                     songTitle.innerText = songData[songCode];
                     if (songCodes.includes(songCode)) {
                         songScore.innerText = `${scores[songCode]}%`;
-                        if (scores[songCode] < 90) {
+                        if (scores[songCode] < passingScore) {
                             if (!defaultSong) {
                                 defaultSong = songCode;
                             }
@@ -221,26 +229,31 @@ export class ControlsManager {
                     document.getElementById("close-and-play").classList.remove("hidden");
                     // document.getElementById("close-and-play-ghost").classList.add("hidden");
                 } else {
-                    this.player.setSource(`data:audio/x-wav;base64,${str}`, true, false); // make player forget previous song
-                    this.fileConverter.convertToM4a(str).then((piecesArr) => {
-                        const newSongData = `data:audio/x-wav;base64,${str}`;
+                    this.player.setSource(`data:audio/x-wav;base64,${str}`, false, false, true);
+                    stopLoading();
+                    this.masterInfo.currentSong = e.target.files[0].name;
+                    document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+
+                    // this.player.setSource(`data:audio/x-wav;base64,${str}`, true, false); // make player forget previous song
+                    // this.fileConverter.convertToM4a(str).then((piecesArr) => {
+                    //     const newSongData = `data:audio/x-wav;base64,${str}`;
                         
-                        this.animator.stopAnimation();
-                        this.player.pause();
-                        // this.player.setSource(newSongData);
-                        this.player.setSource(newSongData, true, piecesArr);
+                    //     this.animator.stopAnimation();
+                    //     this.player.pause();
+                    //     // this.player.setSource(newSongData);
+                    //     this.player.setSource(newSongData, true, piecesArr);
     
-                        showSongControlButton("button-play");
-                        killAllNotes(this.masterInfo, this.noteWriter);
+                    //     showSongControlButton("button-play");
+                    //     killAllNotes(this.masterInfo, this.noteWriter);
                         
-                        this.masterInfo.currentSong = e.target.files[0].name;
-                        document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+                    //     this.masterInfo.currentSong = e.target.files[0].name;
+                    //     document.getElementById("song-label").innerText = this.masterInfo.currentSong;
     
-                        stopLoading();
-                        document.getElementById("close-and-play").classList.remove("hidden");
-                        // document.getElementById("close-and-play-ghost").classList.add("hidden");
-                        this.masterInfo.audioLoaded = true;
-                    });
+                    //     stopLoading();
+                    //     document.getElementById("close-and-play").classList.remove("hidden");
+                    //     // document.getElementById("close-and-play-ghost").classList.add("hidden");
+                    //     this.masterInfo.audioLoaded = true;
+                    // });
                 }
             };
             reader.readAsBinaryString(file);
@@ -250,9 +263,13 @@ export class ControlsManager {
     activateSongControls() {
         document.getElementById("button-play").addEventListener("click", () => {
             this.playFunction();
+            document.getElementById("button-play").classList.remove("pulse");
+            document.getElementById("button-play-beacon").classList.add("hidden");
         });
         document.getElementById("button-pause").addEventListener("click", () => {
-            this.pauseFunction();
+            if (!this.masterInfo.pauseDisabled) {
+                this.pauseFunction();
+            }
         });
         document.getElementById("button-restart").addEventListener("click", () => {
             this.restartFunction()
@@ -263,7 +280,7 @@ export class ControlsManager {
     }
     
     playFunction() {
-        if (this.masterInfo.streaming || this.masterInfo.songMode === "radio") {
+        if (this.masterInfo.songMode === "stream" || this.masterInfo.songMode === "radio") {
             this.streamPlayer.start();
             this.animator.runAnimation({ player: this.streamPlayer, algorithm: this.masterInfo.algorithm });
         } else {
@@ -281,7 +298,7 @@ export class ControlsManager {
         };
     }
     pauseFunction() {
-        if (this.masterInfo.streaming || this.masterInfo.songMode === "radio") {
+        if (this.masterInfo.songMode === "stream" || this.masterInfo.songMode === "radio") {
             this.streamPlayer.stop();
             killAllNotes(this.masterInfo, this.noteWriter);
         } else {
@@ -507,10 +524,10 @@ export class ControlsManager {
                     document.getElementById(`${settingSet[0]}-ball`).classList.remove("toggle-ball-off");
                     document.getElementById(settingSet[2]).style.opacity = "1";
                 }
-                // getUserProfile().then((profile) => {
-                //     profile[settingSet[1]] = this.masterInfo[settingSet[1]];
-                //     setUserProfile(profile);
-                // });
+                getUserProfile().then((profile) => {
+                    profile[settingSet[1]] = this.masterInfo[settingSet[1]];
+                    setUserProfile(profile);
+                });
             });
         });
         const resetButton = document.getElementById("reset-button");
@@ -525,6 +542,18 @@ export class ControlsManager {
         const freqSelector = document.getElementById("select-sustained-frequency");
         freqSelector.addEventListener("change", () => {
             this.masterInfo.sustainedNotesFrequency = freqSelector.value;
+            getUserProfile().then((profile) => {
+                profile.sustainedNotesFrequency = this.masterInfo.sustainedNotesFrequency;
+                setUserProfile(profile);
+            });
+        });
+        const doubleFreqSelector = document.getElementById("select-double-frequency");
+        doubleFreqSelector.addEventListener("change", () => {
+            this.masterInfo.doubleFrequency = doubleFreqSelector.value;
+            getUserProfile().then((profile) => {
+                profile.doubleFrequency = this.masterInfo.doubleFrequency;
+                setUserProfile(profile);
+            });
         });
         resetButton.addEventListener("click", () => {
             getUserProfile().then((profile) => {

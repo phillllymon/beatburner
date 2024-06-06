@@ -104,10 +104,33 @@ export function killAllNotes(masterInfo, noteWriter) {
         if (note.tail) {
             note.tail.note.remove();
         }
+        note.killed = true;
         note.note.remove();
         masterInfo.notes.delete(note);
     });
     noteWriter.resetData();
+}
+
+export function makeAudioByRepeat(src, numTries = 10) {
+    return new Promise((resolve) => {
+        let resolved = false;
+        for (let i = 0; i < numTries; i++) {
+            setTimeout(() => {
+                const thisAudio = new Audio(src);
+                thisAudio.oncanplaythrough = () => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve(thisAudio);
+                    }
+                };
+            }, 1000 * Math.random());
+        }
+        setTimeout(() => {
+            if (!resolved) {
+                resolve(false);
+            }
+        }, 5000);
+    });
 }
 
 export function setUserProfile(profile) {

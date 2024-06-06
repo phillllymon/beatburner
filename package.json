@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@capacitor/cli": "^5.7.4",
+    "@capacitor/cli": "6.0.0",
     "html-webpack-plugin": "^5.5.4",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
@@ -23,6 +23,8 @@
     "@capacitor/ios": "^6.0.0",
     "@capacitor/preferences": "^6.0.0",
     "@capacitor/status-bar": "^5.0.7",
+    "nodeJS": "^1.0.0",
+    "nvm": "^0.0.4",
     "xcode": "^3.0.1"
   }
 }

@@ -170,6 +170,9 @@ export class StreamPlayer {
     }
 
     setData(data, blobStream = false) {
+        if (!this.masterInfo.songMode === "stream") {
+            return;
+        }
         if (!this.started) {
             document.getElementById("initial-received").style.color = "gray";
         }
@@ -181,10 +184,10 @@ export class StreamPlayer {
                 document.getElementById("now-streaming").style.color = "gray";
                 setTimeout(() => {
                     document.getElementById("connecting-radio").classList.add("hidden");
+                    
                     document.getElementById("button-play").classList.add("pulse");
-                    setTimeout(() => {
-                        document.getElementById("button-play").classList.remove("pulse");
-                    }, 10000);
+                    document.getElementById("button-play-beacon").classList.remove("hidden");
+
                 }, 1000);
             }, 2000);
 
@@ -326,6 +329,7 @@ export class StreamPlayer {
         } else {
             this.liveStreaming = false;
         }
+        // BELOW FOR STREAMING MODE
         const dataObj = JSON.parse(data);
 
         const audioCtx = new AudioContext();
@@ -362,15 +366,19 @@ export class StreamPlayer {
             }
             setTimeout(() => {
                 document.getElementById("connecting-radio").classList.add("hidden");
+                document.getElementById("button-play").classList.add("pulse");
+                document.getElementById("button-play-beacon").classList.remove("hidden");
             }, 2000);
         }
     }
 
     startNextChunk() {
         if (this.queue.length < 1) {
-            console.log("music queue empty " + this.queue.length);
-            document.getElementById("song-label").innerText = "stream ended";
-            // this.started = false;
+            if (this.masterInfo.songMode === "stream") {
+                // console.log("music queue empty " + this.queue.length);
+                document.getElementById("song-label").innerText = "stream ended";
+            }
+            this.started = false;
         } else {
             this.current = this.queue.shift();
             
@@ -419,15 +427,24 @@ export class StreamPlayer {
         if (this.liveStream) {
             this.ctx.suspend();
         } else {
-            this.setVolume(1);
+            this.setVolume(0);
         }
         this.muted = true;
     }
 
     stopStream() {
+        this.liveStream = false;
         if (this.livePlayer) {
             this.livePlayer.pause();
             this.livePlayer = null;
+        }
+        if (this.current) {
+            this.current.song.pause();
+            this.current.song = null;
+            this.current = null;
+            while (this.queue.length > 0) {
+                this.queue.shift();
+            }
         }
     }
 }

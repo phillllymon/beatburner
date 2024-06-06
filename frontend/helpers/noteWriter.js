@@ -109,11 +109,15 @@ export class NoteWriter {
             return;
         }
 
-        const reach = {
+        let reach = {
             "few": 5,
             "medium": 10,
             "many": 15
         } [this.masterInfo.sustainedNotesFrequency];
+
+        if (this.masterInfo.songMode === "radio") {
+            reach = Math.floor(reach / 2);
+        }
 
         slideIds.forEach((slideId) => {
 
@@ -375,6 +379,7 @@ export class NoteWriter {
             let makeNote = false;
             let marked = false;
             let colVal = false;
+            let canDouble = false;
             
             // FOR NO COLLECT ARRAY!!!!
             const arrToUse = dataArray;
@@ -697,11 +702,11 @@ export class NoteWriter {
 
                 // number version (instead of fraction version)
                 let numNotes = {
-                    1: 5,
+                    1: 4,
                     2: 7,
                     3: 10,
-                    4: 15,
-                    5: 20
+                    4: 30,
+                    5: 60
                 }[notesPerSecond];
                 if (slideIds.length === 3) {
                     numNotes *= 0.75;
@@ -710,12 +715,30 @@ export class NoteWriter {
                     numNotes *= 0.5;
                 }
 
-                if (hills.slice(Math.floor(hills.length - numNotes), hills.length - 1).map((hill) => {
-                // if (hills.slice(Math.floor(cutoff * hills.length), hills.length - 1).map((hill) => {
-                    return hill[1];
-                }).includes(midIdx)) {
-                    makeNote = true;
-                }
+                const doubleThreshold = {
+                    "few": 0.75,
+                    "medium": 0.5,
+                    "many": 0
+                } [this.masterInfo.doubleFrequency];
+
+                const hillsToSearch = hills.slice(Math.floor(hills.length - numNotes), hills.length - 1);
+                hillsToSearch.forEach((hill, i) => {
+                    if (hill[1] === midIdx) {
+                        makeNote = true;
+                        if (i > doubleThreshold * hillsToSearch.length) {
+                            // marked = true;
+                            canDouble = true;
+                        }
+                    }
+                });
+
+
+                // if (hills.slice(Math.floor(hills.length - numNotes), hills.length - 1).map((hill) => {
+                // // if (hills.slice(Math.floor(cutoff * hills.length), hills.length - 1).map((hill) => {
+                //     return hill[1];
+                // }).includes(midIdx)) {
+                //     makeNote = true;
+                // }
 
                 this.lastAlls.push({
                     "slide-left": (now - this.lastAll["slide-left"]),
@@ -788,6 +811,7 @@ export class NoteWriter {
                     marked: marked,
                     mobile: true,
                     notesPerSecond: notesPerSecond,
+                    canDouble: canDouble,
                     timeOffset: timeOffset
                 });
             }
@@ -911,6 +935,7 @@ export class NoteWriter {
             marked,
             mobile,
             notesPerSecond,
+            canDouble,
             timeOffset
         } = params;
         let noteMade = false;
@@ -943,7 +968,7 @@ export class NoteWriter {
                         const rightTime = now - this.lastRight;
                         if (slideToUse === this.rightId) {
                             if (leftTime > gap || midTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.sideWithNotes = slideToUse;
                                 this.lastRight = now;
@@ -951,7 +976,7 @@ export class NoteWriter {
                             }
                         } else if (slideToUse === this.leftId) {
                             if (midTime > gap || rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.sideWithNotes = slideToUse;
                                 this.lastLeft = now;
@@ -959,7 +984,7 @@ export class NoteWriter {
                             }
                         } else {
                             if (leftTime > gap || rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.lastMid = now;
                                 this.lastAll[slideToUse] = now;
@@ -970,14 +995,14 @@ export class NoteWriter {
                         const rightTime = now - this.lastRight;
                         if (this.leftSlides.includes(slideToUse)) {
                             if (leftTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.lastLeft = now;
                                 this.lastAll[slideToUse] = now;
                             }
                         } else { // we're on the right side
                             if (rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.lastRight = now;
                                 this.lastAll[slideToUse] = now;
@@ -990,21 +1015,21 @@ export class NoteWriter {
                         const rightTime = now - this.lastRight;
                         if (this.leftSlides.includes(slideToUse)) {
                             if (leftTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.lastLeft = now;
                                 this.lastAll[slideToUse] = now;
                             }
                         } else { // we're on the right side
                             if (rightTime > gap) {
-                                addNote(slideToUse, noteVal, marked, timeOffset);
+                                addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                                 noteMade = true;
                                 this.lastRight = now;
                                 this.lastAll[slideToUse] = now;
                             }
                         }
                     } else {
-                        addNote(slideToUse, noteVal, marked, timeOffset);
+                        addNote(slideToUse, noteVal, marked, timeOffset, canDouble);
                         noteMade = true;
                         this.lastAll[slideToUse] = now;
                     }

@@ -23,6 +23,7 @@
 <body>
     <center>
         <div id="game-container" class="game-container">
+            <div id="start-curtain"><br><br><br><br><br>Beatburner</div>
             <div id="give-feedback-modal" class="hidden">
                 I'd love to hear from you! Be sure to include your email if you'd like a reply.
                 <br>
@@ -44,11 +45,11 @@
             
             <div id="modal-background" class="hidden"></div>
             <div id="connecting-radio" class="hidden">
-                <div class="menu-title">
+                <div id="radio-status-title" class="menu-title">
                     Connecting...
                 </div>
                 <div id="acquiring" class="menu-choice connect-status">
-                    Stream acquired
+                    Acquiring stream
                 </div>
                 <div id="initial-received" class="menu-choice connect-status">
                     Initial data received 
@@ -271,6 +272,7 @@
                                 <option value="medium">medium</option>
                                 <option value="many">many</option>
                             </select>
+                            <br>
                             Sustained notes are notes with tails that you need to hold down.
                         </div>
                     </div>
@@ -288,6 +290,13 @@
                             </div>
                         </div>
                         <div class="settings-description">
+                            Double note frequency
+                            <select id="select-double-frequency" class="select">
+                                <option value="few" selected>few</option>
+                                <option value="medium">medium</option>
+                                <option value="many">many</option>
+                            </select>
+                            <br>
                             Double notes are symultaneous notes on different slides that you have to hit at the
                             same time.
                         </div>
@@ -395,6 +404,10 @@
                 <div id="background-left" class="left"></div>
                 <div id="background-right" class="right"></div>
                 <div id="slides-container" class="slides-container">
+                    <div id="slides-under-red" class="slides-under"></div>
+                    <div id="slides-under-blue" class="slides-under"></div>
+                    <div id="slides-under-purple" class="slides-under"></div>
+                    <div id="slides-under-green" class="slides-under"></div>
                     <div id="slides" class="slides">
                         <div id="a-slider" class="slider">
                             <div id="slide-left" class="clear-slide">
@@ -437,6 +450,9 @@
                                     
                                     <div id="tapper-left" class="tapper">
                                         <div id="bulb-left" class="note-bulb">S</div>
+                                        <!-- <div id="fire-viewer-left" class="fire-viewer">
+                                            <div id="fire-screen-left" class="fire-screen"></div>
+                                        </div> -->
                                     </div>
                                     
                                     
@@ -538,6 +554,7 @@
                 <div id="controls-bottom" class="controls-bottom stuck-to-bottom">
                     <div id="button-play" class="control-button-bottom">
                         <div id="play-arrow"></div>
+                        <div id="button-play-beacon" class="beacon hidden"></div>
                     </div>
                     <div id="button-pause" class="control-button-bottom">
                         <div class="pause-rectangle"></div>
@@ -595,7 +612,7 @@
             </div>
         </div>
     </center>
-    <div id="start-curtain"><br><br><br><br><br>Beatburner</div>
+    <!-- <div id="start-curtain"><br><br><br><br><br>Beatburner</div> -->
     <div id="close-tutorial" class="close-tutorial tutorial-button hidden">Exit tutorial</div>
     <div id="perfect-container" class="perfect-container">
         <div id="perfect" class="perfect hidden">SKILZ!</div>

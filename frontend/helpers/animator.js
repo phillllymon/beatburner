@@ -395,7 +395,8 @@ function moveNotes(
                 theRecents[note.tail.slideId] = null;
             }
         }
-        if (newTop > theSlideLength) {   
+        if (newTop > theSlideLength) {
+            note.killed = true;  
             note.note.remove();
             notes.delete(note);
         }

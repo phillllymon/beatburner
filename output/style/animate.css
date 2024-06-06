@@ -134,3 +134,81 @@
     25%      {opacity: 0}
     100%    {opacity: 0}
 }
+
+.slides-under {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 200%;
+    transform-style: preserve-3d;
+    transform: rotateX(20deg);
+    border-left: 0.5vmin solid transparent;
+    border-right: 0.5vmin solid transparent;
+    opacity: 0;
+}
+.fire-skirt-red {
+    box-shadow: 30px 0px 40px rgba(235, 0, 0, 1), -30px 0px 40px rgba(235, 0, 0, 1);
+    animation-name: fireSkirt;
+    animation-duration: 0.25s;
+}
+.fire-skirt-blue {
+    box-shadow: 30px 0px 40px rgba(41, 177, 255), -30px 0px 40px rgba(41, 177, 255);
+    animation-name: fireSkirt;
+    animation-duration: 0.25s;
+}
+.fire-skirt-purple {
+    box-shadow: 30px 0px 40px rgba(250, 0, 250, 1), -30px 0px 40px rgba(250, 0, 250, 1);
+    animation-name: fireSkirt;
+    animation-duration: 0.25s;
+}
+.fire-skirt-green {
+    box-shadow: 30px 0px 40px rgba(0, 235, 0, 1), -30px 0px 40px rgba(0, 235, 0, 1);
+    animation-name: fireSkirt;
+    animation-duration: 0.25s;
+}
+@keyframes fireSkirt {
+    0%      {opacity: 0;}
+    5%      {opacity: 1}
+    25%      {opacity: 1}
+    100%    {opacity: 0;}
+}
+
+
+
+
+
+/* .fire-viewer {
+    position: absolute;
+    left: 0%;
+    top: 0%;
+    width: 100%;
+    height: 100%;
+    perspective: 20vmin;
+}
+
+.fire-screen {
+    position: absolute;
+    left: 0%;
+    top: 0%;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform: rotateX(-20deg);
+    background-color: blue;
+}
+
+.spark {
+    position: absolute;
+    background-color: red;
+    height: 1vh;
+    width: 3vh;
+    animation-name: sparkRise;
+    animation-duration: 0.5s;
+    
+}
+@keyframes sparkRise {
+    0%      {opacity: 1; }
+    25%      {opacity: 0.75}
+    100%    {opacity: 0}
+} */

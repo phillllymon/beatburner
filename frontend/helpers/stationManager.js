@@ -95,6 +95,8 @@ export class StationManager {
         document.getElementById("cancel-radio-connect").addEventListener("click", () => {
             this.canceled = true;
             this.listening = false;
+            document.getElementById("radio-status-title").style.color = "blue";
+            document.getElementById("radio-status-title").innerText = "Connecting...";
             document.getElementById("connecting-radio").classList.add("hidden");
             document.getElementById("main-menu").classList.remove("hidden");
         });
@@ -148,12 +150,25 @@ export class StationManager {
 
         document.getElementById("acquiring").style.color = "gray";
 
-        // LIVE STREAM VERSION
+        let canPlay = false;
+        setTimeout(() => {
+            if (!canPlay) {
+                this.canceled = true;
+                document.getElementById("radio-status-title").style.color = "red";
+                document.getElementById("radio-status-title").innerText = "Connection failed";
+                // setTimeout(() => {
+                //     document.getElementById("radio-status-title").innerText = "Connecting...";
+                //     document.getElementById("connecting-radio").classList.add("hidden");
+                //     document.getElementById("connecting-radio").classList.remove("menu");
+                //     document.getElementById("main-menu").classList.remove("hidden");
+                //     document.getElementById("main-menu").classList.add("menu");
+                // }, 1500);
+            }
+        }, 15000);
 
         const radioPlayer = new Audio(this.stationInfo.stream);
         radioPlayer.crossOrigin = "anonymous";
 
-        let canPlay = false;
         radioPlayer.addEventListener("canplaythrough", () => {
             if (!canPlay && !this.canceled) {
                 canPlay = true;
