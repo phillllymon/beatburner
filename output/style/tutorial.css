@@ -122,3 +122,47 @@
     transform: rotate(45deg);
     box-shadow: 0px 0px 5px darkgray;
 }
+
+#calibrator {
+    align-items: center;
+}
+.calibrate-button-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 1vh;
+}
+.calibrate-button {
+    width: 5vh;
+    height: 5vh;
+    border-radius: 1vh;
+    background-color: gray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 2vw;
+}
+#slower-arrow {
+    width: 2vh;
+    height: 2vh;
+    border-left: 0.75vh solid darkgray;
+    border-top: 0.75vh solid darkgray;
+    transform: rotate(45deg) translate(15%, 15%);
+}
+#faster-arrow {
+    width: 2vh;
+    height: 2vh;
+    border-bottom: 0.75vh solid darkgray;
+    border-right: 0.75vh solid darkgray;
+    transform: rotate(45deg) translate(-15%, -15%);
+}
+#manual-delay-display {
+    font-size: 3vh;
+}
+
+.horizontal {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+}

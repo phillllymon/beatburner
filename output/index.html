@@ -236,6 +236,39 @@
                     </div>
                     <div class="settings-item">
                         <div class="settings-item-bar">
+                            <div class="settings-item-title">
+                                Calibrate lag
+                            </div>
+                            <div>
+                                <button id="open-calibration">Calibrate</button>
+                            </div>
+                        </div>
+                        <div class="settings-description">
+                            Manually calibrate audio/visual lag, often caused by headphones. Do this when
+                            the lag is severe and constant instead of relying on autocalibration. (See below)
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-bar">
+                            <div id="calibration-title" class="settings-item-title">
+                                Autocalibration
+                            </div>
+                            <div class="settings-toggle">
+                                <div>OFF</div>
+                                <div id="toggle-calibration" class="toggle-switch">
+                                    <div id="toggle-calibration-ball" class="toggle-ball"></div>
+                                </div>
+                                <div>ON</div>
+                            </div>
+                        </div>
+                        <div class="settings-description">
+                            Autocalibration continually adjusts note timing as you play to account
+                            for factors like song style, lag, or when it makes sense for you
+                            to tap.
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-bar">
                             <div id="background-title" class="settings-item-title">
                                 Animated Background
                             </div>
@@ -299,25 +332,6 @@
                             <br>
                             Double notes are symultaneous notes on different slides that you have to hit at the
                             same time.
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-bar">
-                            <div id="calibration-title" class="settings-item-title">
-                                Autocalibration
-                            </div>
-                            <div class="settings-toggle">
-                                <div>OFF</div>
-                                <div id="toggle-calibration" class="toggle-switch">
-                                    <div id="toggle-calibration-ball" class="toggle-ball"></div>
-                                </div>
-                                <div>ON</div>
-                            </div>
-                        </div>
-                        <div class="settings-description">
-                            Autocalibration continually adjusts note timing as you play to account
-                            for factors like song style, headphone lag, or when it makes sense for you
-                            to tap.
                         </div>
                     </div>
                     <div class="settings-item">
@@ -699,11 +713,74 @@
             </div>
         </div>
     </div>
-    <!-- <div id="equalizer" class="hidden">
-        <div id="equalizer-box">
-
+    <div id="calibrator" class="tutorial-step hidden">
+        <div>
+            Adjust visual/audio delay until the beats match the lights.
         </div>
-    </div> -->
+        <br>
+        <div class="calibrate-button-container">
+            <div id="way-slower-button" class="calibrate-button">
+                <div id="slower-arrow"></div>
+            </div>
+            <div>- 25 ms</div>
+        </div>
+        <div class="calibrate-button-container">
+            <div id="slower-button" class="calibrate-button">
+                <div id="slower-arrow"></div>
+            </div>
+            <div>- 1 ms</div>
+        </div>
+        <div id="manual-delay-display">+ 0 ms</div>
+        <div class="calibrate-button-container">
+            <div id="faster-button" class="calibrate-button">
+                <div id="faster-arrow"></div>
+            </div>
+            <div>+ 1 ms</div>
+        </div>
+        <div class="calibrate-button-container">
+            <div id="way-faster-button" class="calibrate-button">
+                <div id="faster-arrow"></div>
+            </div>
+            <div>+ 25 ms</div>
+        </div>
+        <br>
+        <div id="close-calibrator-button" class="tutorial-button">Done</div>
+    </div>
+    <div id="calibrate-popup" class="tutorial-step hidden">
+        <div>
+            <div class="menu-title">Calibrate lag?</div>
+        </div>
+        <br>
+        <div>
+            It is recommended to manually calibrate lag before playing Beatburner, especially if you are using headphones.
+        </div>
+        <br>
+        <div class="horizontal">
+            <div id="calibrate-now" class="tutorial-button">
+                Calibrate
+            </div>
+            <div id="skip-calibrate" class="tutorial-button">
+                Skip
+            </div>
+        </div>
+    </div>
+    <div id="big-calibrate-popup" class="tutorial-step hidden">
+        <div>
+            <div class="menu-title">Sound effects off</div>
+        </div>
+        <br>
+        <div>
+            Because you've indicated a large amount of audio/visual lag, missed
+            note effects are automatically turned off. You can turn them back on
+            at any time in the settings menu.
+        </div>
+        <br>
+        
+        <div id="ok-big-calibrate" class="tutorial-button">
+            OK
+        </div>
+        
+    </div>
     
     <script type="text/javascript" src="./main.js"></script>
 </body>

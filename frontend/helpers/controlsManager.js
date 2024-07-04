@@ -20,11 +20,12 @@ import {
 } from "../data.js";
 
 export class ControlsManager {
-    constructor(masterInfo, player, streamPlayer, animator, fileConverter, noteWriter) {
+    constructor(masterInfo, player, streamPlayer, animator, fileConverter, noteWriter, calibrator) {
         this.player = player;
         this.animator = animator;
         this.fileConverter = fileConverter;
         this.noteWriter = noteWriter;
+        this.calibrator = calibrator;
         this.masterInfo = masterInfo;
         this.streamPlayer = streamPlayer;
         this.activateSongSelect();
@@ -529,6 +530,10 @@ export class ControlsManager {
                     setUserProfile(profile);
                 });
             });
+        });
+        const calibrateButton = document.getElementById("open-calibration");
+        calibrateButton.addEventListener("click", () => {
+            this.calibrator.openCalibration();
         });
         const resetButton = document.getElementById("reset-button");
         const resetCheckbox = document.getElementById("reset-checkbox");

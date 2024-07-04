@@ -24,7 +24,7 @@ export class NoteWriter {
         this.lastAlls = [];
         this.mostRecentNotes = masterInfo.mostRecentNotesOrTails;
 
-        this.numToneVals = 5;
+        this.numToneVals = 5; // min; will shift off only if already above this number
         // this.recentToneVals = [80];
         // this.recentToneVals = [20, 50, 80];
         // this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80];
@@ -77,6 +77,10 @@ export class NoteWriter {
 
         // which algorithm?
         this.doPreciseBetter = true;
+
+
+        // TEMP
+        this.tallestTowerIdices = [];
     }
 
     resetData() {
@@ -473,14 +477,33 @@ export class NoteWriter {
                 }
                 this.toneVals.push(aveDiff);
 
-                // this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
-                //     return peak[0];
-                // }))); // put latest average peak height into this.aveHillHeights
-
-                // MAX INSTEAD OF AVE hill height
-                this.aveHillHeights.push(Math.max(...highPeaks.map((peak) => {
+                this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
                     return peak[0];
                 }))); // put latest average peak height into this.aveHillHeights
+
+                // (1) MAX INSTEAD OF AVE hill height
+                // this.aveHillHeights.push(Math.max(...highPeaks.map((peak) => {
+                //     return peak[0];
+                // })));
+
+                // (2) TEMP
+                // highPeaks.forEach((peakPair) => {
+                //     if (peakPair[0] === this.aveHillHeights[this.aveHillHeights.length - 1]) {
+                //         this.tallestTowerIdices.push(peakPair[1]);
+                //     }
+                // });
+
+                // combine previous 2 things into 1 loop through highPeaks
+                let tallestHeight = 0;
+                let tallestIdx = 0;
+                highPeaks.forEach((peakPair) => {
+                    if (peakPair[0] > tallestHeight) {
+                        tallestHeight = peakPair[0];
+                        tallestIdx = peakPair[1];
+                    }
+                });
+                // this.aveHillHeights.push(tallestHeight);  // COMMENTED TO REVERT TO average tower height instead of tallest
+                this.tallestTowerIdices.push(tallestIdx);
 
                 // EQUALIZER TEMP!!!!
                 // const equals = [
@@ -506,6 +529,7 @@ export class NoteWriter {
                     // this.lastEquals.shift(); /////////// TEMP
                     this.rawArrs.shift(); /////////// TEMP
                     // this.highestFreqs.shift();
+                    this.tallestTowerIdices.shift(); // TEMP
                 }
 
                 // FOR highestFreqs
@@ -533,10 +557,58 @@ export class NoteWriter {
                 let timeLow = timePrev;
                 let timeLowIdx = 0;
 
-                const legLength = Math.floor(this.aveHillHeights.length / (2 * zoomInFactor));
-                const startIdx = Math.floor(this.aveHillHeights.length / 2 - legLength);
-                const endIdx = Math.floor(this.aveHillHeights.length / 2 + legLength);
+                let timePerFrame = 0;
+                let manualFrameDelay = 0;
+                // console.log(this.times[this.times.length - 1], this.times[0]);
+                if (this.times.length > 100) {
+                    timePerFrame = (1.0 * this.times[this.times.length - 1] - this.times[0]) / this.times.length;
+                    if (timePerFrame > 0) {
+                        manualFrameDelay = 1.0 * this.masterInfo.manualDelay / timePerFrame;
+                    }
+                }
+                // console.log("timePerFrame: " + timePerFrame);
+                // console.log("manualFrameDelay: " + manualFrameDelay);
 
+                const halfway = 1900; // 100ms default offset seems to work well
+                let midIdx = 0;
+
+                while (this.times[midIdx] < now - halfway + manualFrameDelay) {
+                    midIdx += 1;
+                    if (!this.times[midIdx]) {
+                        break;
+                    }
+                }
+
+                if (midIdx === 0) {
+                    return;
+                }
+
+                const legLength = Math.floor(this.aveHillHeights.length / (2 * zoomInFactor));
+                // let startIdx = Math.floor(((midIdx) + manualFrameDelay) - legLength);
+                // let endIdx = Math.floor(((midIdx) + manualFrameDelay) + legLength);
+
+                let startIdx = Math.floor(((midIdx)) - legLength);
+                let endIdx = Math.floor(((midIdx)) + legLength);
+
+                if (startIdx < 0) {
+                    // startIdx = 0;
+                    return;
+                }
+                if (startIdx > this.aveHillHeights.length - 1) {
+                    // startIdx = this.aveHillHeights.length - 1;
+                    return;
+
+                }
+                if (endIdx < 0) {
+                    // endIdx = 0;
+                    return;
+
+                }
+                if (endIdx > this.aveHillHeights.length - 1) {
+                    // endIdx = this.aveHillHeights.length - 1;
+                    return;
+
+                }
 
                 // for (let i = 1; i < this.aveHillHeights.length; i++) {
                 for (let i = startIdx; i < endIdx; i++) {
@@ -585,14 +657,22 @@ export class NoteWriter {
                 });
                 // console.log(hills.length);
 
-                let midIdx = 0;
-                let realMidIdx = 0;
-                while (this.times[midIdx] < now - 1900) { // 100ms offset seems to work well
-                    midIdx += 1;
-                    if (this.times[midIdx] < now - 2000) {
-                        realMidIdx += 1;
-                    }
-                }
+                // const halfway = 1900 + this.masterInfo.manualDelay; // 100ms default offset seems to work well
+                // console.log(halfway);
+
+                // let midIdx = 0;
+                // while (this.times[midIdx] < now - halfway) {
+                //     midIdx += 1;
+                //     if (!this.times[midIdx]) {
+                //         break;
+                //     }
+                // }
+                // console.log(startIdx, endIdx);
+                // let midIdx = Math.floor(((endIdx + startIdx) / 2));
+                // if (midIdx < 0) {
+                //     midIdx = 0;
+                // }
+                // console.log("midIdx: " + midIdx);
 
                 const peakIdx = hillPeakIdxs[midIdx] + midIdx;
                 if (peakIdx) {
@@ -604,9 +684,18 @@ export class NoteWriter {
                 //     this.tallestTowers[midIdx + this.peakOffset].length - 0
                 // );
                 // noteValToUse = Math.max(...this.tallestTowers[midIdx + this.peakOffset]);
-                toneValToUse = arrAverage(this.tallestTowers[midIdx + this.peakOffset].map((sub) => {
-                    return sub[1];
-                }));
+                
+                // NEW toneValToUse
+                
+                // toneValToUse = this.tallestTowerIdices[midIdx + this.peakOffset];
+                // END NEW toneValToUse
+                // OLD toneValToUse
+                // toneValToUse = arrAverage(this.tallestTowers[midIdx + this.peakOffset].map((sub) => {
+                //     return sub[1];
+                // }));
+                // END OLD toneValToUse
+
+
                 let highest = 0;
                 let highIdx = 0;
                 this.tallestTowers[midIdx + this.peakOffset].forEach((tower) => {
@@ -617,7 +706,7 @@ export class NoteWriter {
                 })
                 noteValToUse = highIdx;
                 
-                // toneValToUse = this.toneVals[peakIdx]; // TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
+                toneValToUse = this.toneVals[peakIdx + this.peakOffset]; // TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
                 // if (this.rawArrs[peakIdx]) {
                 //     // toneValToUse = weightedAve(this.rawArrs[peakIdx].slice(0, 2048));
                 //     // average indices of top 10 
@@ -659,7 +748,7 @@ export class NoteWriter {
                 } 
                 
                 // too quiet
-                if (this.timeArrayVariances[midIdx] < 15) {
+                if (this.timeArrayVariances[midIdx] < 15 || this.times[this.times.length - 1] - this.times[0] < 1900) {
                     return;
                 }
 
@@ -679,7 +768,7 @@ export class NoteWriter {
                 // }[notesPerSecond];
 
                 let cutoff = {
-                    1: 0.93,
+                    1: 1,
                     2: 0.82,
                     3: 0.75,
                     4: 0.5,
@@ -820,82 +909,180 @@ export class NoteWriter {
     }
 
     getSlideToUse(toneVal, numSlides) {
-        const sortedTones = this.recentToneVals.map((val) => {
-            return val;
-        }).sort();
+        const sortedTones = this.recentToneVals.map(ele => ele).sort((a, b) => {
+            if (a > b) {
+                return 1;
+            } else {
+                return -1;
+            }
+        });
+
+        // UP DOWN experiment
+        // if (numSlides === 4 && this.lastSlide && this.lastToneVal && this.lastNoteTime && performance.now() - this.lastNoteTime < 1000) {
+        //     this.lastNoteTime = performance.now();
+        //     const slides = ["slide-left", "slide-a", "slide-b", "slide-right"];
+        //     const max = Math.max(...this.recentToneVals);
+        //     const min = Math.min(...this.recentToneVals);
+        //     const range = max - min;
+        //     const stepSize = 1.0 * range / 4;
+        //     const diff = toneVal - this.lastToneVal;
+        //     if (Math.abs(diff) < stepSize / 16) {
+        //         this.lastToneVal = toneVal;
+        //         return slides[this.lastSlide];
+        //     }
+        //     const diffNum = Math.round(1.0 * range / diff);
+        //     if (diffNum > 0) { // go up
+        //         this.lastSlide = (this.lastSlide + diffNum) % 4;
+        //         this.lastToneVal = toneVal;
+        //         return slides[this.lastSlide];
+        //     } else { // go down
+        //         let newNum = this.lastSlide + diffNum;
+        //         while (newNum < 0) {
+        //             newNum += 4;
+        //         }
+        //         this.lastSlide = newNum;
+        //         this.lastToneVal = toneVal;
+        //         return slides[this.lastSlide];
+        //     }
+        // }
+
+        // this.lastToneVal = toneVal;
+        // this.lastNoteTime = performance.now();
+        // END UP DOWN experiment
 
         // TEMP - revisit old algorithm A
-        if (numSlides === 4) {
-            const recents = this.recentToneVals.slice(this.recentToneVals.length - 3, this.recentToneVals.length).sort();
-            if (toneVal < recents[0]) {
-                return "slide-left";
-            }
-            if (toneVal < recents[1]) {
-                return "slide-a";
-            }
-            if (toneVal < recents[2]) {
-                return "slide-b";
-            }
-            return "slide-right";
-        }
-        if (numSlides === 3) {
-            const recents = this.recentToneVals.slice(this.recentToneVals.length - 2, this.recentToneVals.length).sort();
-            if (toneVal < recents[0]) {
-                return "slide-left";
-            }
-            if (toneVal > recents[1]) {
-                return "slide-right";
-            }
-            return "slide-a";
-        }
-        if (toneVal < this.recentToneVals[this.recentToneVals.length - 1]) {
-            return "slide-left";
-        }
-        return "slide-right";
+        // if (numSlides === 4) {
+        //     const recents = this.recentToneVals.slice(this.recentToneVals.length - 3, this.recentToneVals.length).sort((a, b) => {
+        //         if (a > b) {
+        //             return 1;
+        //         } else {
+        //             return -1;
+        //         }
+        //     });
+        //     if (toneVal < recents[0]) {
+        //         this.lastSlide = 0; // for UP DOWN
+        //         return "slide-left";
+        //     }
+        //     if (toneVal < recents[1]) {
+        //         this.lastSlide = 1; // for UP DOWN
+        //         return "slide-a";
+        //     }
+        //     if (toneVal < recents[2]) {
+        //         this.lastSlide = 2; // for UP DOWN
+        //         return "slide-b";
+        //     }
+        //     this.lastSlide = 3; // for UP DOWN
+        //     return "slide-right";
+        // }
+        // if (numSlides === 3) {
+        //     const recents = this.recentToneVals.slice(this.recentToneVals.length - 2, this.recentToneVals.length).sort((a, b) => {
+        //     if (a > b) {
+        //         return 1;
+        //     } else {
+        //         return -1;
+        //     }
+        // });
+        //     if (toneVal < recents[0]) {
+        //         return "slide-left";
+        //     }
+        //     if (toneVal > recents[1]) {
+        //         return "slide-right";
+        //     }
+        //     return "slide-a";
+        // }
+        // if (toneVal < this.recentToneVals[this.recentToneVals.length - 1]) {
+        //     return "slide-left";
+        // }
+        // return "slide-right";
         // end TEMP
 
-        if (numSlides === 4 && this.recentToneVals.length > 7) {
-            const max = Math.max(...this.recentToneVals);
-            const min = Math.min(...this.recentToneVals);
-            const stepSize = (1.0 * max - min) / 4;
+        // exp - non-weighted range
+        // if (numSlides === 4 && this.recentToneVals.length > 7) {
+        //     const max = Math.max(...this.recentToneVals);
+        //     const min = Math.min(...this.recentToneVals);
+        //     const stepSize = (1.0 * max - min) / 4;
             
-            if (toneVal < stepSize + min) {
-                return "slide-left";
-            }
-            if (toneVal < (2 * stepSize) + min) {
-                return "slide-a";
-            }
-            if (toneVal < (3 * stepSize) + min) {
-                return "slide-b";
-            }
-            return "slide-right";
-        }
+        //     if (toneVal < stepSize + min) {
+        //         return "slide-left";
+        //     }
+        //     if (toneVal < (2 * stepSize) + min) {
+        //         return "slide-a";
+        //     }
+        //     if (toneVal < (3 * stepSize) + min) {
+        //         return "slide-b";
+        //     }
+        //     return "slide-right";
+        // }
 
-        if (numSlides === 3 && this.recentToneVals.length > 7) {
-            const max = Math.max(...this.recentToneVals);
-            const min = Math.min(...this.recentToneVals);
-            const stepSize = (1.0 * max - min) / 3;
+        // if (numSlides === 3 && this.recentToneVals.length > 7) {
+        //     const max = Math.max(...this.recentToneVals);
+        //     const min = Math.min(...this.recentToneVals);
+        //     const stepSize = (1.0 * max - min) / 3;
             
-            if (toneVal < stepSize + min) {
-                return "slide-left";
-            }
-            if (toneVal < (2 * stepSize) + min) {
-                return "slide-a";
-            }
-            return "slide-right";
-        }
+        //     if (toneVal < stepSize + min) {
+        //         return "slide-left";
+        //     }
+        //     if (toneVal < (2 * stepSize) + min) {
+        //         return "slide-a";
+        //     }
+        //     return "slide-right";
+        // }
 
-        if (numSlides === 2 && this.recentToneVals.length > 7) {
-            const max = Math.max(...this.recentToneVals);
-            const min = Math.min(...this.recentToneVals);
-            const stepSize = (1.0 * max - min) / 2;
+        // if (numSlides === 2 && this.recentToneVals.length > 7) {
+        //     const max = Math.max(...this.recentToneVals);
+        //     const min = Math.min(...this.recentToneVals);
+        //     const stepSize = (1.0 * max - min) / 2;
             
-            if (toneVal < stepSize + min) {
-                return "slide-left";
-            }
-            return "slide-right";
-        }
+        //     if (toneVal < stepSize + min) {
+        //         return "slide-left";
+        //     }
+        //     return "slide-right";
+        // }
         // end exp
+
+        // weighted range algo
+        const highest = sortedTones[sortedTones.length - 1];
+        const lowest  = sortedTones[0];
+        
+        if (toneVal > highest) {
+            return "slide-right";
+        } else if (toneVal < lowest) {
+            return "slide-left";
+        }
+        
+        
+        
+        if (numSlides === 4) {
+            let slideToReturn = "slide-left";
+            if (toneVal > sortedTones[Math.floor(0.25 * sortedTones.length)]) {
+                slideToReturn = "slide-a";
+                if (toneVal > sortedTones[Math.floor(0.5 * sortedTones.length)]) {
+                    slideToReturn = "slide-b";
+                    if (toneVal > sortedTones[Math.floor(0.75 * sortedTones.length)]) {
+                        slideToReturn = "slide-right";
+                    }
+                }
+            }
+            return slideToReturn;
+        }
+        if (numSlides === 3) {
+            let slideToReturn = "slide-left";
+            if (toneVal > sortedTones[Math.floor(0.33 * sortedTones.length)]) {
+                slideToReturn = "slide-a";
+                if (toneVal > sortedTones[Math.floor(0.66 * sortedTones.length)]) {
+                    slideToReturn = "slide-right";
+                }
+            }
+            return slideToReturn;
+        }
+        if (numSlides === 2) {
+            let slideToReturn = "slide-left";
+            if (toneVal > sortedTones[Math.floor(0.5 * sortedTones.length)]) {
+                slideToReturn = "slide-right";
+            }
+            return slideToReturn;
+        }
+        // end range algo
 
         let slideToUse = "slide-left";
         if (numSlides === 4) {

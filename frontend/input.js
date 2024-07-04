@@ -11,6 +11,7 @@ import { StationManager } from "./helpers/stationManager.js";
 import { StreamPlayer } from "./helpers/streamPlayer.js";
 import { FileConverter } from "./helpers/fileConverter.js";
 import { Tutorial } from "./helpers/tutorial.js";
+import { Calibrator } from "./helpers/calibrator.js";
 import {
     setElementText,
     removeElementClass,
@@ -150,6 +151,7 @@ let sustainedNotes = true;
 let animatedBackground = true;
 let streaming = false;
 let useShortSteps = true;
+let manualDelay = 0;
 
 let autoAdjustment = 0;
 // let autoAdjustment = -0.05 * travelLength;
@@ -195,6 +197,7 @@ const masterInfo = {
     doubleFrequency,
     effects,
     hapticsOnHit,
+    manualDelay,
     maxTailLength,
     minNoteGap,
     mostRecentNotesOrTails,
@@ -302,13 +305,20 @@ const stationManager = new StationManager(
     streamPlayer
 );
 const fileConverter = new FileConverter();
+const calibrator = new Calibrator(
+    masterInfo,
+    animator,
+    noteWriter,
+    addNote
+);
 const controlsManager = new ControlsManager(
     masterInfo,
     player,
     streamPlayer,
     animator,
     fileConverter,
-    noteWriter
+    noteWriter,
+    calibrator
 );
 let connector = new Connector(
     masterInfo,
@@ -324,7 +334,6 @@ const menuManager = new MenuManager(
     noteWriter,
     connector
 );
-
 const tutorial = new Tutorial(
     masterInfo,
     controlsManager,
@@ -366,6 +375,16 @@ document.isFullscreen = false;
 document.wantFullscreenReturn = false;
 
 // main
+const calibratePopup = document.getElementById("calibrate-popup");
+calibratePopup.style.top = "25%";
+calibratePopup.style.left = "15%";
+calibratePopup.style.width = "60%";
+calibratePopup.style.zIndex = 10;
+setTimeout(() => {
+    if (!masterInfo.songMode) {
+        calibratePopup.classList.remove("hidden");
+    }
+}, 5000);
 showSongControlButton("button-play");
 
 
@@ -734,7 +753,6 @@ function triggerHitNote(slideId, tapperId, hasTail) {
     }
     
     masterInfo.songNotesHit += 1;
-    const songLabel = document.getElementById("song-label");
     
     if (masterInfo.songMode !== "tutorial") {
         const rockLabel = document.getElementById("rock-label");

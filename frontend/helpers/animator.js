@@ -113,7 +113,7 @@ export class Animator {
 
     animate(params) {
         const now = performance.now();
-        if (this.masterInfo.songMode === "tutorial") {
+        if (this.masterInfo.songMode === "tutorial" || this.masterInfo.songMode === "calibrate") {
             const dt = now - this.time;
             this.time = now;
             moveNotes(
@@ -127,7 +127,9 @@ export class Animator {
                 this.recents,
                 this.masterInfo.slideLength,
                 dt,
-                this
+                this,
+                this.masterInfo.songMode,
+                this.masterInfo.travelLength
             );
     
             if (this.animating) {
@@ -180,7 +182,9 @@ export class Animator {
             this.recents,
             this.masterInfo.slideLength,
             dt,
-            this
+            this,
+            this.masterInfo.songMode,
+            this.masterInfo.travelLength
         );
 
         if (this.animating) {
@@ -259,11 +263,11 @@ function moveNotes(
     theRecents,
     theSlideLength,
     dt,
-    obj
+    obj,
+    theSongMode,
+    theTravelLength
 ) {
 
-    const realMovement = 1.0 * noteSpeed * (dt / 1000);
-    // exp ^real
     const now = performance.now();
     const elapsedTime = now - obj.slideStartTime;
     // console.log("elapsed: " + elapsedTime);
@@ -400,5 +404,30 @@ function moveNotes(
             note.note.remove();
             notes.delete(note);
         }
+
+        if (theSongMode === "calibrate") {
+            if (newTop > theTravelLength) {
+                note.killed = true;  
+                note.note.remove();
+                notes.delete(note);
+                lightup("slide-right", "tapper-right");
+            }
+        }
     }
+}
+
+function lightup(slideId, tapperId) {
+    const lighted = document.createElement("div");
+        lighted.classList.add("note-lighted");
+        const middleLighted = document.createElement("div");
+        middleLighted.classList.add("note-middle-lighted");
+        const light = document.createElement("div");
+        light.id = `${slideId}-flash`;
+        light.appendChild(lighted);
+        light.appendChild(middleLighted);
+        document.getElementById(`dummy-${tapperId}`).appendChild(light);
+        light.classList.add("flash");
+        setTimeout(() => {
+            light.remove();
+    }, 1000);
 }
