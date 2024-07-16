@@ -1,8 +1,14 @@
 import {
     getUserProfile,
     setUserProfile,
-    killAllNotes
+    killAllNotes,
+    promptCalibration,
+    setLoading,
+    stopLoading
 } from "./util.js";
+import {
+    songData
+} from "../data.js";
 
 // // TEMP for local testing
 // import { rockIt } from "./rockItTonight.js";
@@ -26,295 +32,209 @@ export class Tutorial {
         this.activateTutorial();
 
         this.songNotes = [
-            [1.943831, 'slide-left'],
-            [2.46194, 'slide-left'],
-            [2.93213, 'slide-left'],
-            [3.261772, 'slide-left'],
-            [4.071073, 'slide-left'],
-            [4.888844, 'slide-left'],
-            [5.451498, 'slide-left'],
-            [6.268138, 'slide-a'],
-            // [6.980142, 'slide-left'],
-            [6.987352, 'slide-a'],
-            [8.352035, 'slide-right'],
-            // [8.358885, 'slide-a'],
-            [8.825848, 'slide-right'],
-            // [9.200945, 'slide-left'],
-            [9.208735, 'slide-right'],
-            [9.891026, 'slide-right'],
-            [9.924831, 'slide-a'],
-            [10.621651, 'slide-a'],
-            // [10.629568, 'slide-left'],
-            [11.383086, 'slide-left'],
-            [12.181558, 'slide-left'],
-            // [12.752709, 'slide-right'],
-            [12.771304, 'slide-left'],
-            // [13.565134, 'slide-right'],
-            [13.58432, 'slide-a'],
-            [14.199451, 'slide-a'],
-            [14.200682, 'slide-left'],
-            [14.686029, 'slide-a'],
-            [15.077, 'slide-right'],
-            [15.675686, 'slide-right'],
-            // [16.110811, 'slide-a'],
-            [16.119929, 'slide-left'],
-            [16.508924, 'slide-left'],
-            [17.253228, 'slide-left'],
-            [17.677042, 'slide-right'],
-            // [18.069906, 'slide-right'],
-            [18.665896, 'slide-a'],
-            [19.041213, 'slide-right'],
-            [19.408597, 'slide-left'],
-            [20.096563, 'slide-right'],
-            [20.10311, 'slide-left'],
-            [20.551235, 'slide-left'],
-            [20.879712, 'slide-right'],
-            // [20.899284, 'slide-left'],
-            [21.570719, 'slide-left'],
-            // [22.004532, 'slide-left'],
-            [22.017696, 'slide-a'],
-            [22.403017, 'slide-left'],
-            [23.010386, 'slide-a'],
-            [23.477792, 'slide-a'],
-            [23.80235, 'slide-left'],
-            [24.520093, 'slide-a'],
-            [24.961103, 'slide-a'],
-            // [24.968926, 'slide-left'],
-            [25.335092, 'slide-left'],
-            [25.880481, 'slide-right'],
-            [26.416421, 'slide-right'],
-            [26.818142, 'slide-a'],
-            [27.329045, 'slide-left'],
-            // [27.336278, 'slide-a'],
-            [27.839089, 'slide-left'],
-            [27.847059, 'slide-a'],
-            [28.193594, 'slide-left'],
-            [28.977664, 'slide-left'],
-            // [28.977979, 'slide-a'],
-            [29.383244, 'slide-right'],
-            [29.391985, 'slide-a'],
-            [29.722685, 'slide-a'],
-            // [29.740602, 'slide-right'],
-            [30.819628, 'slide-a'],
-            [31.119825, 'slide-left'],
-            [31.876483, 'slide-right'],
-            // [31.886171, 'slide-left'],
-            [32.269131, 'slide-right'],
-            [32.636287, 'slide-left'],
-            // [32.646182, 'slide-a'],
-            // [33.251759, 'slide-right'],
-            [33.258386, 'slide-a'],
-            [33.687021, 'slide-right'],
-            // [33.693368, 'slide-a'],
-            [34.102092, 'slide-right'],
-            [34.637631, 'slide-a'],
-            [34.825343, 'slide-left'],
-            [35.202356, 'slide-right'],
-            // [35.526062, 'slide-left'],
-            [35.543482, 'slide-right'],
-            [36.229869, 'slide-a'],
-            [36.702039, 'slide-a'],
-            [37.002433, 'slide-a'],
-            [37.59896, 'slide-left'],
-            [37.782288, 'slide-a'],
-            [38.152062, 'slide-a'],
-            // [38.463139, 'slide-left'],
-            [38.480706, 'slide-a'],
-            [39.166, 'slide-left'],
-            [39.60085, 'slide-right'],
-            [39.903795, 'slide-left'],
-            // [40.525273, 'slide-left'],
-            [40.711821, 'slide-left'],
-            [41.138345, 'slide-left'],
-            [42.049796, 'slide-left'],
-            [42.477504, 'slide-left'],
-            [42.66329, 'slide-right'],
-            [42.892988, 'slide-left'],
-            [43.436948, 'slide-right'],
-            [43.447235, 'slide-left'],
-            [43.977588, 'slide-a'],
-            // [44.301956, 'slide-a'],
-            [44.30976, 'slide-right'],
-            [45.458284, 'slide-left'],
-            [46.470486, 'slide-right'],
-            [46.898406, 'slide-left'],
-            // [47.228253, 'slide-left'],
-            [47.236151, 'slide-a'],
-            [47.911318, 'slide-left'],
-            [48.355652, 'slide-a'],
-            [48.711462, 'slide-left'],
-            // [49.257221, 'slide-left'],
-            [49.265738, 'slide-a'],
-            [49.816343, 'slide-left'],
-            [50.205555, 'slide-right'],
-            [50.217131, 'slide-a'],
-            [50.83423, 'slide-right'],
-            [51.633747, 'slide-left'],
-            [52.34084, 'slide-a'],
-            [52.785104, 'slide-left'],
-            [53.074742, 'slide-right'],
-            [54.200097, 'slide-left'],
-            [54.569704, 'slide-left'],
-            // [55.231494, 'slide-a'],
-            [55.23889, 'slide-left'],
-            [55.723891, 'slide-left'],
-            // [56.0555, 'slide-a'],
-            [56.055633, 'slide-left'],
-            [56.578485, 'slide-left'],
-            [56.749268, 'slide-left'],
-            // [57.1294, 'slide-a'],
-            [57.156046, 'slide-right'],
-            [58.092507, 'slide-a'],
-            [58.252219, 'slide-right'],
-            // [58.621207, 'slide-left'],
-            [58.647402, 'slide-right'],
-            // [58.954711, 'slide-a'],
-            [58.963944, 'slide-left'],
-            [59.704233, 'slide-left'],
-            [60.130858, 'slide-left'],
-            // [61.047767, 'slide-right'],
-            [61.056442, 'slide-left'],
-            [61.528066, 'slide-right'],
-            [61.891473, 'slide-left'],
-            [62.454313, 'slide-left'],
-            [62.627828, 'slide-a'],
-            [62.966183, 'slide-left'],
-            [63.365505, 'slide-left'],
-            [64.106267, 'slide-left'],
-            [64.489571, 'slide-left'],
-            [64.829666, 'slide-left'],
-            // [65.940065, 'slide-right'],
-            [65.956729, 'slide-left'],
-            // [66.304467, 'slide-right'],
-            [66.322777, 'slide-left'],
-            [67.370048, 'slide-right'],
-            [67.733991, 'slide-a'],
-            [68.460176, 'slide-right'],
-            [68.467931, 'slide-left'],
-            [68.869097, 'slide-right'],
-            [69.224845, 'slide-right'],
-            // [69.882824, 'slide-right'],
-            [69.890504, 'slide-a'],
-            // [70.329246, 'slide-left'],
-            [70.331709, 'slide-a'],
-            [70.683683, 'slide-right'],
-            [70.693289, 'slide-a'],
-            [71.376449, 'slide-a'],
-            [71.751753, 'slide-left'],
-            [71.757064, 'slide-a'],
-            [72.123742, 'slide-a'],
-            [72.131217, 'slide-left'],
-            [73.220055, 'slide-right'],
-            [73.231204, 'slide-a'],
-            [73.581908, 'slide-a'],
-            [73.603726, 'slide-right'],
-            [74.236397, 'slide-left'],
-            [74.777472, 'slide-right'],
-            [75.077161, 'slide-a'],
-            [75.711161, 'slide-a'],
-            [76.198607, 'slide-a'],
-            [76.527807, 'slide-left'],
-            [77.123927, 'slide-left'],
-            [77.132386, 'slide-a'],
-            [77.593554, 'slide-a'],
-            [77.925786, 'slide-left'],
-            [78.625694, 'slide-left'],
-            [79.083081, 'slide-right'],
-            [79.102485, 'slide-a'],
-            [79.448487, 'slide-right'],
-            [80.062396, 'slide-right'],
-            [80.069648, 'slide-left'],
-            [80.539922, 'slide-right'],
-            [80.865434, 'slide-left'],
-            [81.477818, 'slide-right'],
-            [81.492786, 'slide-left'],
-            [81.971707, 'slide-left'],
-            [82.390223, 'slide-left'],
-            [83.086038, 'slide-left'],
-            [83.095862, 'slide-right'],
-            [83.469737, 'slide-left'],
-            [83.477005, 'slide-a'],
-            [83.819914, 'slide-a'],
-            [83.828195, 'slide-left'],
-            [84.5346, 'slide-left'],
-            [84.934407, 'slide-right'],
-            [84.944366, 'slide-left'],
-            [85.837949, 'slide-right'],
-            [86.025258, 'slide-a'],
-            [86.452148, 'slide-left'],
-            [87.06509, 'slide-left'],
-            [87.391524, 'slide-right'],
-            [87.392957, 'slide-a'],
-            [87.88303, 'slide-a'],
-            [87.892487, 'slide-right'],
-            [88.293713, 'slide-left'],
-            [88.310089, 'slide-right'],
-            [88.8714, 'slide-a'],
-            [88.879422, 'slide-left'],
-            [89.316545, 'slide-left'],
-            [89.715283, 'slide-left'],
-            [90.211734, 'slide-left'],
-            [90.417352, 'slide-a'],
-            [90.820264, 'slide-right'],
-            [91.190637, 'slide-right'],
-            [91.76351, 'slide-right'],
-            [91.777049, 'slide-a'],
-            [92.254535, 'slide-a'],
-            [92.651679, 'slide-a'],
-            [93.21941, 'slide-right'],
-            [93.224337, 'slide-a'],
-            [93.735028, 'slide-a'],
-            [94.053814, 'slide-left'],
-            [94.759652, 'slide-right'],
-            [94.776053, 'slide-left'],
-            [95.243925, 'slide-a'],
-            [95.576649, 'slide-left'],
-            [96.202458, 'slide-left'],
-            [96.640634, 'slide-a'],
-            [97.023522, 'slide-left'],
-            [97.714649, 'slide-left'],
-            [99.62146, 'slide-left'],
-            [99.938512, 'slide-a'],
-            [99.949915, 'slide-right'],
-            [100.508893, 'slide-left'],
-            [100.519563, 'slide-a'],
-            [100.999325, 'slide-left'],
-            [101.302508, 'slide-left'],
-            [101.984086, 'slide-right'],
-            [101.994815, 'slide-a'],
-            [102.207472, 'slide-a'],
-            [102.821043, 'slide-left'],
-            [103.535615, 'slide-left'],
-            [104.015683, 'slide-left'],
-            [104.353905, 'slide-left'],
-            [105.022819, 'slide-left'],
-            [105.423756, 'slide-left'],
-            [105.431557, 'slide-a'],
-            [105.785448, 'slide-a'],
-            [105.792439, 'slide-left'],
-            [106.523045, 'slide-a'],
-            [106.899581, 'slide-right'],
-            [106.906163, 'slide-left'],
-            [107.237517, 'slide-left'],
-            [107.245444, 'slide-right'],
-            [107.901745, 'slide-left'],
-            [108.323757, 'slide-left'],
-            [108.328904, 'slide-a'],
-            [108.703916, 'slide-right'],
-            [108.712152, 'slide-a'],
-            [109.361246, 'slide-left'],
-            [109.800983, 'slide-a'],
-            [109.805361, 'slide-left'],
-            [110.244485, 'slide-left'],
-            [110.869287, 'slide-right'],
-            [111.310829, 'slide-left'],
-            [111.63546, 'slide-left'],
-            [112.326915, 'slide-left'],
-            [112.691335, 'slide-left'],
-            [112.702023, 'slide-a'],
-            [113.091933, 'slide-a'],
-            [113.810393, 'slide-a'],
-            [114.208271, 'slide-left']
+            [2.46194, "slide-left"],
+            [2.93213, "slide-left"],
+            [3.261772, "slide-left"],
+            [4.071073, "slide-left"],
+            [4.888844, "slide-left"],
+            [5.451498, "slide-left"],
+            [6.268138, "slide-a"],
+            [6.987352, "slide-a"],
+            [8.352035, "slide-right"],
+            [8.825848, "slide-right"],
+            [9.208735, "slide-right"],
+            [9.891026, "slide-right"],
+            [10.621651, "slide-a"],
+            [11.383086, "slide-left"],
+            [12.181558, "slide-left"],
+            [12.771304, "slide-left"],
+            [13.58432, "slide-a"],
+            [14.199451, "slide-a"],
+            [14.686029, "slide-a"],
+            [15.077, "slide-right"],
+            [15.675686, "slide-right"],
+            [16.119929, "slide-left"],
+            [16.508924, "slide-left"],
+            [17.253228, "slide-left"],
+            [17.677042, "slide-right"],
+            [18.665896, "slide-a"],
+            [19.041213, "slide-right"],
+            [19.408597, "slide-left"],
+            [20.096563, "slide-right"],
+            [20.551235, "slide-left"],
+            [20.879712, "slide-right"],
+            [21.570719, "slide-left"],
+            [22.017696, "slide-a"],
+            [22.403017, "slide-left"],
+            [23.010386, "slide-a"],
+            [23.477792, "slide-a"],
+            [23.80235, "slide-left"],
+            [24.520093, "slide-a"],
+            [24.961103, "slide-a"],
+            [25.335092, "slide-left"],
+            [25.880481, "slide-right"],
+            [26.416421, "slide-right"],
+            [26.818142, "slide-a"],
+            [27.329045, "slide-left"],
+            [27.839089, "slide-left"],
+            [28.193594, "slide-left"],
+            [28.977664, "slide-left"],
+            [29.383244, "slide-right"],
+            [29.722685, "slide-a"],
+            [30.819628, "slide-a"],
+            [31.119825, "slide-left"],
+            [31.876483, "slide-right"],
+            [32.269131, "slide-right"],
+            [32.636287, "slide-left"],
+            [33.258386, "slide-a"],
+            [33.687021, "slide-right"],
+            [34.102092, "slide-right"],
+            [34.637631, "slide-a"],
+            [35.202356, "slide-right"],
+            [35.543482, "slide-right"],
+            [36.229869, "slide-a"],
+            [36.702039, "slide-a"],
+            [37.002433, "slide-a"],
+            [37.59896, "slide-left"],
+            [38.152062, "slide-a"],
+            [38.480706, "slide-a"],
+            [39.166, "slide-left"],
+            [39.60085, "slide-right"],
+            [39.903795, "slide-left"],
+            [40.711821, "slide-left"],
+            [41.138345, "slide-left"],
+            [42.049796, "slide-left"],
+            [42.477504, "slide-left"],
+            [43.436948, "slide-right"],
+            [43.977588, "slide-a"],
+            [44.30976, "slide-right"],
+            [45.458284, "slide-left"],
+            [46.470486, "slide-right"],
+            [46.898406, "slide-left"],
+            [47.236151, "slide-a"],
+            [47.911318, "slide-left"],
+            [48.355652, "slide-a"],
+            [48.711462, "slide-left"],
+            [49.265738, "slide-a"],
+            [49.816343, "slide-left"],
+            [50.205555, "slide-right"],
+            [50.83423, "slide-right"],
+            [51.633747, "slide-left"],
+            [52.34084, "slide-a"],
+            [52.785104, "slide-left"],
+            [54.200097, "slide-left"],
+            [54.569704, "slide-left"],
+            [55.23889, "slide-left"],
+            [55.723891, "slide-left"],
+            [56.055633, "slide-left"],
+            [56.578485, "slide-left"],
+            [57.156046, "slide-right"],
+            [58.092507, "slide-a"],
+            [58.647402, "slide-right"],
+            [58.963944, "slide-left"],
+            [59.704233, "slide-left"],
+            [60.130858, "slide-left"],
+            [61.056442, "slide-left"],
+            [61.528066, "slide-right"],
+            [61.891473, "slide-left"],
+            [62.454313, "slide-left"],
+            [62.966183, "slide-left"],
+            [63.365505, "slide-left"],
+            [64.106267, "slide-left"],
+            [64.489571, "slide-left"],
+            [64.829666, "slide-left"],
+            [65.956729, "slide-left"],
+            [66.322777, "slide-left"],
+            [67.370048, "slide-right"],
+            [67.733991, "slide-a"],
+            [68.460176, "slide-right"],
+            [68.869097, "slide-right"],
+            [69.224845, "slide-right"],
+            [69.890504, "slide-a"],
+            [70.331709, "slide-a"],
+            [70.683683, "slide-right"],
+            [71.376449, "slide-a"],
+            [71.751753, "slide-left"],
+            [72.123742, "slide-a"],
+            [73.220055, "slide-right"],
+            [73.581908, "slide-a"],
+            [74.236397, "slide-left"],
+            [74.777472, "slide-right"],
+            [75.711161, "slide-a"],
+            [76.198607, "slide-a"],
+            [76.527807, "slide-left"],
+            [77.123927, "slide-left"],
+            [77.593554, "slide-a"],
+            [77.925786, "slide-left"],
+            [78.625694, "slide-left"],
+            [79.083081, "slide-right"],
+            [79.448487, "slide-right"],
+            [80.062396, "slide-right"],
+            [80.539922, "slide-right"],
+            [80.865434, "slide-left"],
+            [81.477818, "slide-right"],
+            [81.971707, "slide-left"],
+            [82.390223, "slide-left"],
+            [83.086038, "slide-left"],
+            [83.469737, "slide-left"],
+            [83.819914, "slide-a"],
+            [84.5346, "slide-left"],
+            [84.934407, "slide-right"],
+            [85.837949, "slide-right"],
+            [86.452148, "slide-left"],
+            [87.06509, "slide-left"],
+            [87.391524, "slide-right"],
+            [87.88303, "slide-a"],
+            [88.293713, "slide-left"],
+            [88.8714, "slide-a"],
+            [89.316545, "slide-left"],
+            [89.715283, "slide-left"],
+            [90.211734, "slide-left"],
+            [90.820264, "slide-right"],
+            [91.190637, "slide-right"],
+            [91.76351, "slide-right"],
+            [92.254535, "slide-a"],
+            [92.651679, "slide-a"],
+            [93.21941, "slide-right"],
+            [93.735028, "slide-a"],
+            [94.053814, "slide-left"],
+            [94.759652, "slide-right"],
+            [95.243925, "slide-a"],
+            [95.576649, "slide-left"],
+            [96.202458, "slide-left"],
+            [96.640634, "slide-a"],
+            [97.023522, "slide-left"],
+            [97.714649, "slide-left"],
+            [99.62146, "slide-left"],
+            [99.938512, "slide-a"],
+            [100.508893, "slide-left"],
+            [100.999325, "slide-left"],
+            [101.302508, "slide-left"],
+            [101.984086, "slide-right"],
+            [102.821043, "slide-left"],
+            [103.535615, "slide-left"],
+            [104.015683, "slide-left"],
+            [104.353905, "slide-left"],
+            [105.022819, "slide-left"],
+            [105.423756, "slide-left"],
+            [105.785448, "slide-a"],
+            [106.523045, "slide-a"],
+            [106.899581, "slide-right"],
+            [107.237517, "slide-left"],
+            [107.901745, "slide-left"],
+            [108.323757, "slide-left"],
+            [108.703916, "slide-right"],
+            [109.361246, "slide-left"],
+            [109.800983, "slide-a"],
+            [110.244485, "slide-left"],
+            [110.869287, "slide-right"],
+            [111.310829, "slide-left"],
+            [111.63546, "slide-left"],
+            [112.326915, "slide-left"],
+            [112.691335, "slide-left"],
+            [113.091933, "slide-a"],
+            [113.810393, "slide-a"],
+            [114.208271, "slide-left"],
         ];
         this.discoNotes = [
             [1.19, 'slide-right'],
@@ -500,8 +420,36 @@ export class Tutorial {
     }
 
     activateTutorial() {
+        // extended steps
+        [10, 11, 12, 13].forEach((n) => {
+            if (n === 10) {
+                document.getElementById(`close-tutorial-${n}`).addEventListener("click", () => {
+                    document.getElementById(`tutorial-step-${n}`).classList.add("hidden");
+                    const step11 = document.getElementById("tutorial-step-11");
+                    step11.style.top = "5vh";
+                    step11.style.left = "6vh";
+                    step11.style.zIndex = 2000;
+                    step11.classList.remove("hidden");
+                });
+            } else if (n === 13) {
+                document.getElementById(`close-tutorial-${n}`).addEventListener("click", () => {
+                    document.getElementById(`tutorial-step-${n}`).classList.add("hidden");
+                    this.masterInfo.extendedTutorial = false;
+                });
+            } else {
+                document.getElementById(`close-tutorial-${n}`).addEventListener("click", () => {
+                    document.getElementById(`tutorial-step-${n}`).classList.add("hidden");
+                });
+            }
+        });
+
         document.getElementById("source-tutorial").addEventListener("click", () => {
             document.getElementById("source-menu").classList.add("hidden");
+            document.getElementById("close-tutorial").classList.remove("hidden");
+            this.startTutorial();
+        });
+        document.getElementById("start-tutorial-button").addEventListener("click", () => {
+            document.getElementById("first-time-menu").classList.add("hidden");
             document.getElementById("close-tutorial").classList.remove("hidden");
             this.startTutorial();
         });
@@ -509,7 +457,7 @@ export class Tutorial {
             this.exitTutorial();
         });
         // [3, 4, 6, 8, 9, 10, 11, 12].forEach((stepNum) => {
-        [3, 4, 6, 8, 12].forEach((stepNum) => {
+        [3, 4, 6, 8, 9].forEach((stepNum) => {
             document.getElementById(`tutorial-${stepNum}-button`).addEventListener("click", () => {
                 this.triggerTutorialStep(stepNum);
             });
@@ -532,7 +480,7 @@ export class Tutorial {
             stepOne.style.left = "2vh";
             stepOne.classList.remove("hidden");
             this.animator.runAnimation();
-            this.addNote("slide-left", 50)         
+            this.addNote("slide-left", 50);         
             setTimeout(() => {
                 if (!this.exited) {
                     this.addNote("slide-right", 50);
@@ -543,7 +491,7 @@ export class Tutorial {
                     this.addNote("slide-a", 50);
                     setTimeout(() => {
                         if (!this.exited) {
-                            this.animator.stopAnimation();
+                            this.animator.stopAnimation(true);
                             this.triggerTutorialStep(2);
                         }
                     }, 1990);
@@ -580,6 +528,11 @@ export class Tutorial {
             arrow.classList.add("hidden");
 
             this.discoAudio = new Audio();
+
+            // fake for testing
+            // this.discoAudio.setAttribute("src", "./effects/Buddha Kid - Share Love.m4a");
+
+            // real
             fetch("./songStrings/discoBeat.txt").then((res) => {
                 res.text().then((str) => {
                     this.discoAudio.setAttribute("src", `data:audio/x-wav;base64,${str}`);
@@ -604,7 +557,7 @@ export class Tutorial {
                 const slideToUse = ["slide-left", "slide-a", "slide-right"][Math.floor(3 * Math.random())];
                 this.addNote(slideToUse);
                 this.releaseTime = performance.now();
-                if (this.masterInfo.streak > 6) {
+                if (this.masterInfo.streak > 6 && !this.exited) {
                     clearInterval(this.beatInterval);
                     this.playing = false;
                     setTimeout(() => {
@@ -637,6 +590,7 @@ export class Tutorial {
                 this.discoAudio.pause();
                 this.discoAudio.currentTime = 0;
             }
+            killAllNotes(this.masterInfo, this.noteWriter);
             this.playingSong = false;
             document.getElementById("tutorial-step-5").classList.add("hidden");
             this.songAudio = new Audio();
@@ -650,10 +604,12 @@ export class Tutorial {
                     this.nextNoteIdx = 0;
                     this.player.countdown();
                     setTimeout(() => {
-                        this.playingRealSong = true;
-                        this.playing = false;
-                        this.songAudio.play();
-                        this.animateNotes(this.songAudio, this.songNotes);
+                        if (!this.exited) {
+                            this.playingRealSong = true;
+                            this.playing = false;
+                            this.songAudio.play();
+                            this.animateNotes(this.songAudio, this.songNotes);
+                        }
                     }, 3000);
                 }
             };
@@ -661,6 +617,9 @@ export class Tutorial {
                 this.playingSong = false;
                 this.animator.stopAnimation();
                 const percent = Math.floor(100.0 * this.notesHit / (this.songNotes.length + this.notesMissed));
+
+                // document.getElementById("song-label").innerText = `${this.notesHit} ${this.songNotes.length} ${this.notesMissed}`;
+
                 let text = `Nice job! You had an accuracy of ${percent}%`;
                 if (percent < 90) {
                     text = `Hey, not bad. Your accuracy was ${percent}%. Want to retry and go for ${Math.min(90, percent + 20)}%?`;
@@ -698,46 +657,13 @@ export class Tutorial {
             // arrow.style.left = "18vw";
             // arrow.style.transform = "rotate(0deg)";
             // arrow.classList.remove("hidden");
-            document.getElementById("controls-bottom").classList.remove("hidden");
+            // document.getElementById("controls-bottom").classList.remove("hidden");
             // document.getElementById("source-menu").classList.remove("hidden");
         }
         if (n === 9) {
             document.getElementById("tutorial-step-8").classList.add("hidden");
-            const stepNine = document.getElementById("tutorial-step-9");
-            stepNine.style.top = "20vh";
-            stepNine.style.right = "15vw";
-            stepNine.style.width = "60vw";
-            stepNine.classList.remove("hidden");
-            arrow.style.top = "45vh";
-            arrow.style.left = "73vw";
-            arrow.style.transform = "rotate(90deg)";
-            arrow.classList.remove("hidden");
-        }
-        if (n === 10) {
-            document.getElementById("controls-bottom").classList.remove("hidden");
-            document.getElementById("tutorial-step-9").classList.add("hidden");
-            const stepTen = document.getElementById("tutorial-step-10");
-            stepTen.style.top = "60vh";
-            stepTen.style.left = "15vw";
-            stepTen.style.width = "60vw";
-            stepTen.classList.remove("hidden");
-            arrow.style.top = "87vh";
-            arrow.style.left = "46vw";
-            arrow.style.transform = "rotate(180deg)";
-            arrow.classList.remove("hidden");
-        }
-        if (n === 11) {
-            arrow.classList.add("hidden");
-            document.getElementById("tutorial-step-10").classList.add("hidden");
-            const stepEleven = document.getElementById("tutorial-step-11");
-            stepEleven.style.top = "20vh";
-            stepEleven.style.left = "15vw";
-            stepEleven.style.width = "60vw";
-            stepEleven.classList.remove("hidden");
-        }
-        if (n === 12) {
-            document.getElementById("tutorial-step-8").classList.add("hidden");
             this.exitTutorial();
+            this.startExtendedTutorial();
         }
     }
 
@@ -747,7 +673,7 @@ export class Tutorial {
             let nextNoteArr = notes[this.nextNoteIdx];
             if (nextNoteArr !== undefined) {
                 while (nextNoteArr[0] < nowInSong) {
-                    this.addNote(nextNoteArr[1]);
+                    this.addNote(nextNoteArr[1], 50, false, this.masterInfo.manualDelay);
                     this.nextNoteIdx += 1;
                     if (this.nextNoteIdx > notes.length - 1) {
                         return;
@@ -773,7 +699,7 @@ export class Tutorial {
             let nextNoteArr = notes[this.nextNoteIdx];
             if (nextNoteArr !== undefined) {
                 while (nextNoteArr[0] < nowInSong) {
-                    this.addNote(nextNoteArr[1]);
+                    this.addNote(nextNoteArr[1], 50, false, this.masterInfo.manualDelay);
                     this.releaseTime = performance.now();
                     this.nextNoteIdx += 1;
                     if (this.nextNoteIdx > notes.length - 1) {
@@ -822,15 +748,40 @@ export class Tutorial {
     }
 
     startTutorial() {
-        this.masterInfo.songMode = "tutorial";
-        document.getElementById("controls-bottom").classList.add("hidden");
-        this.controlsManager.deselectSlides();
-        this.controlsManager.selectSlides(3, (n) => {
-            this.animator.setNumSlides(n);
-        });
-        document.getElementById("slides-3").classList.add("level-selected");
-        this.triggerTutorialStep(1);
-        this.masterInfo.autoCalibrating = false;
+        const levelNames = {
+            1: "Super easy",
+            2: "Easy",
+            3: "Medium",
+            4: "Hard",
+            5: "Crazy hard"
+        };
+        this.exited = false;
+        if (!this.masterInfo.promptedCalibration) {
+            promptCalibration();
+            this.masterInfo.promptedCalibration = true;
+            this.masterInfo.tutorialAfterCalibrate = true;
+        } else {
+            this.masterInfo.songMode = "tutorial";
+            document.getElementById("controls-bottom").classList.add("hidden");
+            this.controlsManager.deselectSlides();
+            this.controlsManager.selectSlides(3, (n) => {
+                this.animator.setNumSlides(n);
+            });
+            document.getElementById("slides-3").classList.add("level-selected");
+            this.animator.setNumSlides(3);
+            getUserProfile().then((profile) => {
+                profile.level = 1;
+                const levelName = levelNames[profile.level];
+                profile.slides = 3;
+                const difficultyText = `${levelName} / ${profile.slides} slides`;
+                document.getElementById("current-difficulty").innerText = difficultyText;
+                document.getElementById("level-sub-title").innerText = difficultyText;
+                setUserProfile(profile);
+            });
+            // this.triggerTutorialStep(8);
+            this.triggerTutorialStep(1);
+            this.masterInfo.autoCalibrating = false;
+        }
 
     }
 
@@ -856,10 +807,7 @@ export class Tutorial {
             "tutorial-step-3",
             "tutorial-step-5",
             "tutorial-step-7",
-            "tutorial-step-8",
-            "tutorial-step-9",
-            "tutorial-step-10",
-            "tutorial-step-11"
+            "tutorial-step-8"
         ].forEach((eleId) => {
             document.getElementById(eleId).classList.add("hidden");
         });
@@ -885,6 +833,34 @@ export class Tutorial {
             document.getElementById("level-1").classList.add("level-selected");
             this.controlsManager.activateSongSelect();
             setUserProfile(profile);
+        });
+
+        getUserProfile().then((profile) => {
+            profile.oldUser = true;
+            setUserProfile(profile);
+        });
+    }
+
+    startExtendedTutorial() {
+        setLoading();
+        this.masterInfo.extendedTutorial = true;
+        this.masterInfo.hideAllMenus();
+        this.masterInfo.songMode = "demo";
+        const songCode = "liveInMyHead";
+        fetch(`./songStrings/${songCode}.txt`).then((res) => {
+            res.text().then((str) => {
+                this.masterInfo.currentSong = songData[songCode];
+                this.masterInfo.songCode = songCode;
+                this.animator.stopAnimation();
+                this.player.pause();
+                this.player.setSource(`data:audio/x-wav;base64,${str}`);
+                document.getElementById("song-label").innerText = this.masterInfo.currentSong;
+                killAllNotes(this.masterInfo, this.noteWriter);
+                setTimeout(() => {
+                    this.controlsManager.playFunction();
+                    stopLoading();
+                }, 100);
+            });
         });
     }
 }

@@ -18,6 +18,7 @@ import {
     songStages,
     songData
 } from "../data.js";
+import { App } from "@capacitor/app";
 
 export class ControlsManager {
     constructor(masterInfo, player, streamPlayer, animator, fileConverter, noteWriter, calibrator) {
@@ -34,7 +35,13 @@ export class ControlsManager {
         this.activateSlidesSelector((newVal) => {this.animator.setNumSlides(newVal)});
         this.activateSongControls();
         this.activateSongUpload();
+
+        App.addListener("pause", () => {
+            this.pauseFunction();
+        });
     }
+
+
 
     activateSongSelect(chooseDefault = true) {
         document.getElementById("stages").innerText = "";
@@ -155,6 +162,7 @@ export class ControlsManager {
             if (chooseDefault && defaultSong) {
                 this.masterInfo.songCode = defaultSong;
                 document.getElementById("song-to-play").innerText = songData[defaultSong];
+                this.masterInfo.currentSong = songData[defaultSong];
             }
         });
     }
@@ -209,6 +217,11 @@ export class ControlsManager {
             // document.getElementById("close-and-play-ghost").classList.remove("hidden");
 
             const file = e.target.files[0];
+
+            if (!file) {
+                stopLoading();
+            }
+
             const reader = new FileReader();
             reader.onload = (readerE) => {
                 const str = btoa(readerE.target.result);
@@ -231,7 +244,7 @@ export class ControlsManager {
                     // document.getElementById("close-and-play-ghost").classList.add("hidden");
                 } else {
                     this.player.setSource(`data:audio/x-wav;base64,${str}`, false, false, true);
-                    stopLoading();
+                    // stopLoading();
                     this.masterInfo.currentSong = e.target.files[0].name;
                     document.getElementById("song-label").innerText = this.masterInfo.currentSong;
 
@@ -438,8 +451,20 @@ export class ControlsManager {
             slidesContainer.classList.add("four-wide-slides-container");
         }
 
+        const levelNames = {
+            1: "Super easy",
+            2: "Easy",
+            3: "Medium",
+            4: "Hard",
+            5: "Crazy hard"
+        };
+
         getUserProfile().then((profile) => {
             profile.slides = n;
+
+            const levelName = levelNames[profile.level];
+            document.getElementById("current-difficulty").innerText = `${levelName} / ${profile.slides} slides`;
+
             setUserProfile(profile).then(() => {
                 this.activateSongSelect(false);
             });
@@ -447,6 +472,13 @@ export class ControlsManager {
     }
 
     activateLevelSelector() {
+        const levelNames = {
+            1: "Super easy",
+            2: "Easy",
+            3: "Medium",
+            4: "Hard",
+            5: "Crazy hard"
+        };
         [
             // ["level-1", 2],
             // ["level-2", 4],
@@ -467,6 +499,10 @@ export class ControlsManager {
                 addElementClass(levelSet[0], "level-selected");
                 getUserProfile().then((profile) => {
                     profile.level = levelSet[1];
+                    
+                    const levelName = levelNames[profile.level];
+                    document.getElementById("current-difficulty").innerText = `${levelName} / ${profile.slides} slides`;
+
                     setUserProfile(profile).then(() => {
                         this.activateSongSelect(false);
                     });
@@ -476,6 +512,9 @@ export class ControlsManager {
         getUserProfile().then((profile) => {
             this.animator.setNotesPerSecond(profile.level);
             addElementClass(`level-${profile.level}`, "level-selected");
+
+            const levelName = levelNames[profile.level];
+            document.getElementById("current-difficulty").innerText = `${levelName} / ${profile.slides} slides`;
         });
     }
 
@@ -512,7 +551,8 @@ export class ControlsManager {
             ["toggle-effects", "effects", "effects-title"],
             ["toggle-double", "double", "double-title"]
         ].forEach((settingSet) => {
-            setButtonClick(settingSet[0], () => {
+            document.getElementById(settingSet[0]).addEventListener("click", () => {
+            // setButtonClick(settingSet[0], () => {
                 if (this.masterInfo[settingSet[1]]) {
                     this.masterInfo[settingSet[1]] = false;
                     document.getElementById(`${settingSet[0]}-ball`).classList.add("toggle-ball-off");

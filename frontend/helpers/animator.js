@@ -106,8 +106,10 @@ export class Animator {
         this.slideStartTime = performance.now();
     }
 
-    stopAnimation() {
-        killAllNotes(this.masterInfo, this.noteWriter);
+    stopAnimation(keepNotes = false) {
+        if (!keepNotes) {
+            killAllNotes(this.masterInfo, this.noteWriter);
+        }
         this.animating = false;
     }
 
@@ -145,7 +147,7 @@ export class Animator {
         const timesToUse = [];
 
         if (now - this.lastTime > 35 || !this.masterInfo.useShortSteps) {
-            // console.log("SLOW" + Math.random());
+            console.log("SLOW" + Math.random());
             timesToUse.push(now);
             this.lastTime = now;
         } else {
@@ -158,7 +160,6 @@ export class Animator {
         }
         
         // console.log(timesToUse.map(ele => ele));
-        
         timesToUse.forEach((timeToUse) => {
             const timeOffset = now - timeToUse;
             const delayToUse = this.delay + timeOffset;
@@ -267,6 +268,8 @@ function moveNotes(
     theSongMode,
     theTravelLength
 ) {
+    
+    // document.noteVal = dt;
 
     const now = performance.now();
     const elapsedTime = now - obj.slideStartTime;
@@ -383,6 +386,14 @@ function moveNotes(
         if (!note.target && newTop > theTargetBounds.top && newTop < theTargetBounds.bottom) {
             theTargets[note.slideId].add(note);
             note.target = true;
+
+            const smudgeId = {
+                "slide-left": "smudge-left",
+                "slide-a": "smudge-a",
+                "slide-b": "smudge-b",
+                "slide-right": "smudge-right"
+            }[note.slideId];
+            document.getElementById(smudgeId).classList.add("smudge-active");
             
         }
         if (newTop > theTargetBounds.bottom && note.target === true) {
@@ -392,6 +403,14 @@ function moveNotes(
             note.target = false;
             theTargets[note.slideId].delete(note);
             triggerMissedNote();
+
+            const smudgeId = {
+                "slide-left": "smudge-left",
+                "slide-a": "smudge-a",
+                "slide-b": "smudge-b",
+                "slide-right": "smudge-right"
+            }[note.slideId];
+            document.getElementById(smudgeId).classList.remove("smudge-active");
             
             // delete tail once target is missed
             if (note.tail) {
@@ -405,14 +424,14 @@ function moveNotes(
             notes.delete(note);
         }
 
-        if (theSongMode === "calibrate") {
-            if (newTop > theTravelLength) {
-                note.killed = true;  
-                note.note.remove();
-                notes.delete(note);
-                lightup("slide-right", "tapper-right");
-            }
-        }
+        // if (theSongMode === "calibrate") {
+        //     if (newTop > theTravelLength) {
+        //         note.killed = true;  
+        //         note.note.remove();
+        //         notes.delete(note);
+        //         lightup("slide-right", "tapper-right");
+        //     }
+        // }
     }
 }
 

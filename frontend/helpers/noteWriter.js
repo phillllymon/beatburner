@@ -372,6 +372,9 @@ export class NoteWriter {
         const now = performance.now() - timeOffset;
         // if (now - this.lastTime > this.stepTime) {
             this.times.push(now);
+
+            // document.noteVal = now - this.times[0];
+            
             
             while (this.times[0] < now - 4000) {
                 this.times.shift();
@@ -389,19 +392,28 @@ export class NoteWriter {
             const arrToUse = dataArray;
             // const arrToUse = timeArray;
 
+            // TEMP 
+            // const arrToUse = dataArray.map((ele, i) => {
+            //     return ele * timeArray[i];
+            // });
+            // end TEMP
+
             const timeArrToUse = timeArray;
             this.timeArrayVariances.push(Math.max(...timeArrToUse) - Math.min(...timeArrToUse));
             
             // precise below
             let toneValToUse;
             let noteValToUse;
-            
 
             // precise better
             if (this.doPreciseBetter) {
                 let prev = arrToUse[0];
                 let low = prev;
                 let dir = 1;
+
+                // wavelength exp
+                let lowIdx = 0;
+
                 const peaks = []; // will be populated with [val, i] ordered by val
 
                 // FOR highestFreqs
@@ -421,6 +433,7 @@ export class NoteWriter {
                             if (dir === -1) {
                                 // found a low
                                 low = val;
+                                lowIdx = i;
                                 dir = 1;
                             }
                         } else {    // going down
@@ -428,7 +441,7 @@ export class NoteWriter {
                                 // found a peak
                                 const height = prev - low;
                                 if (height > 0) {
-                                    peaks.push([height, i - 1]);
+                                    peaks.push([height, i - 1, i - lowIdx]);
                                 }
                                 low = val;
                                 dir = -1;
@@ -475,11 +488,13 @@ export class NoteWriter {
                 if (peakSpots.length > 1) {
                     aveDiff = diffSum / (peakSpots.length - 1);
                 }
-                this.toneVals.push(aveDiff);
 
-                this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
-                    return peak[0];
-                }))); // put latest average peak height into this.aveHillHeights
+                // AVERAGE (see TALLEST below)
+                // this.aveHillHeights.push(arrAverage(highPeaks.map((peak) => {
+                //     return peak[0];
+                // }))); // put latest average peak height into this.aveHillHeights
+
+                
 
                 // (1) MAX INSTEAD OF AVE hill height
                 // this.aveHillHeights.push(Math.max(...highPeaks.map((peak) => {
@@ -496,13 +511,21 @@ export class NoteWriter {
                 // combine previous 2 things into 1 loop through highPeaks
                 let tallestHeight = 0;
                 let tallestIdx = 0;
+                // let waveLength = 0;
                 highPeaks.forEach((peakPair) => {
                     if (peakPair[0] > tallestHeight) {
                         tallestHeight = peakPair[0];
                         tallestIdx = peakPair[1];
+                        // waveLength = peakPair[2];
                     }
                 });
-                // this.aveHillHeights.push(tallestHeight);  // COMMENTED TO REVERT TO average tower height instead of tallest
+
+                // TALLEST (see AVERAGE above)
+                this.aveHillHeights.push(tallestHeight);  // COMMENTED TO REVERT TO average tower height instead of tallest
+
+                this.toneVals.push(aveDiff);
+                // this.toneVals.push(waveLength); // WAVELENGTH is for when using highest tower from timeArray
+
                 this.tallestTowerIdices.push(tallestIdx);
 
                 // EQUALIZER TEMP!!!!
@@ -521,16 +544,33 @@ export class NoteWriter {
                 // END TEMP - but see this.lastEquals below
                 
 
-                if (this.aveHillHeights.length > this.times.length) {
-                    this.aveHillHeights.shift();
-                    this.timeArrayVariances.shift();
-                    this.tallestTowers.shift();
-                    this.toneVals.shift();
-                    // this.lastEquals.shift(); /////////// TEMP
-                    this.rawArrs.shift(); /////////// TEMP
-                    // this.highestFreqs.shift();
-                    this.tallestTowerIdices.shift(); // TEMP
-                }
+                // if (this.aveHillHeights.length > this.times.length) {
+                //     this.aveHillHeights.shift();
+                //     this.timeArrayVariances.shift();
+                //     this.tallestTowers.shift();
+                //     this.toneVals.shift();
+                //     // this.lastEquals.shift(); /////////// TEMP
+                //     this.rawArrs.shift(); /////////// TEMP
+                //     // this.highestFreqs.shift();
+                //     this.tallestTowerIdices.shift(); // TEMP
+                // }
+
+                // replacement for ^above that hopefully gets them all down to the right length
+                const arrsToShorten = [
+                    this.aveHillHeights,
+                    this.timeArrayVariances,
+                    this.tallestTowers,
+                    this.toneVals,
+                    this.rawArrs,
+                    this.tallestTowerIdices
+                ];
+                arrsToShorten.forEach((arr) => {
+                    while (arr.length > this.times.length) {
+                        arr.shift();
+                    }
+                });
+
+                // console.log(this.rawArrs.length, this.times.length);
 
                 // FOR highestFreqs
                 // let highestPeakVal = 0;
@@ -573,6 +613,7 @@ export class NoteWriter {
                 let midIdx = 0;
 
                 while (this.times[midIdx] < now - halfway + manualFrameDelay) {
+                // while (this.times[midIdx] < now - 2000 + manualFrameDelay) {
                     midIdx += 1;
                     if (!this.times[midIdx]) {
                         break;
@@ -748,9 +789,9 @@ export class NoteWriter {
                 } 
                 
                 // too quiet
-                if (this.timeArrayVariances[midIdx] < 15 || this.times[this.times.length - 1] - this.times[0] < 1900) {
-                    return;
-                }
+                // if (this.timeArrayVariances[midIdx] < 15 || this.times[this.times.length - 1] - this.times[0] < 1900) {
+                const soundAmt = this.timeArrayVariances[midIdx + this.peakOffset];
+                
 
                 const maxV = Math.max(...this.aveHillHeights);
                 const minV = Math.min(...this.aveHillHeights);
@@ -769,7 +810,7 @@ export class NoteWriter {
 
                 let cutoff = {
                     1: 1,
-                    2: 0.82,
+                    2: 0.85,
                     3: 0.75,
                     4: 0.5,
                     5: 0.25
@@ -780,28 +821,37 @@ export class NoteWriter {
 
                 if (slideIds.length === 3) {
                     let cutoffDiff = 1 - cutoff;
-                    cutoffDiff *= 0.75;
+                    // cutoffDiff *= 0.75;
+                    cutoffDiff *= 0.9;
                     cutoff = 1 - cutoffDiff;
                 }
                 if (slideIds.length === 2) {
                     let cutoffDiff = 1 - cutoff;
-                    cutoffDiff *= 0.5;
+                    // cutoffDiff *= 0.5;
+                    cutoffDiff *= 0.65;
                     cutoff = 1 - cutoffDiff;
                 }
 
                 // number version (instead of fraction version)
                 let numNotes = {
-                    1: 4,
-                    2: 7,
+                    1: 3,
+                    2: 6,
                     3: 10,
-                    4: 30,
+                    4: 20,
                     5: 60
                 }[notesPerSecond];
                 if (slideIds.length === 3) {
-                    numNotes *= 0.75;
+                    // numNotes *= 0.75;
+                    numNotes *= 0.9;
                 }
                 if (slideIds.length === 2) {
-                    numNotes *= 0.5;
+                    // numNotes *= 0.5;
+                    numNotes *= 0.65;
+                }
+
+                if (soundAmt < 80) {
+                    const fraction = 1.0 * soundAmt / 80;
+                    numNotes = Math.floor(numNotes * fraction);
                 }
 
                 const doubleThreshold = {
@@ -814,6 +864,11 @@ export class NoteWriter {
                 hillsToSearch.forEach((hill, i) => {
                     if (hill[1] === midIdx) {
                         makeNote = true;
+
+                        // TEMP
+                        // document.noteVal = this.times.length;
+                        // end TEMP
+                        
                         if (i > doubleThreshold * hillsToSearch.length) {
                             // marked = true;
                             canDouble = true;
@@ -843,8 +898,21 @@ export class NoteWriter {
                     Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 2048, arrToUse.length - 1536)), 1.5),
                     Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 1536, arrToUse.length - 1024)), 1.5),
                     Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 1024, arrToUse.length - 512)), 1.5),
-                    Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 512, arrToUse.length - 256)), 1.5)
+                    Math.pow(arrAverage(arrToUse.slice(arrToUse.length - 512, arrToUse.length - 256)), 1.5),
+                    this.timeArrayVariances[this.timeArrayVariances.length - 1]
                 ];
+                // const thisBackArr = [
+                //     Math.pow(arrAverage(timeArrToUse.slice(timeArrToUse.length - 2048, timeArrToUse.length - 1536)), 1.5),
+                //     Math.pow(arrAverage(timeArrToUse.slice(timeArrToUse.length - 1536, timeArrToUse.length - 1024)), 1.5),
+                //     Math.pow(arrAverage(timeArrToUse.slice(timeArrToUse.length - 1024, timeArrToUse.length - 512)), 1.5),
+                //     Math.pow(arrAverage(timeArrToUse.slice(timeArrToUse.length - 512, timeArrToUse.length - 256)), 1.5)
+                // ];
+                // const thisBackArr = [
+                //     noteValToUse,
+                //     noteValToUse,
+                //     noteValToUse,
+                //     noteValToUse
+                // ];
                 this.lastArrs.push(thisBackArr);
                 if (this.lastArrs.length > 8) {
                     this.lastArrs.shift();
@@ -878,7 +946,12 @@ export class NoteWriter {
                 //     }
                 // }
                 
-                
+                if (soundAmt < 15) {
+                    return;
+                }
+                if (now - this.times[0] < 1900) {
+                    return;
+                }   
                 
                 
             }
@@ -916,6 +989,14 @@ export class NoteWriter {
                 return -1;
             }
         });
+
+        // TEMP
+        // const left = document.notesRecord["slide-left"];
+        // const a = document.notesRecord["slide-a"];
+        // const b = document.notesRecord["slide-b"];
+        // const right = document.notesRecord["slide-right"];
+        // document.getElementById("song-label").innerText = `${left} ${a} ${b} ${right}`;
+        // END TEMP
 
         // UP DOWN experiment
         // if (numSlides === 4 && this.lastSlide && this.lastToneVal && this.lastNoteTime && performance.now() - this.lastNoteTime < 1000) {
@@ -1053,13 +1134,23 @@ export class NoteWriter {
         
         
         if (numSlides === 4) {
-            let slideToReturn = "slide-left";
-            if (toneVal > sortedTones[Math.floor(0.25 * sortedTones.length)]) {
-                slideToReturn = "slide-a";
-                if (toneVal > sortedTones[Math.floor(0.5 * sortedTones.length)]) {
-                    slideToReturn = "slide-b";
-                    if (toneVal > sortedTones[Math.floor(0.75 * sortedTones.length)]) {
-                        slideToReturn = "slide-right";
+            // let slideToReturn = "slide-left";
+            // if (toneVal > sortedTones[Math.round(0.25 * sortedTones.length)]) {
+            //     slideToReturn = "slide-a";
+            //     if (toneVal > sortedTones[Math.round(0.5 * sortedTones.length)]) {
+            //         slideToReturn = "slide-b";
+            //         if (toneVal > sortedTones[Math.round(0.75 * sortedTones.length)]) {
+            //             slideToReturn = "slide-right";
+            //         }
+            //     }
+            // }
+            let slideToReturn = "slide-right";
+            if (toneVal < sortedTones[Math.round(0.75 * sortedTones.length)]) {
+                slideToReturn = "slide-b";
+                if (toneVal < sortedTones[Math.round(0.5 * sortedTones.length)]) {
+                    slideToReturn = "slide-a";
+                    if (toneVal < sortedTones[Math.round(0.25 * sortedTones.length)]) {
+                        slideToReturn = "slide-left";
                     }
                 }
             }
@@ -1067,9 +1158,9 @@ export class NoteWriter {
         }
         if (numSlides === 3) {
             let slideToReturn = "slide-left";
-            if (toneVal > sortedTones[Math.floor(0.33 * sortedTones.length)]) {
+            if (toneVal > sortedTones[Math.round(0.33 * sortedTones.length)]) {
                 slideToReturn = "slide-a";
-                if (toneVal > sortedTones[Math.floor(0.66 * sortedTones.length)]) {
+                if (toneVal > sortedTones[Math.round(0.66 * sortedTones.length)]) {
                     slideToReturn = "slide-right";
                 }
             }
@@ -1077,7 +1168,7 @@ export class NoteWriter {
         }
         if (numSlides === 2) {
             let slideToReturn = "slide-left";
-            if (toneVal > sortedTones[Math.floor(0.5 * sortedTones.length)]) {
+            if (toneVal > sortedTones[Math.round(0.5 * sortedTones.length)]) {
                 slideToReturn = "slide-right";
             }
             return slideToReturn;

@@ -3,7 +3,10 @@ import {
     showModal,
     hideModal,
     showSongControlButton,
-    killAllNotes
+    killAllNotes,
+    getUserProfile,
+    setUserProfile,
+    promptCalibration
 } from "./util.js";
 import { songData } from "../data.js";
 
@@ -20,7 +23,9 @@ export class MenuManager {
             "source-menu",
             "main-menu",
             "feedback",
-            "choose-song-menu"
+            "choose-song-menu",
+            "first-time-menu",
+            "stream-modal"
         ];
         this.mainMenuOptions = [
             "choose-song-button",
@@ -33,6 +38,7 @@ export class MenuManager {
         this.activateSourceMenuButtons();
 
         this.activateMainMenu();
+        this.activateDifficultyMenu();
         this.activateFeedbackMenu();
         this.activateGiveFeedbackMenu();
 
@@ -158,10 +164,21 @@ export class MenuManager {
         });
     }
 
+    activateDifficultyMenu() {
+        document.getElementById("close-difficulty").addEventListener("click", () => {
+            document.getElementById("difficulty-menu").classList.add("hidden");
+            document.getElementById("main-menu").classList.remove("hidden");
+        });
+    }
+
     activateMainMenu() {
         document.getElementById("choose-song-button").addEventListener("click", () => {
         // setButtonClick("choose-song-button", () => {
             document.getElementById("choose-song-menu").classList.remove("hidden");
+            document.getElementById("main-menu").classList.add("hidden");
+        });
+        document.getElementById("change-difficulty-button").addEventListener("click", () => {
+            document.getElementById("difficulty-menu").classList.remove("hidden");
             document.getElementById("main-menu").classList.add("hidden");
         });
         setButtonClick("close-and-play", () => {
@@ -176,10 +193,23 @@ export class MenuManager {
 
     activateSourceMenuButtons() {
         setButtonClick("source-demo-songs", () => {
+            if (!this.masterInfo.promptedCalibration) {
+                promptCalibration();
+                this.masterInfo.promptedCalibration = true;
+            }
+            if (this.masterInfo.songMode === "radio") {
+                this.stationManager.stopListening();
+            }
+            
+            let newMode = true;
+            if (this.masterInfo.songMode === "demo") {
+                newMode = false;
+            }
+            
             this.masterInfo.canEnterCode = false;
             this.masterInfo.songMode = "demo";
             this.setMainMenuOption("choose-song-button");
-            if (!this.masterInfo.audioLoaded) {
+            if (newMode || !this.masterInfo.audioLoaded) {
                 document.getElementById("close-and-play").classList.add("hidden");
                 document.getElementById("close-and-play-ghost").classList.remove("hidden");
                 this.player.setPlayerReady(() => {
@@ -188,35 +218,57 @@ export class MenuManager {
                     this.masterInfo.audioLoaded = true;
                     this.player.setPlayerReady(() => {});
                 });
-                if (this.masterInfo.defaultSong) {
-                    fetch(`./songStrings/${this.masterInfo.defaultSong}.txt`).then((res) => {
+
+                let songToLoad = this.masterInfo.songCode;
+                if (!songToLoad) {
+                    songToLoad = this.masterInfo.defaultSong;
+                }
+                if (!songToLoad) {
+                    songToLoad = "liveInMyHead";
+                    document.getElementById("song-to-play").innerText = songData["liveInMyHead"];
+                }
+
+                // if (this.masterInfo.defaultSong) {
+                    // fetch(`./songStrings/${this.masterInfo.defaultSong}.txt`).then((res) => {
+                    fetch(`./songStrings/${songToLoad}.txt`).then((res) => {
                         res.text().then((str) => {
-                            this.masterInfo.currentSong = songData[this.masterInfo.defaultSong];
+                            this.masterInfo.currentSong = songData[songToLoad];
+                            this.masterInfo.songCode = songToLoad;
                             this.player.pause();
                             this.player.setSource(`data:audio/x-wav;base64,${str}`);
                             showSongControlButton("button-play");
                             document.getElementById("song-label").innerText = this.masterInfo.currentSong;
                             killAllNotes(this.masterInfo, this.noteWriter);
-                            this.masterInfo.defaultSong = null;
+                            // this.masterInfo.defaultSong = null;
+
+                            // document.getElementById("song-label").innerText = "SWITCHED BY DEFAULT";
                         });
                     });
-                } else {
-                    if (this.masterInfo.currentSong) {
-                        this.masterInfo.currentSong = songData[this.masterInfo.songCode];
-                    }
-                }
+                // } else {
+                //     if (this.masterInfo.currentSong) {
+                //         this.masterInfo.currentSong = songData[this.masterInfo.songCode];
+                //     }
+                // }
+            } else {
+                document.getElementById("close-and-play").classList.remove("hidden");
+                document.getElementById("close-and-play-ghost").classList.add("hidden");
             }
             this.showMenu("main-menu");
-            if (this.masterInfo.songMode === "radio") {
-                this.stationManager.stopListening();
-            }
         });
         setButtonClick("source-upload", () => {
+            if (!this.masterInfo.promptedCalibration) {
+                promptCalibration();
+                this.masterInfo.promptedCalibration = true;
+            }
+            let newMode = true;
+            if (this.masterInfo.songMode === "upload") {
+                newMode = false;
+            }
             this.masterInfo.canEnterCode = false;
             this.masterInfo.songMode = "upload";
             this.setMainMenuOption("upload-song-button");
 
-            if (!this.masterInfo.audioLoaded) {
+            if (newMode || !this.masterInfo.audioLoaded) {
                 document.getElementById("close-and-play").classList.add("hidden");
                 document.getElementById("close-and-play-ghost").classList.add("hidden");
                 this.player.setPlayerReady(() => {
@@ -225,6 +277,9 @@ export class MenuManager {
                     this.masterInfo.audioLoaded = true;
                     this.player.setPlayerReady(() => {});
                 });
+            } else {
+                document.getElementById("close-and-play").classList.remove("hidden");
+                document.getElementById("close-and-play-ghost").classList.add("hidden");
             }
 
             this.showMenu("main-menu");
@@ -233,6 +288,10 @@ export class MenuManager {
             }
         });
         setButtonClick("source-radio", () => {
+            if (!this.masterInfo.promptedCalibration) {
+                promptCalibration();
+                this.masterInfo.promptedCalibration = true;
+            }
             this.masterInfo.canEnterCode = false;
             document.getElementById("close-and-play-ghost").classList.add("hidden");
             this.masterInfo.songMode = "radio";
@@ -242,6 +301,10 @@ export class MenuManager {
             document.getElementById("close-and-play").classList.remove("hidden");
         });
         document.getElementById("source-streaming").addEventListener("click", () => {
+            if (!this.masterInfo.promptedCalibration) {
+                promptCalibration();
+                this.masterInfo.promptedCalibration = true;
+            }
             this.masterInfo.canEnterCode = false;
             document.getElementById("close-and-play-ghost").classList.add("hidden");
             this.masterInfo.songMode = "stream";
@@ -294,11 +357,34 @@ export class MenuManager {
         document.getElementById("back-to-main-menu").addEventListener("click", () => {
             this.showMenu("main-menu");
         });
+        document.getElementById("skip-tutorial-button").addEventListener("click", () => {
+            this.showMenu("source-menu");
+            getUserProfile().then((profile) => {
+                profile.oldUser = true;
+                setUserProfile(profile);
+            });
+        });
     }
 
     showMenu(menuId) {
         this.hideMenus();
         document.getElementById(menuId).classList.remove("hidden");
+        if (menuId === "choose-song-menu" && this.masterInfo.extendedTutorial) {
+            const step12 = document.getElementById("tutorial-step-12");
+            step12.style.top = "20vh";
+            step12.style.left = "6vh";
+            step12.style.zIndex = 2000;
+            step12.style.opacity = 1;
+            step12.classList.remove("hidden");
+        }
+        if (menuId === "main-menu" && this.masterInfo.extendedTutorial) {
+            const step13 = document.getElementById("tutorial-step-13");
+            step13.style.top = "30vh";
+            step13.style.left = "6vh";
+            step13.style.zIndex = 2000;
+            step13.style.opacity = 1;
+            step13.classList.remove("hidden");
+        }
     }
 
     hideMenus() {

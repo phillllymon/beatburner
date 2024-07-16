@@ -90,12 +90,20 @@
                     <div id="no-replay" class="primary-button">Switch song</div>
                 </div>
             </div>
+            <div id="first-time-menu" class="menu menu-blue">
+                <div class="menu-title">
+                    Welcome to Beatburner!
+                </div>
+                <div id="start-tutorial-button" class="menu-choice big-choice">
+                    Start tutorial
+                </div>
+                <div id="skip-tutorial-button" class="menu-choice">
+                    Skip tutorial
+                </div>
+            </div>
             <div id="source-menu" class="menu menu-red">
                 <div class="menu-title">
-                    Game mode
-                </div>
-                <div id="source-tutorial" class="menu-choice">
-                    Tutorial
+                    Choose music source
                 </div>
                 <div id="source-demo-songs" class="menu-choice">
                     Built-in songs
@@ -109,9 +117,15 @@
                 <div id="source-streaming" class="menu-choice">
                     Streaming
                 </div>
+                <div class="menu-title">
+                    or
+                </div>
+                <div id="source-tutorial" class="menu-choice">
+                    Repeat tutorial
+                </div>
             </div>
             <div id="main-menu" class="menu">
-                <div id="show-source-menu" class="primary-button"><div class="left-arrow"></div><div>Switch mode</div></div>
+                <div id="show-source-menu" class="primary-button"><div class="left-arrow"></div><div>Switch music source</div></div>
                 <br>
                 
                 <div id="choose-song-button">
@@ -135,6 +149,30 @@
                     Connect stream
                 </div>
                 <br>
+                <div id="change-difficulty-button">
+                    <div class="menu-title">Difficulty</div>
+                    <div id="current-difficulty" class="inset-blue"></div>
+                    <div class="primary-button">Change</div>
+                </div>
+                <!-- <div class="menu-title">Difficulty</div>
+                <div id="level-1" class="level">super easy</div>
+                <div id="level-2" class="level">easy</div>
+                <div id="level-3" class="level">medium</div>
+                <div id="level-4" class="level">hard</div>
+                <div id="level-5" class="level">crazy hard</div>
+                <br>
+                <div class="menu-title">Slides</div>
+                <div id="slides-2" class="level">2</div>
+                <div id="slides-3" class="level">3</div>
+                <div id="slides-4" class="level">4</div> -->
+                <br>
+                <br>
+                <br>
+                <div id="close-and-play" class="primary-button">Play</div>
+                <div id="close-and-play-ghost" class="primary-button primary-button-ghost">loading...</div>
+            </div>
+            <div id="difficulty-menu" class="menu menu-red hidden">
+                <br>
                 <div class="menu-title">Difficulty</div>
                 <div id="level-1" class="level">super easy</div>
                 <div id="level-2" class="level">easy</div>
@@ -147,8 +185,7 @@
                 <div id="slides-3" class="level">3</div>
                 <div id="slides-4" class="level">4</div>
                 <br>
-                <div id="close-and-play" class="primary-button">Play</div>
-                <div id="close-and-play-ghost" class="primary-button primary-button-ghost">loading...</div>
+                <div id="close-difficulty" class="primary-button">Done</div>
             </div>
             <div id="choose-song-menu" class="menu menu-green hidden">
                 <div id="back-to-main-menu" class="primary-button"><div class="left-arrow"></div><div>Back</div></div>
@@ -440,22 +477,42 @@
                         <div id="b-slider" class="slider">
                             <div id="b-slide-left" class="clear-slide">
                                 <!-- <div id="test-note-left" class="note"></div> -->
+                                <!-- <div class="permanent-smudge"></div> -->
+                                
                             </div>
                             <div id="b-slide-a" class="clear-slide">
                                 <!-- <div id="test-note-a" class="note"></div> -->
+                                <!-- <div class="permanent-smudge"></div> -->
+                                
                             </div>
                             <div id="b-slide-b" class="clear-slide">
                                 <!-- <div id="test-note-b" class="note"></div> -->
+                                <!-- <div class="permanent-smudge"></div> -->
+                                
                             </div>
                             <div id="b-slide-right" class="clear-slide">
                                 <!-- <div id="test-note-right" class="note"></div> -->
+                                <!-- <div class="permanent-smudge"></div> -->
+                                
                             </div>
                         </div>
                         <div id="tappers-outer-container" class="slider">
-                            <div id="dummy-left" class="slide"></div>
-                            <div id="dummy-a" class="slide"></div>
-                            <div id="dummy-b" class="slide"></div>
-                            <div id="dummy-right" class="slide"></div>
+                            <div id="dummy-left" class="slide">
+                                <div class="middle-smudge"></div>
+                                <div id="smudge-left" class="inner-smudge"></div>
+                            </div>
+                            <div id="dummy-a" class="slide">
+                                <div class="middle-smudge"></div>
+                                <div id="smudge-a" class="inner-smudge"></div>
+                            </div>
+                            <div id="dummy-b" class="slide">
+                                <div class="middle-smudge"></div>
+                                <div id="smudge-b" class="inner-smudge"></div>
+                            </div>
+                            <div id="dummy-right" class="slide">
+                                <div class="middle-smudge"></div>
+                                <div id="smudge-right" class="inner-smudge"></div>
+                            </div>
 
                             <div id="tappers-inner-container">
                                 <div class="tapper-shadow-bar"></div>
@@ -672,38 +729,41 @@
         Well done!
         <br>
         <br>
-        When you've finished the built-in songs, come back and take advantage of the other game modes
-        that let you play with any music you want!
+        Looks like you're ready to start the first stage of the game.
         <br>
         <br>
         <!-- <div id="tutorial-9-button" class="tutorial-button">Next</div> -->
-        <div id="tutorial-12-button" class="tutorial-button">Done</div>
-    </div>
-    <div id="tutorial-step-9" class="tutorial-step hidden">
-        This meter shows how many notes you've gotten in a row.
-        <br>
-        <br>
-        Try to fill it up with 100 notes!
-        <br>
-        <br>
-        <div id="tutorial-10-button" class="tutorial-button">Next</div>
+        <div id="tutorial-9-button" class="tutorial-button">Continue</div>
     </div>
     <div id="tutorial-step-10" class="tutorial-step hidden">
-        If this bottom menu is in your way, just hold your finger on
-        it for a second and drag it anywhere you like.
+        Congrats on finishing your first song!
         <br>
         <br>
-        <div id="tutorial-11-button" class="tutorial-button">Next</div>
+        You need 75% accuracy to pass a song in "Super Easy" level.
+        <br>
+        <br>
+        <div id="close-tutorial-10" class="tutorial-button">Next</div>
     </div>
     <div id="tutorial-step-11" class="tutorial-step hidden">
-        That's about it! You probably want to start with the built-in songs.
+        Here you'll see your accuracy and your longest streak in this song.
         <br>
         <br>
-        Be sure to check out the other modes that let you play
-        with any music you want.
+        Your current streak persists throughout songs, so there's no limit to how big it can get.
         <br>
         <br>
-        <div id="tutorial-12-button" class="tutorial-button">Done</div>
+        <div id="close-tutorial-11" class="tutorial-button">Got it</div>
+    </div>
+    <div id="tutorial-step-12" class="tutorial-step hidden">
+        The next stage will unlock once you pass all the songs in this stage.
+        <br>
+        <br>
+        <div id="close-tutorial-12" class="tutorial-button">Got it</div>
+    </div>
+    <div id="tutorial-step-13" class="tutorial-step hidden">
+        Adjust the difficulty and how many slides you're playing with here.
+        <br>
+        <br>
+        <div id="close-tutorial-13" class="tutorial-button">Got it</div>
     </div>
     <div id="tutorial-arrow" class="tutorial-arrow hidden">
         <div class="tutorial-arrow-container">
@@ -715,44 +775,53 @@
     </div>
     <div id="calibrator" class="tutorial-step hidden">
         <div>
-            Adjust visual/audio delay until the beats match the lights.
+            Adjust visual/audio delay until the pings match the flashes.
+        </div>
+        <div id="flashy-thing-container">
+            <div id="flashy-stick-upper" class="calibration-stick"></div>
+            <div id="flashy-stick-middle" class="calibration-stick"></div>
+            <div id="flashy-stick-lower" class="calibration-stick"></div>
         </div>
         <br>
-        <div class="calibrate-button-container">
-            <div id="way-slower-button" class="calibrate-button">
-                <div id="slower-arrow"></div>
+        <div class="horizontal">
+            <div class="calibrate-button-container">
+                <div id="way-slower-button" class="calibrate-button">
+                    <div id="slower-arrow"></div>
+                </div>
+                <div>- 25</div>
             </div>
-            <div>- 25 ms</div>
-        </div>
-        <div class="calibrate-button-container">
-            <div id="slower-button" class="calibrate-button">
-                <div id="slower-arrow"></div>
+            <div class="calibrate-button-container">
+                <div id="slower-button" class="calibrate-button">
+                    <div id="slower-arrow"></div>
+                </div>
+                <div>- 1</div>
             </div>
-            <div>- 1 ms</div>
-        </div>
-        <div id="manual-delay-display">+ 0 ms</div>
-        <div class="calibrate-button-container">
-            <div id="faster-button" class="calibrate-button">
-                <div id="faster-arrow"></div>
+            <div id="manual-delay-display">+ 0 ms</div>
+            <div class="calibrate-button-container">
+                <div id="faster-button" class="calibrate-button">
+                    <div id="faster-arrow"></div>
+                </div>
+                <div>+ 1</div>
             </div>
-            <div>+ 1 ms</div>
-        </div>
-        <div class="calibrate-button-container">
-            <div id="way-faster-button" class="calibrate-button">
-                <div id="faster-arrow"></div>
+            <div class="calibrate-button-container">
+                <div id="way-faster-button" class="calibrate-button">
+                    <div id="faster-arrow"></div>
+                </div>
+                <div>+ 25</div>
             </div>
-            <div>+ 25 ms</div>
         </div>
         <br>
         <div id="close-calibrator-button" class="tutorial-button">Done</div>
     </div>
+    <div id="calibrate-curtain" class="hidden"></div>
     <div id="calibrate-popup" class="tutorial-step hidden">
         <div>
-            <div class="menu-title">Calibrate lag?</div>
+            <div class="menu-title">Using headphones?</div>
         </div>
         <br>
         <div>
-            It is recommended to manually calibrate lag before playing Beatburner, especially if you are using headphones.
+            It is recommended to manually calibrate lag before playing Beatburner, especially if you are
+            using headphones. This will only take a minute.
         </div>
         <br>
         <div class="horizontal">

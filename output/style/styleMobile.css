@@ -275,3 +275,55 @@
     opacity: 0.5;
 }
 
+.permanent-smudge {
+    position: absolute;
+    top: 137vh;
+    left: 50%;
+    width: 90%;
+    transform: translate(-50%, 0%);
+    height: 10vh;
+    background-color: lightgray;
+    opacity: 0.2;
+    border-radius: 30%;
+}
+
+.middle-smudge {
+    position: absolute;
+    top: 138.5vh;
+    left: 50%;
+    width: 60%;
+    transform: translate(-50%, 0%);
+    height: 6vh;
+    /* background-color: lightgray; */
+    opacity: 0.1;
+    border-radius: 50%;
+    border: 1vw solid darkgray;
+    animation-name: fadeIn;
+    animation-duration: 5s;
+}
+
+.inner-smudge {
+    position: absolute;
+    top: 139.5vh;
+    left: 50%;
+    width: 40%;
+    transform: translate(-50%, 0%);
+    height: 4vh;
+    /* background-color: lightgray; */
+    opacity: 0.1;
+    border-radius: 50%;
+    border: 1vw solid darkgray;
+    animation-name: fadeIn;
+    animation-duration: 5s;
+}
+
+.smudge-active {
+    background-color: darkgray;
+}
+
+@keyframes fadeIn {
+    0%    {opacity: 0}
+    70%    {opacity: 0}
+    100%    {opacity: 0.1}
+}
+

@@ -1,5 +1,6 @@
 import { showSongControlButton } from "./util.js";
 import { setLoading, setLoadingPercent, stopLoading } from "./util.js";
+import { Mp3Player } from "./mp3Player.js";
 
 export class Player {
     // delay in ms
@@ -191,6 +192,9 @@ export class Player {
 
     start() {
         if (this.delayPlay) {
+            this.mp3.play();
+            return;
+
             if (this.delayPaused) {
                 // TODO - deal with delayPlay pause
                 const delayTimeMS = 1000.0 * (this.delayPieceObj.endTime - this.delayPieceObj.startTime - this.delayPieceObj.audio.currentTime);
@@ -225,11 +229,34 @@ export class Player {
         if (this.timeToStart2) {
             setTimeout(() => {this.startSong2()}, this.timeToStart2);
             this.waiting = true;
+
+            // TEMP - old above, SEE animateWaiting() BELOW
+            // this.song2.play();
+            
+            // this.animateWaiting();
+            // END TEMP
+
         } else {
             this.song2.play();
             this.playing2 = true;
         }
         this.paused = false;
+    }
+
+    // PART OF TEMP ABOVE
+    animateWaiting(song = this.song1) {
+        this.song2.currentTime = 0.01;
+        this.song2.play();
+        if (song.currentTime < 4.0) {
+            requestAnimationFrame(() => {
+                this.animateWaiting(song);
+            });
+        } else {
+            this.playing2 = true;
+            this.timeToStart2 = false;
+            this.waiting = false;
+            document.getElementById("song-label").innerText = this.song1.currentTime;
+        }
     }
 
     startSong2() {
@@ -238,11 +265,15 @@ export class Player {
             this.playing2 = true;
             this.timeToStart2 = false;
             this.waiting = false;
+            // document.getElementById("song-label").innerText = this.song1.currentTime;
         }
     }
 
     pause() {
         if (this.delayPlay) {
+            this.mp3.pause();
+            return;
+
             if (this.delaySongStarted) {
                 this.delayPaused = true;
                 this.playingOnDelay = false;
@@ -289,6 +320,9 @@ export class Player {
 
     restart() {
         if (this.delayPlay) {
+            this.mp3.restart();
+            return;
+
             this.delaySongStarted = false;
             this.delayPaused = false;
             this.playingOnDelay = false;
@@ -343,8 +377,12 @@ export class Player {
 
     setSource(songData, arrayPlay = false, arrayData = false, delayPlay = false) {
         if (delayPlay) { // for mp3 uploads - it plays the mp3 silently, records it in segments, uses the segments for analyser, & plays mp3 outloud on delay
-            this.restart();
+            this.mp3 = new Mp3Player(songData, this.onEnd);
+
             this.delayPlay = true;
+            return;
+            
+            this.restart();
             this.uploadSilent = new Audio(songData);
             this.uploadLoud = new Audio(songData);
             this.uploadLoud.addEventListener("ended", () => {
@@ -477,7 +515,9 @@ export class Player {
             this.songPiece.analyser.smoothingTimeConstant = 0.0;
             this.songPiece.analyser.getByteFrequencyData(this.songPiece.array);
             return this.songPiece.array.map(ele => ele);
-        } else if (this.delayPlay && this.delayAnalyser) {
+        } else if (this.delayPlay) {
+            return this.mp3.getDetailedFreqArray();
+
             this.delayAnalyser.smoothingTimeConstant = 0.0
             this.delayAnalyser.getByteFrequencyData(this.delayDataArray);
             return this.delayDataArray.map(ele => ele);
@@ -493,7 +533,9 @@ export class Player {
             this.songPiece.analyser.smoothingTimeConstant = 0;
             this.songPiece.analyser.getByteTimeDomainData(this.songPiece.array);
             return this.songPiece.array.map(ele => ele);
-        } else if (this.delayPlay && this.delayAnalyser) {
+        } else if (this.delayPlay) {
+            return this.mp3.getDetailedTimeArray();
+
             this.delayAnalyser.smoothingTimeConstant = 0.0
             this.delayAnalyser.getByteTimeDomainData(this.delayDataArray);
             return this.delayDataArray.map(ele => ele);
@@ -537,7 +579,8 @@ export class Player {
 
     setVolume(val) {
         if (this.delayPlay) {
-            this.uploadLoud.volume = val;
+            this.mp3.setVolume(val);
+            // this.uploadLoud.volume = val;
         } else {
             this.song2.volume = val;
         }
@@ -547,9 +590,13 @@ export class Player {
         const delayInSeconds = 1.0 * delay / 1000;
         
         if (this.delayPlay) {
-            if (this.playingDelayPieces && this.delayPieceObj && this.uploadLoud.currentTime > 0) {
-                this.delayPieceObj.audio.currentTime = delayInSeconds + this.uploadLoud.currentTime - this.delayPieceObj.startTime;
+            if (this.mp3) {
+                this.mp3.calibrateLag();
             }
+            
+            // if (this.playingDelayPieces && this.delayPieceObj && this.uploadLoud.currentTime > 0) {
+            //     this.delayPieceObj.audio.currentTime = delayInSeconds + this.uploadLoud.currentTime - this.delayPieceObj.startTime;
+            // }
             return;
         }
 
@@ -558,7 +605,7 @@ export class Player {
                 this.songPiece.audio.currentTime = this.song2.currentTime + delayInSeconds - this.songPiece.startTime;
             }
         } else {
-            if (this.song1.currentTime > delayInSeconds) {  // just check to make sure we're playing song2 yet
+            if (this.song1.currentTime > delayInSeconds + 0.1) {  // just check to make sure we're playing song2 yet
                 this.song1.currentTime = this.song2.currentTime + delayInSeconds;
             }
         }

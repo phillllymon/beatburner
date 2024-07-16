@@ -14,6 +14,7 @@ export class BackgroundAnimator {
 
     // newVals is CURRENT vals - we'll store it for later and use the older one
     animateBackground(newVals) {
+
         if (!this.masterInfo.animatedBackground) {
             return;
         }
@@ -69,6 +70,8 @@ export class BackgroundAnimator {
             document.getElementById("play-area").style.backgroundColor = `rgb(${colsToUse[2]})`;
             const left = document.getElementById("background-left");
             const right = document.getElementById("background-right");
+
+            const leftRightColor = this.masterInfo.onFire ? "255, 0, 0" : colsToUse[0];
             
             left.style.background = `linear-gradient(
                 to left,
@@ -90,13 +93,36 @@ export class BackgroundAnimator {
             valsToUse.forEach((val) => {
                 total += val;
             });
-            const percent = 100.0 * valsToUse[3] / total;
-            left.style.width = `${15 + percent}%`;
-            right.style.width = `${15 + percent}%`;
+
+            // old
+            // const percent = 100.0 * valsToUse[3] / total;
+
+            // exp - old above
+            const thisVal = valsToUse[4];
+
+            if (this.distVals) {
+                this.distVals.push(thisVal);
+                if (this.distVals.length > 80) {
+                    while (this.distVals.length > 80) {
+                        this.distVals.shift();
+                    }
+                }
+            } else {
+                this.distVals = [thisVal];
+            }
+            const distMin = Math.min(...this.distVals);
+            const distMax = Math.max(...this.distVals);
+            const percent = 100.0 - (100.0 * (thisVal - distMin) / (distMax - distMin));
+            const adjustedPercent = Math.pow(0.3 * percent, 0.75);
+            // end exp
+
+            left.style.width = `${5 + adjustedPercent}%`;
+            right.style.width = `${5 + adjustedPercent}%`;
 
         } else {
             if (valsToUse) {
                 let total = 0;
+                
     
                 // determine new widths for colors
                 valsToUse.forEach((val) => {
@@ -149,7 +175,7 @@ export class BackgroundAnimator {
     changeColors() {
         this.colors.forEach((row, rIdx) => {
             return row.map((color, cIdx) => {
-                if (Math.random() > 0.8) {
+                if (Math.random() > 0.9) {
                     color[1] = color[1] === 1 ? -1 : 1
                 }
                 const nextIdx = rIdx === this.colors.length - 1 ? rIdx : rIdx + 1;
@@ -160,17 +186,40 @@ export class BackgroundAnimator {
                 if (color[0] < 40 && color[1] === -1) {
                     color[1] = 1;
                 }
+                // exp
+                if (this.masterInfo.onFire) {
+                    if (rIdx === 2) {
+                        if (cIdx === 0) {
+                            color[1] = 1;
+                        } else {
+                            color[1] = -1;
+                        }
+                    }
+                } else {
+                    if (rIdx === 2 && this.masterInfo.puttingOutFire) {
+                        if (cIdx === 0) {
+                            if (color[0] > 150) {
+                                color[1] = -1;
+                            }
+                        } else {
+                            if (color[0] < 100) {
+                                color[1] = 1;
+                            }
+                        }
+                    }
+                }
+                // end exp
                 if (Math.random() > 0.8) {
-                    color[0] += color[1] * Math.floor(5 * Math.random());
+                    color[0] += color[1] * Math.floor(3 * Math.random());
                 }
             });
         });
     }
 
     initializeColors() {
-        const a1 = Math.floor(240 * Math.random());
-        const a2 = Math.floor(240 * Math.random());
-        const a3 = Math.floor(240 * Math.random());
+        const a1 = Math.floor(100 * Math.random());
+        const a2 = Math.floor(100 * Math.random());
+        const a3 = Math.floor(100 * Math.random());
         const b1 = Math.floor(a1 + ((255 - a1) * Math.random()));
         const b2 = Math.floor(a2 + ((255 - a2) * Math.random()));
         const b3 = Math.floor(a3 + ((255 - a3) * Math.random()));

@@ -18,7 +18,8 @@ import {
     detectMobile,
     showSongControlButton,
     getUserProfile,
-    setUserProfile
+    setUserProfile,
+    resetUserProfile
 } from "./helpers/util.js";
 import { gameDataConst, songAuthors, songStages } from "./data.js";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -48,31 +49,14 @@ twangs.push(twang2);
     });
 })
 
-// fetch(`./effects/twang1.txt`).then((res) => {
-//     res.text().then((str) => {
-//         twang1.setAttribute("src", `data:audio/x-wav;base64,${str}`);
-//     });
-// });
-// fetch(`./effects/twang2.txt`).then((res) => {
-//     res.text().then((str) => {
-//         twang2.setAttribute("src", `data:audio/x-wav;base64,${str}`);
-//     });
-// });
-
-// makeAudioByRepeat("./effects/twang6.m4a").then((res) => {
-//     if (res) {
-//         twangs.push(res);
-//     }
-// });
-// makeAudioByRepeat("./effects/twang9.m4a").then((res) => {
-//     if (res) {
-//         twangs.push(res);
-//     }
-// });
+// resetUserProfile();
 
 
 
 
+setTimeout(() => {
+    document.getElementById("start-curtain").remove();
+}, 1100);
 setTimeout(() => {
     initialAnimate();
 }, 1000);
@@ -104,9 +88,6 @@ const targetBounds = {
 }
 
 handleMobile();
-setTimeout(() => {
-    document.getElementById("start-curtain").remove();
-}, 1100);
 
 const notes = new Set();
 
@@ -182,6 +163,11 @@ let double = true;
 let sustainedNotesFrequency = "few";
 let doubleFrequency = "few";
 let canEnterCode = true;
+let onFire = false;
+let puttingOutFire = false;
+let extendedTutorial = false;
+
+let promptedCalibration = false;
 
 const masterInfo = {
     algorithm,
@@ -196,6 +182,7 @@ const masterInfo = {
     double,
     doubleFrequency,
     effects,
+    extendedTutorial,
     hapticsOnHit,
     manualDelay,
     maxTailLength,
@@ -203,6 +190,9 @@ const masterInfo = {
     mostRecentNotesOrTails,
     notes,
     noteSpeed,
+    onFire,
+    promptedCalibration,
+    puttingOutFire,
     radioCode,
     sendStat,
     slideLength,
@@ -293,6 +283,13 @@ const player = new Player(
         masterInfo.songNotesMissed = 0;
         masterInfo.songNotesHit = 0;
         masterInfo.songStreak = 0;
+        if (masterInfo.extendedTutorial) {
+            const step10 = document.getElementById("tutorial-step-10");
+            step10.style.top = "5vh";
+            step10.style.left = "6vh";
+            step10.style.zIndex = 1000;
+            step10.classList.remove("hidden");
+        }
         // alert(notesMade);
     }
 );
@@ -343,6 +340,14 @@ const tutorial = new Tutorial(
     addNote
 );
 
+masterInfo.startTutorial = () => {
+    tutorial.startTutorial();
+};
+
+masterInfo.hideAllMenus = () => {
+    menuManager.hideMenus();
+};
+
 function replaceConnector() {
     connector = new Connector(
         masterInfo,
@@ -375,16 +380,16 @@ document.isFullscreen = false;
 document.wantFullscreenReturn = false;
 
 // main
-const calibratePopup = document.getElementById("calibrate-popup");
-calibratePopup.style.top = "25%";
-calibratePopup.style.left = "15%";
-calibratePopup.style.width = "60%";
-calibratePopup.style.zIndex = 10;
-setTimeout(() => {
-    if (!masterInfo.songMode) {
-        calibratePopup.classList.remove("hidden");
-    }
-}, 5000);
+// const calibratePopup = document.getElementById("calibrate-popup");
+// calibratePopup.style.top = "25%";
+// calibratePopup.style.left = "15%";
+// calibratePopup.style.width = "60%";
+// calibratePopup.style.zIndex = 10;
+// setTimeout(() => {
+//     if (!masterInfo.songMode) {
+//         calibratePopup.classList.remove("hidden");
+//     }
+// }, 5000);
 showSongControlButton("button-play");
 
 
@@ -535,7 +540,7 @@ function activateTapper(tapperId, slideId, leavingClass) {
     }
 
     // document.getElementById(tapperId).classList.add("active-tapper");
-    document.getElementById(tapperId).style.backgroundColor = "rgba(255, 166, 0, 0.2)";
+    // document.getElementById(tapperId).style.backgroundColor = "rgba(255, 166, 0, 0.2)";
     const tapperTargets = targets[slideId];
     if (tapperTargets.size === 0) {
         triggerMissedNote();
@@ -639,9 +644,16 @@ let notesMade = 0;
 //     console.log(notesRecord);
 // });
 
+// document.notesRecord = {
+//     "slide-left": 0,
+//     "slide-a": 0,
+//     "slide-b": 0,
+//     "slide-right": 0
+// };
+
 function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false) {
     // notesRecord.push([slideId, player.song2.currentTime]);
-    
+
     const newNote = document.createElement("div");
     newNote.classList.add("note");
     if (marked === true) {
@@ -651,6 +663,14 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
     if (marked && marked !== true) {
         newNote.style.backgroundColor = marked;
     }
+
+    // TEMP
+    // if (document.noteVal !== undefined) {
+    //     newNote.style.fontSize = "30px";
+    //     newNote.innerText = document.noteVal;
+        
+    // }
+    // end TEMP
     
     let startPos = -1.0 * autoAdjustment; // should be zero initially
     if (timeOffset > 0) {
@@ -667,6 +687,7 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
             startPos = lastNote.position;
             newNoteAligned = true;
         } else {
+            // console.log("POOOOOOOOOOOOOOOP");
             return false;
         }
     }
@@ -688,6 +709,10 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
     notes.add(noteInfo);
     
     document.getElementById(slideId).appendChild(newNote);
+
+    // TEMP
+    // document.notesRecord[slideId] += 1;
+    // END TEMP
 
     lastNote = noteInfo;
     if (masterInfo.songMode !== "tutorial") {
@@ -724,6 +749,14 @@ function triggerHitNote(slideId, tapperId, hasTail) {
     } else if (masterInfo.songMode !== "radio") {
         player.setVolume(1);
     }
+
+    const smudgeId = {
+        "slide-left": "smudge-left",
+        "slide-a": "smudge-a",
+        "slide-b": "smudge-b",
+        "slide-right": "smudge-right"
+    }[slideId];
+    document.getElementById(smudgeId).classList.remove("smudge-active");
 
     if (!hasTail) {
         const lighted = document.createElement("div");
@@ -789,6 +822,7 @@ function triggerHitNote(slideId, tapperId, hasTail) {
             // document.getElementById("song-label").classList.add("on-fire");
             rockLabel.innerHTML = "ON FIRE!";
             rockLabel.classList.add("rock-label");
+            masterInfo.onFire = true;
             
             labelInUse = true;
             setTimeout(() => {
@@ -823,19 +857,28 @@ function triggerHitNote(slideId, tapperId, hasTail) {
 }
 
 function triggerMissedNote() {
-    if (masterInfo.songMode !== "tutorial" && masterInfo.effects) {
+    if (masterInfo.songMode !== "tutorial" && masterInfo.effects && animator.notesPerSecond > 1) {
         twangs[Math.floor(twangs.length * Math.random())].play();
         if (masterInfo.streaming) {
-            streamPlayer.setVolume(0.3);
+            // streamPlayer.setVolume(0.3); // people don't like the volume shit
         } else if (masterInfo.songMode !== "radio") {
-            player.setVolume(0.3);
+            // player.setVolume(0.3);   // people don't like the volume shit
         }
     }
     animator.recordNoteMissed();
     removeElementClass("song-label", "font-bigA");
-    setElementText("song-label", masterInfo.currentSong);
+    if (masterInfo.songMode !== "tutorial") {
+        setElementText("song-label", masterInfo.currentSong);
+    }
     document.getElementById("slides").classList.remove("on-fire");
     document.getElementById("song-label").classList.remove("on-fire");
+    if (masterInfo.onFire) {
+        masterInfo.puttingOutFire = true;
+        setTimeout(() => {
+            masterInfo.puttingOutFire = false;
+        }, 20000);
+    }
+    masterInfo.onFire = false;
 
     document.getElementById("streak-channel").classList.remove("streak-channel-lit");
     document.getElementById("streak-meter").classList.remove("streak-meter-lit");
@@ -1155,8 +1198,14 @@ function initialAnimate() {
             }, (1500 * Math.random()));
         }
     }, 1800);
+    let startMenu = "first-time-menu";
+    getUserProfile().then((profile) => {
+        if (profile.oldUser) {
+            startMenu = "source-menu";
+        }
+    });
     setTimeout(() => {
-        menuManager.showMenu("source-menu");
+        menuManager.showMenu(startMenu);
     }, 3700);
     setTimeout(() => {
         guitar.play();

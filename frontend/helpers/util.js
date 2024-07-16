@@ -9,11 +9,11 @@ export function averageOf(arr) {
 }
 
 export function setButtonClick(buttonId, callback) {
-    if (detectMobile()) {
-        document.getElementById(buttonId).addEventListener("touchstart", callback);
-    } else {
+    // if (detectMobile()) {
+    //     document.getElementById(buttonId).addEventListener("touchstart", callback);
+    // } else {
         document.getElementById(buttonId).addEventListener("click", callback);
-    }
+    // }
 }
 
 export function setElementText(elementId, text) {
@@ -131,6 +131,17 @@ export function makeAudioByRepeat(src, numTries = 10) {
             }
         }, 5000);
     });
+}
+
+export function promptCalibration() {
+    const calibratePopup = document.getElementById("calibrate-popup");
+    calibratePopup.style.top = "5%";
+    calibratePopup.style.left = "15%";
+    calibratePopup.style.width = "60%";
+    calibratePopup.style.zIndex = 10;
+    calibratePopup.style.opacity = 1;
+    calibratePopup.classList.remove("hidden");
+    document.getElementById("calibrate-curtain").classList.remove("hidden");
 }
 
 export function setUserProfile(profile) {
@@ -335,6 +346,10 @@ export function getUserProfile() {
             }
         });
     });
+}
+
+export function resetUserProfile() {
+    setUserProfile(defaultUserProfile);
 }
 
 const defaultUserProfile = {
