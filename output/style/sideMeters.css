@@ -169,7 +169,7 @@
 .perfect-container {
     position: fixed;
     left: 0%;
-    top: 30%;
+    top: 26%;
     width: 25vw;
     height: 4vh;
     perspective: 20vmin;
@@ -180,10 +180,24 @@
     animation-duration: 2s;
 }
 @keyframes perfectSlideLeft {
-    0% { transform: translate(125%, 0%) scale(2); }
-    10% { transform: translate(125%, 0%) scale(2); }
+    0% { transform: translate(200%, 300%) scale(2); }
+    10% { transform: translate(200%, 300%) scale(2); }
+    /* 55% { transform: translate(125%, 100%) scale(1.5); } */
     100% { transform: translate(0%, 0%) scale(1); }
 }
+
+.perfect-stay {
+    font-family: sans-serif;
+    color: rgb(144, 0, 228);
+    font-size: 3vh;
+    text-shadow: 0px 0px 3px lightgray;
+    transform-style: preserve-3d;
+    /* transform: rotateY(0deg); */
+    /* animation-name: twist;
+    animation-duration: 12s; */
+    /* animation-iteration-count: 6; */
+}
+
 
 .perfect {
     font-family: sans-serif;
@@ -191,18 +205,26 @@
     font-size: 3vh;
     text-shadow: 0px 0px 3px lightgray;
     transform-style: preserve-3d;
-    transform: rotateY(0deg);
+    /* transform: rotateY(0deg); */
+    transform: scale(0) translate(0%, -1000%);
     animation-name: twist;
-    animation-duration: 2s;
-    animation-iteration-count: 6;
+    animation-duration: 12s;
+    /* animation-iteration-count: 6; */
 }
 
-@keyframes twist {
+/* @keyframes twist {
     0% { transform: rotateY(0deg); }
     25% { transform: rotateY(-25deg); }
     75% { transform: rotateY(25deg); }
     100% { transform: rotateY(0deg); }
+} */
+
+@keyframes twist {
+    0% { transform: scale(1); }
+    75% { transform: scale(1) translate(0%, 0%); }
+    100% { transform: scale(0) translate(0%, -500%); }
 }
+
 
 .streak-container {
     position: fixed;

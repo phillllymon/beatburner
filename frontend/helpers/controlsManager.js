@@ -21,12 +21,13 @@ import {
 import { App } from "@capacitor/app";
 
 export class ControlsManager {
-    constructor(masterInfo, player, streamPlayer, animator, fileConverter, noteWriter, calibrator) {
+    constructor(masterInfo, player, streamPlayer, animator, fileConverter, noteWriter, calibrator, statsManager) {
         this.player = player;
         this.animator = animator;
         this.fileConverter = fileConverter;
         this.noteWriter = noteWriter;
         this.calibrator = calibrator;
+        this.statsManager = statsManager;
         this.masterInfo = masterInfo;
         this.streamPlayer = streamPlayer;
         this.activateSongSelect();
@@ -312,6 +313,7 @@ export class ControlsManager {
         };
     }
     pauseFunction() {
+        this.statsManager.updateInfo();
         if (this.masterInfo.songMode === "stream" || this.masterInfo.songMode === "radio") {
             this.streamPlayer.stop();
             killAllNotes(this.masterInfo, this.noteWriter);
@@ -326,6 +328,9 @@ export class ControlsManager {
     }
     restartFunction() {
         this.player.restart();
+        this.masterInfo.songNotesHit = 0;
+        this.masterInfo.songNotesMissed = 0;
+        this.masterInfo.songStreak = 0;
         this.animator.stopAnimation();
         showSongControlButton("button-play");
         killAllNotes(this.masterInfo, this.noteWriter);
@@ -619,6 +624,33 @@ export class ControlsManager {
                     l5s3: {},
                     l5s4: {}
                 };
+                profile.stats = {
+                    currentStreak: 0,
+                    streakLevel: 6,
+                    notesHitOnFire: 0,
+                    rank: "groupie",
+                    streaks: {
+                        l1: 0,
+                        l2: 0,
+                        l3: 0,
+                        l4: 0,
+                        l5: 0
+                    },
+                    accuracy: { // stored as percent
+                        l1: 100,
+                        l2: 100,
+                        l3: 100,
+                        l4: 100,
+                        l5: 100
+                    },
+                    notesHit: {
+                        l1: 0,
+                        l2: 0,
+                        l3: 0,
+                        l4: 0,
+                        l5: 0
+                    }
+                }
                 setUserProfile(profile);
                 resetButton.disabled = "disabled";
                 resetCheckbox.checked = false;

@@ -415,6 +415,7 @@ export class StreamPlayer {
     }
 
     start() {
+        this.masterInfo.songActive = true;
         if (this.liveStream) {
             this.ctx.resume();
         } else {
@@ -424,6 +425,7 @@ export class StreamPlayer {
     }
 
     stop() {
+        this.masterInfo.songActive = false;
         if (this.liveStream) {
             this.ctx.suspend();
         } else {

@@ -1,3 +1,5 @@
+import { songNotes } from "./songNotes.js";
+
 export class NoteWriter {
     constructor(masterInfo, addNote, makeTail, backgroundAnimator) {
         this.masterInfo = masterInfo;
@@ -353,7 +355,7 @@ export class NoteWriter {
         
     }
 
-    writeNotes(dataArray, timeArray, slideIds, notesPerSecond, timeOffset = 0) {
+    writeNotes(dataArray, timeArray, slideIds, notesPerSecond, songTime, timeOffset = 0) {
         
         // show equalizer
         // document.getElementById("equalizer").classList.remove("hidden");
@@ -404,6 +406,8 @@ export class NoteWriter {
             // precise below
             let toneValToUse;
             let noteValToUse;
+
+            let hardToneValToUse;
 
             // precise better
             if (this.doPreciseBetter) {
@@ -834,19 +838,26 @@ export class NoteWriter {
 
                 // number version (instead of fraction version)
                 let numNotes = {
-                    1: 3,
-                    2: 6,
+                    // 1: 3,
+                    // 2: 6,
+                    // 3: 10,
+                    // 4: 20,
+                    // 5: 60
+                    1: 2,
+                    2: 4,
                     3: 10,
-                    4: 20,
+                    4: 15,
                     5: 60
                 }[notesPerSecond];
                 if (slideIds.length === 3) {
                     // numNotes *= 0.75;
-                    numNotes *= 0.9;
+                    numNotes = Math.ceil(numNotes * 0.9);
+                    // numNotes *= 0.9;
                 }
                 if (slideIds.length === 2) {
                     // numNotes *= 0.5;
-                    numNotes *= 0.65;
+                    numNotes = Math.ceil(numNotes * 0.65);
+                    // numNotes *= 0.65;
                 }
 
                 if (soundAmt < 80) {
@@ -951,15 +962,38 @@ export class NoteWriter {
                 }
                 if (now - this.times[0] < 1900) {
                     return;
-                }   
+                }
                 
+                hardToneValToUse = this.toneVals[midIdx];
                 
             }
 
-            
+            if (this.masterInfo.songMode === "demo" && notesPerSecond === 1) {
+                const thisSongNotes = songNotes[this.masterInfo.songCode];
+                if (thisSongNotes) {
+                    if (this.lastSongTime === undefined || this.lastSongTime === undefined || songTime < this.lastSongTime) {
+                        this.lastSongTime = 0;
+                        this.noteIdx = 0;
+                        makeNote = false;
+                    } else {
+                        let makeNextNote = false;
+                        while (thisSongNotes[this.noteIdx] < songTime + 2.0 - (this.masterInfo.manualDelay / 1000.0)) {
+                            this.noteIdx += 1;
+                            makeNextNote = true;
+                        }
+                        if (makeNextNote) {
+                            toneValToUse = hardToneValToUse;
+                            console.log(toneValToUse);
+                            makeNote = true;
+                        } else {
+                            makeNote = false;
+                        }
+                        this.lastSongTime = songTime;
+                    }
+                }
+            }
             
             if (makeNote) {
-
                 
                 const slideToRequest = this.getSlideToUse(toneValToUse, slideIds.length);
                 
@@ -969,6 +1003,7 @@ export class NoteWriter {
                     noteVal: noteValToUse,
                     // noteVal: toneValToUse,
                     toneVal: toneValToUse,
+                    // toneVal: hardToneValToUse,
                     addNote: this.addNote,
                     marked: marked,
                     mobile: true,

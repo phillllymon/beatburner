@@ -112,8 +112,23 @@ export class BackgroundAnimator {
             }
             const distMin = Math.min(...this.distVals);
             const distMax = Math.max(...this.distVals);
+
             const percent = 100.0 - (100.0 * (thisVal - distMin) / (distMax - distMin));
-            const adjustedPercent = Math.pow(0.3 * percent, 0.75);
+            
+            if (this.percents) {
+                this.percents.push(percent);
+                if (this.percents.length > 5) {
+                    while (this.percents.length > 5) {
+                        this.percents.shift();
+                    }
+                }
+            } else {
+                this.percents = [percent];
+            }
+
+            const percentToUse = averageOf(this.percents);
+
+            const adjustedPercent = Math.pow(0.4 * percentToUse, 0.75);
             // end exp
 
             left.style.width = `${5 + adjustedPercent}%`;
@@ -189,9 +204,9 @@ export class BackgroundAnimator {
                 // exp
                 if (this.masterInfo.onFire) {
                     if (rIdx === 2) {
-                        if (cIdx === 0) {
+                        if (cIdx === 0 && color[0] < 255) {
                             color[1] = 1;
-                        } else {
+                        } else if (color[0] > 0) {
                             color[1] = -1;
                         }
                     }
@@ -202,7 +217,7 @@ export class BackgroundAnimator {
                                 color[1] = -1;
                             }
                         } else {
-                            if (color[0] < 100) {
+                            if (color[0] < 150) {
                                 color[1] = 1;
                             }
                         }

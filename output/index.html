@@ -24,6 +24,12 @@
     <center>
         <div id="game-container" class="game-container">
             <div id="start-curtain"><br><br><br><br><br>Beatburner</div>
+            <div id="message-modal" class="menu hidden">
+                <div id="message-content">
+                    Here is a message
+                </div>
+                <div id="dismiss-message-button" class="menu-choice">Continue</div>
+            </div>
             <div id="give-feedback-modal" class="hidden">
                 I'd love to hear from you! Be sure to include your email if you'd like a reply.
                 <br>
@@ -226,6 +232,76 @@
                 <div id="connect-stream-button" class="menu-choice">Connect</div>
                 <div id="cancel-stream-button" class="menu-choice">Cancel</div>
             </div>
+            <div id="stats-modal" class="menu menu-green hidden">
+                <div class="menu-title">
+                    Current rank
+                </div>
+                <div id="stats-rank">
+                    groupie
+                </div>
+                <br>
+                <div class="menu-title">
+                    Longest streaks
+                </div>
+                <div class="feedback-item"></div>
+                <table>
+                    <tr>
+                        <td class="stats-level-label">Super easy:</td><td>&nbsp;&nbsp;</td><td id="stats-super-easy-streak">0</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Easy:</td><td>&nbsp;&nbsp;</td><td id="stats-easy-streak">0</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Medium:</td><td>&nbsp;&nbsp;</td><td id="stats-medium-streak">0</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Hard:</td><td>&nbsp;&nbsp;</td><td id="stats-hard-streak">0</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Crazy hard:</td><td>&nbsp;&nbsp;</td><td id="stats-crazy-hard-streak">0</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="menu-title">
+                    Overall accuracy
+                </div>
+                <div class="feedback-item"></div>
+                <table>
+                    <tr>
+                        <td class="stats-level-label">Super easy:</td><td>&nbsp;&nbsp;</td><td id="stats-super-easy-percent">0.0 %</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Easy:</td><td>&nbsp;&nbsp;</td><td id="stats-easy-percent">0.0 %</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Medium:</td><td>&nbsp;&nbsp;</td><td id="stats-medium-percent">0.0 %</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Hard:</td><td>&nbsp;&nbsp;</td><td id="stats-hard-percent">0.0 %</td>
+                    </tr>
+                    <tr>
+                        <td class="stats-level-label">Crazy hard:</td><td>&nbsp;&nbsp;</td><td id="stats-crazy-hard-percent">0.0 %</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="menu-title">
+                    Total notes hit
+                </div>
+                <div class="feedback-item"></div>
+                <div id="stats-total-notes-hit">
+                    0
+                </div>
+                <br>
+                <div class="menu-title">
+                    Notes hit on fire
+                </div>
+                <div class="feedback-item"></div>
+                <div id="stats-notes-hit-on-fire">
+                    0 (0.0 %)
+                </div>
+                <br>
+                <div id="close-stats-button" class="menu-choice">Close</div>
+            </div>
             <div id="settings-modal" class="hidden">
                 <div class="top-bar">
                     <div class="menu-title">
@@ -367,7 +443,7 @@
                                 <option value="many">many</option>
                             </select>
                             <br>
-                            Double notes are symultaneous notes on different slides that you have to hit at the
+                            Double notes are simultaneous notes on different slides that you have to hit at the
                             same time.
                         </div>
                     </div>
@@ -426,14 +502,14 @@
                     <div class="settings-item">
                         <div class="settings-item-bar">
                             <div class="settings-item-title">
-                                Reset scores
+                                Reset stats and scores
                             </div>
                             <div>
                                 <button id="reset-button" disabled="disabled">Reset</button>
                             </div>
                         </div>
                         <div class="settings-description">
-                            <input type="checkbox" id="reset-checkbox" /> I really want to reset my scores
+                            <input type="checkbox" id="reset-checkbox" /> I really want to reset my stats and scores
                         </div>
                     </div>
                     <div class="settings-item">
@@ -635,6 +711,14 @@
                         <div id="restart-rectangle"></div>
                         <div id="restart-arrow"></div>
                     </div>
+                    
+                    <div id="show-menu" class="show-menu control-button-bottom">
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                        <div class="hamburger-rectangle"></div>
+                    </div>
+                </div>
+                <div id="controls-top-left" class="controls-top-left">
                     <div id="show-settings" class="control-button-bottom">
                         <div id="teeth1" class="gear-teeth"></div>
                         <div id="teeth2" class="gear-teeth"></div>
@@ -644,10 +728,14 @@
                         <div id="outer-gear-circle"></div>
                         <div id="inner-gear-circle"></div>
                     </div>
-                    <div id="show-menu" class="show-menu control-button-bottom">
-                        <div class="hamburger-rectangle"></div>
-                        <div class="hamburger-rectangle"></div>
-                        <div class="hamburger-rectangle"></div>
+                    <div id="show-stats" class="control-button-bottom">
+                        <div id="trophy-base-bottom"></div>
+                        <div id="trophy-base-top"></div>
+                        <div id="trophy-stem"></div>
+                        <div id="trophy-cup-right"></div>
+                        <div id="trophy-cup-left"></div>
+                        <div id="trophy-handle-top"></div>
+                        <div id="trophy-handle-bottom"></div>
                     </div>
                 </div>
                 <!-- <div id="controls-left">
@@ -686,7 +774,7 @@
     <!-- <div id="start-curtain"><br><br><br><br><br>Beatburner</div> -->
     <div id="close-tutorial" class="close-tutorial tutorial-button hidden">Exit tutorial</div>
     <div id="perfect-container" class="perfect-container">
-        <div id="perfect" class="perfect hidden">SKILZ!</div>
+        <div id="perfect" class="perfect hidden">perfect</div>
     </div>
     <div id="streak-container" class="streak-container hidden">
         <div id="streak-label" class="streak-label">STREAK</div>
@@ -739,7 +827,7 @@
         Congrats on finishing your first song!
         <br>
         <br>
-        You need 75% accuracy to pass a song in "Super Easy" level.
+        You need 75% accuracy to pass a song on Super easy.
         <br>
         <br>
         <div id="close-tutorial-10" class="tutorial-button">Next</div>

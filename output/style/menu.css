@@ -45,6 +45,18 @@
     overflow: auto;
 }
 
+#stats-modal {
+    z-index: 1001;
+}
+.stats-level-label {
+    text-align: right;
+    margin-right: 10vw;
+}
+.full-width {
+    width: 100%;
+    padding: 2vw;
+}
+
 #source-menu {
     top: 40%;
 }
@@ -187,6 +199,17 @@
     z-index: 1;
     left: 100%;
     transform: translate(-110%, 0%);
+}
+
+.controls-top-left {
+    position: fixed;
+    top: 0%;
+    /* right: 0%; */
+    left: 100%;
+    transform: translate(-100%, 0%);
+    display: flex;
+    flex-direction: column;
+    opacity: 0.5;
 }
 
 #controls-left {

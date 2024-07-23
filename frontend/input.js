@@ -12,6 +12,7 @@ import { StreamPlayer } from "./helpers/streamPlayer.js";
 import { FileConverter } from "./helpers/fileConverter.js";
 import { Tutorial } from "./helpers/tutorial.js";
 import { Calibrator } from "./helpers/calibrator.js";
+import { StatsManager } from "./helpers/statsManager.js";
 import {
     setElementText,
     removeElementClass,
@@ -166,6 +167,7 @@ let canEnterCode = true;
 let onFire = false;
 let puttingOutFire = false;
 let extendedTutorial = false;
+let songActive = false;
 
 let promptedCalibration = false;
 
@@ -197,6 +199,7 @@ const masterInfo = {
     sendStat,
     slideLength,
     sliderPos,
+    songActive,
     songAtStart,
     songDelay,
     // songMode,
@@ -215,6 +218,9 @@ const masterInfo = {
     useShortSteps,
     vMin,
     waitingForKey
+
+    // TEMP
+    // numNotes: 0
 };
 
 // ----------------------------------------- HELPERS
@@ -235,11 +241,17 @@ const animator = new Animator(
     makeTail,
     triggerMissedNote
 );
+const statsManager = new StatsManager(
+    masterInfo
+);
 const player = new Player(
     masterInfo,
     `aintOverYou`,
     32,
     () => {
+        // console.log(notesRecord);
+        // console.log(noteAttempts);
+        statsManager.updateInfo();
         animator.stopAnimation();
         if (masterInfo.songStreak > longestStreak) {
             longestStreak = masterInfo.songStreak;
@@ -315,7 +327,8 @@ const controlsManager = new ControlsManager(
     animator,
     fileConverter,
     noteWriter,
-    calibrator
+    calibrator,
+    statsManager
 );
 let connector = new Connector(
     masterInfo,
@@ -506,10 +519,25 @@ function deactivateTapper(tapperId) {
     }
 }
 
+// record note attempts
+// const noteAttempts = [];
+// end record note attempts
+// document.addEventListener("touchstart", (e) => {
+//     console.log(e.target);
+// });
 function activateTapper(tapperId, slideId, leavingClass) {
+    // console.log(slideId);
     if (masterInfo.canEnterCode) {
         triggerCode(slideId);
     }
+    if (!masterInfo.songActive && masterInfo.songMode !== "tutorial") {
+        return;
+    }
+
+    // record note attempts
+    // noteAttempts.push(player.song2.currentTime);
+    // end record note attempts
+
     activeTappers[tapperId] = true;
     let closest = 500;
     let numNotes = 0;
@@ -651,6 +679,9 @@ let notesMade = 0;
 //     "slide-right": 0
 // };
 
+// for recording notes
+const notesRecord = [];
+
 function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false) {
     // notesRecord.push([slideId, player.song2.currentTime]);
 
@@ -687,7 +718,6 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
             startPos = lastNote.position;
             newNoteAligned = true;
         } else {
-            // console.log("POOOOOOOOOOOOOOOP");
             return false;
         }
     }
@@ -711,7 +741,8 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
     document.getElementById(slideId).appendChild(newNote);
 
     // TEMP
-    // document.notesRecord[slideId] += 1;
+    // masterInfo.numNotes += 1;
+    // notesRecord.push(player.song2.currentTime);
     // END TEMP
 
     lastNote = noteInfo;
@@ -737,8 +768,56 @@ const hitClasses = {
     5: "hit4"
 }
 
+function getStreakUpToSpeed() {
+    const streakThreshold = streakLengths[animator.notesPerSecond];
+    const hitClass = hitClasses[animator.notesPerSecond];
+    
+    for (let i = 0; i < masterInfo.streak; i++) {
+        const newHit = document.createElement("div");
+        newHit.classList.add(hitClass);
+        document.getElementById("streak-channel").appendChild(newHit);
+    }
+
+    
+    const rockLabel = document.getElementById("rock-label");
+
+    if (masterInfo.streak > streakThreshold - 1) {
+        document.getElementById("streak-number").innerHTML = masterInfo.streak;
+        document.getElementById("streak-container").classList.remove("hidden");
+        if (masterInfo.animations) {
+            document.getElementById("streak-container").classList.add("bulge");
+        }
+        document.getElementById("streak-number").innerHTML = masterInfo.streak;
+        document.getElementById("streak-channel").classList.add("streak-channel-lit");
+        document.getElementById("streak-meter").classList.add("streak-meter-lit");
+    }
+    
+    if (masterInfo.streak > 199) {
+        document.getElementById("slides").classList.add("on-fire");
+        rockLabel.innerHTML = "ON FIRE!";
+        rockLabel.classList.add("rock-label");
+        masterInfo.onFire = true;
+        
+        labelInUse = true;
+        setTimeout(() => {
+            rockLabel.classList.remove("rock-label");
+            rockLabel.innerHTML = "";
+            labelInUse = false;
+        }, 1300);
+    
+        if (!labelInUse) {
+            rockLabel.classList.add("static-rock");
+            rockLabel.innerText = masterInfo.streak;
+        }
+    }
+}
+
 let labelInUse = false;
 function triggerHitNote(slideId, tapperId, hasTail) {
+    if (masterInfo.songMode !== "tutorial") {
+        statsManager.recordNoteHit(animator.notesPerSecond, masterInfo.onFire);
+    }
+
     const streakThreshold = streakLengths[animator.notesPerSecond];
     const hitClass = hitClasses[animator.notesPerSecond];
     if (masterInfo.hapticsOnHit) {
@@ -857,7 +936,13 @@ function triggerHitNote(slideId, tapperId, hasTail) {
 }
 
 function triggerMissedNote() {
-    if (masterInfo.songMode !== "tutorial" && masterInfo.effects && animator.notesPerSecond > 1) {
+
+    if (masterInfo.songMode !== "tutorial") {
+        statsManager.recordNoteMissed(animator.notesPerSecond);
+    }
+
+    // if (masterInfo.songMode !== "tutorial" && masterInfo.effects && animator.notesPerSecond > 1) {
+    if (masterInfo.songMode !== "tutorial" && masterInfo.effects) {
         twangs[Math.floor(twangs.length * Math.random())].play();
         if (masterInfo.streaming) {
             // streamPlayer.setVolume(0.3); // people don't like the volume shit
@@ -876,7 +961,7 @@ function triggerMissedNote() {
         masterInfo.puttingOutFire = true;
         setTimeout(() => {
             masterInfo.puttingOutFire = false;
-        }, 20000);
+        }, 6000);
     }
     masterInfo.onFire = false;
 
@@ -981,6 +1066,9 @@ function setupMobile() {
         ["tapper-a", "slide-a", "note-leaving-left", "dummy-tapper-a", "dummy-a", "slide-a", "b-slide-a"],
         ["tapper-b", "slide-b", "note-leaving-right", "dummy-tapper-b", "dummy-b", "slide-b", "b-slide-b"]
     ].forEach((idSet) => {
+        document.getElementById(idSet[0]).addEventListener("touchstart", (e) => {
+            activateTapper(...idSet);
+        });
         document.getElementById(idSet[3]).addEventListener("touchstart", (e) => {
             activateTapper(...idSet);
         });
@@ -1075,29 +1163,57 @@ getUserProfile().then((profile) => {
                     profile.queryStats = r.data.queryStats;
                     profile.queryInitial = r.data.queryInitial;
                     profile.stations = r.data.stations;
+
                     if (r.data.messageId > profile.lastMessage) {
                         showMessage(r.data.message);
                         profile.lastMessage = r.data.messageId;
                     }
                     setUserProfile(profile).then(() => {
+                        statsManager.setup().then(() => {
+                            getStreakUpToSpeed();
+                        });
                         stationManager.updateStationInfo(profile.stations);
                     });
                 } else {
-                    setUserProfile(profile);
+                    setUserProfile(profile).then(() => {
+                        statsManager.setup().then(() => {
+                            getStreakUpToSpeed();
+                        });
+                    });
                 }
+            }).catch((e) => {
+                statsManager.setup().then(() => {
+                    getStreakUpToSpeed();
+                });
+                console.log(e.message);
             });
         }).catch((e) => {
+            statsManager.setup().then(() => {
+                getStreakUpToSpeed();
+            });
             console.log(e.message);
         });
     } else {
         stationManager.updateStationInfo(profile.stations);
-        setUserProfile(profile);
+        setUserProfile(profile).then(() => {
+            statsManager.setup().then(() => {
+                getStreakUpToSpeed();
+            });
+        });
     }
 });
 
-// TEMP!!! - TODO: make modal for this
+document.getElementById("dismiss-message-button").addEventListener("click", () => {
+    dismissMessage();
+});
+function dismissMessage() {
+    document.getElementById("message-modal").classList.add("hidden");
+    calibrator.makeMenusVisible();
+}
 function showMessage(message) {
-    alert(message);
+    calibrator.makeMenusInvisible();
+    document.getElementById("message-content").innerHTML = message;
+    document.getElementById("message-modal").classList.remove("hidden");
 }
 
 // stats - commented out to assure google we collect no user data
@@ -1159,10 +1275,13 @@ function reportNewScore(score) {
     // START HERE !!!!!!!!!!!
     // - get old profile, check score, update if higher or not there, then set profile again
     return new Promise((resolve) => {
+        
         getUserProfile().then((profile) => {
+            
             const levelCode = `l${animator.notesPerSecond}s${animator.slides.length}`;
             const songCode = masterInfo.songCode;
             const oldScore = profile.progress[levelCode][songCode];
+            
             if (!oldScore) {
                 profile.progress[levelCode][songCode] = score;
             } else {
@@ -1170,7 +1289,9 @@ function reportNewScore(score) {
                     profile.progress[levelCode][songCode] = score;
                 }
             }
+            
             setUserProfile(profile).then(() => {
+                
                 controlsManager.activateSongSelect(false);
                 resolve();
             });

@@ -84,6 +84,137 @@
     border: 1vh solid gray;
     border-radius: 50%;
 }
+#show-stats {
+    position: relative;
+}
+/* #trophy-base-bottom {
+    position: absolute;
+    left: 10%;
+    top: 90%;
+    width: 80%;
+    height: 10%;
+    background-color: gray;
+}
+#trophy-base-top {
+    position: absolute;
+    left: 20%;
+    top: 70%;
+    width: 60%;
+    height: 20%;
+    background-color: gray;
+}
+#trophy-stem {
+    position: absolute;
+    left: 45%;
+    top: 0%;
+    width: 10%;
+    height: 70%;
+    background-color: gray;
+}
+#trophy-cup-right {
+    position: absolute;
+    left: 55%;
+    top: 0%;
+    width: 20%;
+    height: 60%;
+    background-color: gray;
+    border-bottom-right-radius: 100%; 
+}
+#trophy-cup-left {
+    position: absolute;
+    left: 25%;
+    top: 0%;
+    width: 20%;
+    height: 60%;
+    background-color: gray;
+    border-bottom-left-radius: 100%; 
+}
+#trophy-handle-top {
+    position: absolute;
+    left: 5%;
+    top: 2%;
+    width: 90%;
+    height: 8%;
+    background-color: gray; 
+}
+#trophy-handle-bottom {
+    position: absolute;
+    left: 5%;
+    top: 0%;
+    width: 90%;
+    height: 50%;
+    border-bottom-left-radius: 50%;
+    border-bottom-right-radius: 50%;
+    box-sizing: border-box;
+    border-bottom: 1vw solid gray;
+    border-left: 1vw solid gray;
+    border-right: 1vw solid gray;
+} */
+
+#trophy-base-bottom {
+    position: absolute;
+    left: 15%;
+    top: 86%;
+    width: 70%;
+    height: 8%;
+    background-color: gray;
+}
+#trophy-base-top {
+    position: absolute;
+    left: 25%;
+    top: 70%;
+    width: 50%;
+    height: 15%;
+    background-color: gray;
+}
+#trophy-stem {
+    position: absolute;
+    left: 46%;
+    top: 6%;
+    width: 8%;
+    height: 64%;
+    background-color: gray;
+}
+#trophy-cup-right {
+    position: absolute;
+    left: 54%;
+    top: 6%;
+    width: 16%;
+    height: 52%;
+    background-color: gray;
+    border-bottom-right-radius: 100%; 
+}
+#trophy-cup-left {
+    position: absolute;
+    left: 30%;
+    top: 6%;
+    width: 16%;
+    height: 52%;
+    background-color: gray;
+    border-bottom-left-radius: 100%; 
+}
+#trophy-handle-top {
+    position: absolute;
+    left: 12%;
+    top: 8%;
+    width: 76%;
+    height: 5%;
+    background-color: gray; 
+}
+#trophy-handle-bottom {
+    position: absolute;
+    left: 12%;
+    top: 6%;
+    width: 76%;
+    height: 42%;
+    border-bottom-left-radius: 50%;
+    border-bottom-right-radius: 50%;
+    box-sizing: border-box;
+    border-bottom: 0.75vw solid gray;
+    border-left: 0.75vw solid gray;
+    border-right: 0.75vw solid gray;
+}
+
 /* #inner-gear-circle {
     position: absolute;
     left: 50%;

@@ -166,7 +166,11 @@ export class Animator {
             player.calibrateLag(delayToUse);
             const dataArray = player.getDetailedFreqArray();
             const timeArray = player.getDetailedTimeArray();
-            this.noteWriter.writeNotes(dataArray, timeArray, this.slides, this.notesPerSecond, timeOffset);
+            if (this.masterInfo.songMode === "demo") {
+                this.noteWriter.writeNotes(dataArray, timeArray, this.slides, this.notesPerSecond, player.song2.currentTime, timeOffset);
+            } else {
+                this.noteWriter.writeNotes(dataArray, timeArray, this.slides, this.notesPerSecond, 0, timeOffset);
+            }
         });
         
         const dt = now - this.time;
@@ -194,10 +198,33 @@ export class Animator {
     }
 }
 
+const words = [
+    "NICE!",
+    "YEAH!",
+    "OH<br>YEAH!",
+    "YOU<br>ROCK!",
+    "ROCK<br>STAR!",
+    "BEAT<br>BURNER",
+    "SUPER<br>hexagon",
+    "SHRED!",
+    "WOO!",
+    "NICE<br>ONE!",
+    "YOU<br>GO!",
+    "BURNIN'<br>UP!",
+    "AWESOME!",
+    "SKILZ!"
+];
+function getWord() {
+    return words[Math.floor(words.length * Math.random())];
+}
 
+const skilzChannel = document.getElementById("skilz-channel");
+const skilzMeter = document.getElementById("skilz-meter");
+const perfect = document.getElementById("perfect");
+const perfectContainer = document.getElementById("perfect-container");
+const skilzBall = document.getElementById("skilz-ball");
 function updateMeter(notesHit, notesMissed, masterInfo) {
     let fraction = 1.0 * notesHit / (notesHit + notesMissed);
-
 
     let percent = Math.floor(100 * fraction);
     if (percent < 2) {
@@ -205,19 +232,48 @@ function updateMeter(notesHit, notesMissed, masterInfo) {
     }
     if (percent > 98 && notesHit > 10) {
         percent = 100;
-        document.getElementById("skilz-channel").classList.add("skilz-channel-lit");
-        document.getElementById("skilz-meter").classList.add("skilz-meter-lit");
+        skilzChannel.classList.add("skilz-channel-lit");
+        skilzMeter.classList.add("skilz-meter-lit");
         if (masterInfo.animations) {
-            document.getElementById("perfect").classList.remove("hidden");
-            document.getElementById("perfect-container").classList.add("perfect-slide-left");
+            perfect.classList.remove("hidden");
+            perfectContainer.classList.add("perfect-slide-left");
+            // setTimeout(() => {
+            //     perfect.classList.add("hidden");
+            //     perfectContainer.classList.remove("perfect-slide-left");
+            // }, 12000);
+            if (masterInfo.streak === 150) {
+                perfect.classList.add("hidden");
+                perfectContainer.classList.remove("perfect-slide-left");
+                setTimeout(() => {
+                    perfect.innerHTML = getWord();
+                    perfect.classList.remove("hidden");
+                    perfectContainer.classList.add("perfect-slide-left");
+                }, 50);
+                
+            }
+            if (masterInfo.streak === 225) {
+                perfect.classList.add("hidden");
+                perfectContainer.classList.remove("perfect-slide-left");
+                setTimeout(() => {
+                    perfect.innerHTML = "ON<br>FIRE";
+                    perfect.classList.remove("perfect");
+                    perfect.classList.add("perfect-stay");
+                    perfect.classList.remove("hidden");
+                    perfectContainer.classList.add("perfect-slide-only");
+                }, 50);
+                
+            }
         }
     } else {
-        document.getElementById("skilz-channel").classList.remove("skilz-channel-lit");
-        document.getElementById("skilz-meter").classList.remove("skilz-meter-lit");
-        document.getElementById("perfect").classList.add("hidden");
-        document.getElementById("perfect-container").classList.remove("perfect-slide-left");
+        skilzChannel.classList.remove("skilz-channel-lit");
+        skilzMeter.classList.remove("skilz-meter-lit");
+        perfect.innerHTML = "perfect";
+        perfect.classList.add("hidden");
+        perfect.classList.add("perfect");
+        perfectContainer.classList.remove("perfect-slide-left");
+        perfectContainer.classList.remove("perfect-slide-only");
     }
-    document.getElementById("skilz-ball").style.top = `${100 - percent}%`;
+    skilzBall.style.top = `${100 - percent}%`;
 
 
     // const cutoff = fraction * 6;

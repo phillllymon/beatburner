@@ -61,7 +61,7 @@ export class Calibrator {
         document.getElementById("calibrate-now").addEventListener("click", () => {
             document.getElementById("calibrate-popup").classList.add("hidden");
             document.getElementById("calibrate-curtain").classList.add("hidden");
-            this.openCalibration();
+            this.openCalibration(this.masterInfo.songMode);
         });
         document.getElementById("skip-calibrate").addEventListener("click", () => {
             document.getElementById("calibrate-popup").classList.add("hidden");
@@ -87,9 +87,10 @@ export class Calibrator {
         this.toneAudio.setAttribute("src", `data:audio/x-wav;base64,${tone}`);
     }
 
-    openCalibration(songMode, openMenu) { // TODO - return to songMode and openMenu!!!!!
+    openCalibration(songMode) {
+        console.log(songMode);
         this.closed = false;
-        this.wasSongMode = songMode;
+        // this.wasSongMode = songMode;
         if (this.masterInfo.manualDelay > -1) {
             document.getElementById("manual-delay-display").innerText = `+ ${this.masterInfo.manualDelay} ms`;
         } else {
@@ -142,7 +143,7 @@ export class Calibrator {
     }
 
     startCalibration() {
-        this.masterInfo.songMode = "calibrate";
+        // this.masterInfo.songMode = "calibrate";
 
         this.calibrationInterval = setInterval(() => {
             this.runPing();
@@ -176,11 +177,11 @@ export class Calibrator {
         // document.getElementById("source-menu").classList.remove("hidden");
         this.makeMenusVisible();
         // killAllNotes(this.masterInfo, this.noteWriter);
-        setTimeout(() => {
-            if (this.wasSongMode && this.masterInfo.songMode !== "tutorial") {
-                this.masterInfo.songMode = this.wasSongMode;
-            }
-        }, 20);
+        // setTimeout(() => {
+        //     if (this.wasSongMode && this.masterInfo.songMode !== "tutorial") {
+        //         // this.masterInfo.songMode = this.wasSongMode;
+        //     }
+        // }, 20);
         if (Math.abs(this.masterInfo.manualDelay) > 150) {
             const bigPopup = document.getElementById("big-calibrate-popup");
             bigPopup.style.top = "20%";

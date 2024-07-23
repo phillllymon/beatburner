@@ -12,6 +12,7 @@ import {
 
 // // TEMP for local testing
 // import { rockIt } from "./rockItTonight.js";
+import { tone } from "./tone.js";
 // // END TEMP
 
 export class Tutorial {
@@ -434,6 +435,7 @@ export class Tutorial {
             } else if (n === 13) {
                 document.getElementById(`close-tutorial-${n}`).addEventListener("click", () => {
                     document.getElementById(`tutorial-step-${n}`).classList.add("hidden");
+                    document.getElementById("tutorial-arrow").classList.add("hidden");
                     this.masterInfo.extendedTutorial = false;
                 });
             } else {
@@ -819,7 +821,9 @@ export class Tutorial {
             this.playingSong = false;
             this.playing = false;
             killAllNotes(this.masterInfo, this.noteWriter);
-            this.masterInfo.songMode = undefined;
+            if (!this.masterInfo.extendedTutorial) {
+                this.masterInfo.songMode = undefined;
+            }
             getUserProfile().then((profile) => {
                 this.masterInfo.autoCalibrating = profile.autoCalibrating;
             });
@@ -854,6 +858,7 @@ export class Tutorial {
                 this.animator.stopAnimation();
                 this.player.pause();
                 this.player.setSource(`data:audio/x-wav;base64,${str}`);
+                // this.player.setSource(`data:audio/x-wav;base64,${tone}`);
                 document.getElementById("song-label").innerText = this.masterInfo.currentSong;
                 killAllNotes(this.masterInfo, this.noteWriter);
                 setTimeout(() => {

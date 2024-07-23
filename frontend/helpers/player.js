@@ -28,6 +28,15 @@ export class Player {
             this.playing1 = false;
         });
         this.song2.addEventListener("ended", () => {
+
+            // temp
+            // console.log("-------------");
+            // console.log("num notes: " + masterInfo.numNotes);
+            // console.log("song duration: " + this.song2.duration);
+            // masterInfo.numNotes = 0;
+            // console.log("-------------");
+
+            this.masterInfo.songActive = false;
             this.playing2 = false;
             this.timeToStart2 = this.delay;
             this.restart();
@@ -132,7 +141,7 @@ export class Player {
 
 
         // this.uploadLoud.play();
-        console.log("HERE!");
+        // console.log("HERE!");
     }
 
     playNextDelayPiece() {
@@ -191,6 +200,7 @@ export class Player {
     }
 
     start() {
+        this.masterInfo.songActive = true;
         if (this.delayPlay) {
             this.mp3.play();
             return;
@@ -270,6 +280,7 @@ export class Player {
     }
 
     pause() {
+        this.masterInfo.songActive = false;
         if (this.delayPlay) {
             this.mp3.pause();
             return;

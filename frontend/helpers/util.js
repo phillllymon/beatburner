@@ -58,13 +58,13 @@ export function showSongControlButton(buttonId) {
     // new
     if (buttonId === "button-play") {
         addElementClass("button-pause", "hidden");
-        ["button-play", "button-restart", "show-settings", "show-menu"].forEach((buttonId) => {
+        ["button-play", "button-restart", "show-settings", "show-menu", "show-stats"].forEach((buttonId) => {
             removeElementClass(buttonId, "hidden");
         });
     }
     if (buttonId === "button-pause") {
         removeElementClass("button-pause", "hidden");
-        ["button-play", "button-restart", "show-settings", "show-menu"].forEach((buttonId) => {
+        ["button-play", "button-restart", "show-settings", "show-menu", "show-stats"].forEach((buttonId) => {
             addElementClass(buttonId, "hidden");
         });
     }

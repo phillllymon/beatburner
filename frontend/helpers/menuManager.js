@@ -43,6 +43,7 @@ export class MenuManager {
         this.activateGiveFeedbackMenu();
 
         this.activateControlsDrag();
+        this.activateOtherControlsDrag();
 
         this.hideMenus();
         // this.showMenu("choose-song-menu");
@@ -99,6 +100,51 @@ export class MenuManager {
             }
         });
     }
+    activateOtherControlsDrag() {
+        const controlsMenu = document.getElementById("controls-top-left");
+        let dragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        const totalWidth = window.innerWidth;
+        const totalHeight = window.innerHeight;
+        let dragTimeout;
+        controlsMenu.addEventListener("touchstart", (e) => {
+            dragTimeout = setTimeout(() => {
+                dragging = true;
+                const rect = controlsMenu.getBoundingClientRect();
+                offsetX = e.targetTouches[0].clientX - rect.left;
+                offsetY = e.targetTouches[0].clientY - rect.top;
+                controlsMenu.style.opacity = "1";
+            }, 500);
+        });
+        controlsMenu.addEventListener("touchend", () => {
+            dragging = false;
+            clearTimeout(dragTimeout);
+            controlsMenu.style.opacity = "0.5";
+        });
+        document.addEventListener("touchmove", (e) => {
+            if (dragging) {
+                controlsMenu.style.transform = "translate(0%, 0%)";
+                let newX = e.changedTouches[0].clientX - offsetX;
+                let newY = e.changedTouches[0].clientY - offsetY;
+                const newRect = controlsMenu.getBoundingClientRect();
+                if (newX < 0) {
+                    newX = 0;
+                }
+                if (newX > totalWidth - (newRect.right - newRect.left)) {
+                    newX = totalWidth - (newRect.right - newRect.left);
+                }
+                if (newY < 0) {
+                    newY = 0;
+                }
+                if (newY > totalHeight - (newRect.bottom - newRect.top)) {
+                    newY = totalHeight - (newRect.bottom - newRect.top);
+                }
+                controlsMenu.style.top = `${newY}px`;
+                controlsMenu.style.left = `${newX}px`;
+            }
+        });
+    }
 
     activateGiveFeedbackMenu() {
         setButtonClick("open-feedback-link", () => {
@@ -150,12 +196,15 @@ export class MenuManager {
 
     activateFeedbackMenu() {
         setButtonClick("replay", () => {
+            document.getElementById("tutorial-step-10").classList.add("hidden");
+            document.getElementById("tutorial-step-11").classList.add("hidden");
             this.player.restart();
             this.controlsManager.playFunction();
             this.hideMenus();
         });
         document.getElementById("no-replay").addEventListener("click", () => {
-        // setButtonClick("no-replay", () => {
+            document.getElementById("tutorial-step-10").classList.add("hidden");
+            document.getElementById("tutorial-step-11").classList.add("hidden");
             if (this.masterInfo.songMode === "demo") {
                 this.showMenu("choose-song-menu");
             } else {
@@ -355,6 +404,7 @@ export class MenuManager {
             this.connector.closeConnection();
         });
         document.getElementById("back-to-main-menu").addEventListener("click", () => {
+            this.setMainMenuOption("choose-song-button");
             this.showMenu("main-menu");
         });
         document.getElementById("skip-tutorial-button").addEventListener("click", () => {
@@ -371,7 +421,7 @@ export class MenuManager {
         document.getElementById(menuId).classList.remove("hidden");
         if (menuId === "choose-song-menu" && this.masterInfo.extendedTutorial) {
             const step12 = document.getElementById("tutorial-step-12");
-            step12.style.top = "20vh";
+            step12.style.top = "10vh";
             step12.style.left = "6vh";
             step12.style.zIndex = 2000;
             step12.style.opacity = 1;
@@ -384,6 +434,14 @@ export class MenuManager {
             step13.style.zIndex = 2000;
             step13.style.opacity = 1;
             step13.classList.remove("hidden");
+            const rectBottom = document.getElementById("change-difficulty-button").getBoundingClientRect().bottom;
+            // const rectBottom = rect.getBoundingClientRect
+            const arrow = document.getElementById("tutorial-arrow");
+            arrow.style.top = `${rectBottom}px`;
+            arrow.style.left = "46vw";
+            arrow.style.transform = "rotate(0deg) translate(0vh, 3vh)";
+            arrow.classList.remove("hidden");
+            document.getElementById("close-and-play-ghost").classList.add("hidden");
         }
     }
 
