@@ -109,6 +109,9 @@ export function killAllNotes(masterInfo, noteWriter) {
         masterInfo.notes.delete(note);
     });
     noteWriter.resetData();
+    ["smudge-left", "smudge-a", "smudge-b", "smudge-right"].forEach((id) => {
+        document.getElementById(id).classList.remove("smudge-active");
+    })
 }
 
 export function makeAudioByRepeat(src, numTries = 10) {
@@ -360,6 +363,7 @@ const defaultUserProfile = {
     // autoCalibrating: true,
     // animations: true,
     // effects: true,
+    algorithm: "A",
     lastMessage: 0,
     queryStats: true,
     queryInitial: true,

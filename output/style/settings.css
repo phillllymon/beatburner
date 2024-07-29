@@ -101,7 +101,9 @@
     margin: 1vh;
 }
 
-
+#algorithm-selector {
+    width: 30vw;
+}
 
 #change-tappers {
     display: flex;

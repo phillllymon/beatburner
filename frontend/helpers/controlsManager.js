@@ -605,6 +605,14 @@ export class ControlsManager {
                 setUserProfile(profile);
             });
         });
+        const algorithmSelector = document.getElementById("algorithm-selector");
+        algorithmSelector.addEventListener("change", () => {
+            this.masterInfo.algorithm = algorithmSelector.value;
+            getUserProfile().then((profile) => {
+                profile.algorithm = this.masterInfo.algorithm;
+                setUserProfile(profile);
+            });
+        });
         resetButton.addEventListener("click", () => {
             getUserProfile().then((profile) => {
                 profile.progress = {

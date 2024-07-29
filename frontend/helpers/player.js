@@ -200,30 +200,21 @@ export class Player {
     }
 
     start() {
+
+        // temp
+        // this.song2.play();
+        // setInterval(() => {
+        //     console.log("start over");
+        //     this.song2.currentTime = 0;
+        // }, 3000);
+        // return;
+        // end temp
+
         this.masterInfo.songActive = true;
         if (this.delayPlay) {
             this.mp3.play();
             return;
 
-            if (this.delayPaused) {
-                // TODO - deal with delayPlay pause
-                const delayTimeMS = 1000.0 * (this.delayPieceObj.endTime - this.delayPieceObj.startTime - this.delayPieceObj.audio.currentTime);
-                console.log(delayTimeMS);
-                this.startDelayRecording();
-                this.uploadLoud.play();
-                this.delayPieceObj.audio.play();
-                setTimeout(() => {
-                    this.playNextDelayPiece();
-                }, delayTimeMS);
-                
-                this.playingOnDelay = true;
-                this.delayPaused = false;
-            } else {
-                this.currentRecorder = "A";
-                this.startDelayRecording();
-                this.startDelayPlaying();
-            }
-            return;
         }
         if (this.masterInfo.songAtStart) {
             this.countdown();
@@ -285,24 +276,7 @@ export class Player {
             this.mp3.pause();
             return;
 
-            if (this.delaySongStarted) {
-                this.delayPaused = true;
-                this.playingOnDelay = false;
-                this.uploadLoud.pause();
-                console.log(this.delayPieceObj);
-                console.log(this.delayPlayQueue);
-                if (this.delayPieceObj) {
-                    this.delayPieceObj.audio.pause();
-                }
-                this.uploadSilent.pause();
-                if (this.currentRecorder === "A") {
-                    this.recorderA.stop();
-                    this.currentRecorder = "B";
-                } else {
-                    this.recorderB.stop();
-                    this.currentRecorder = "A";
-                }
-            }
+            
         } else if (this.playing2) {
             this.song2.pause();
             this.playing2 = false;
@@ -334,26 +308,7 @@ export class Player {
             this.mp3.restart();
             return;
 
-            this.delaySongStarted = false;
-            this.delayPaused = false;
-            this.playingOnDelay = false;
-            this.recorderA.stop();
-            this.recorderB.stop();
-            this.uploadLoud.pause();
-            this.uploadLoud.currentTime = 0;
-            this.uploadSilent.pause();
-            this.uploadSilent.currentTime = 0;
-            if (this.delayPieceObj) {
-                this.delayPieceObj.audio.pause();
-            }
-            this.currentRecorder = "A";
-            this.delayPlayRecordStartTimes = {
-                A: 0,
-                B: 0
-            };
-            while (this.delayPlayQueue.length > 0) {
-                this.delayPlayQueue.shift();
-            }
+            
         } else if (this.arrayPlay) {
             this.songPiece.audio.pause();
             this.arrayPos = 0;
@@ -393,76 +348,7 @@ export class Player {
             this.delayPlay = true;
             return;
             
-            this.restart();
-            this.uploadSilent = new Audio(songData);
-            this.uploadLoud = new Audio(songData);
-            this.uploadLoud.addEventListener("ended", () => {
-                this.onEnd();
-                this.restart();
-            });
-            let canPlay = false;
-            this.currentRecorder = "A";
-            this.delayPlayRecordStartTimes = {
-                A: 0,
-                B: 0
-            };
-            this.uploadSilent.oncanplaythrough = () => {
-                if (!canPlay) {
-                    canPlay = true;
-                    this.delayPlayQueue = []; // populate with objects {audio, startTime, endTime}
-                    const ctx = new AudioContext();
-                    const dest = ctx.createMediaStreamDestination();
-                    const stream = ctx.createMediaElementSource(this.uploadSilent);
-                    // ctx.setSinkId({ type: "none" });
-                    stream.connect(dest);
-                    this.recorderA = new MediaRecorder(dest.stream);
-                    this.recorderB = new MediaRecorder(dest.stream);
-
-                    const chunks = [];
-                    this.recorderA.ondataavailable = (e) => {
-                        chunks.push(e.data);
-                    };
-                    this.recorderB.ondataavailable = (e) => {
-                        chunks.push(e.data);
-                    };
-                    this.recorderA.onstop = () => {
-                        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
-                        while (chunks.length > 0) {
-                            chunks.shift();
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (readerE) => {
-                            const resStr = btoa(readerE.target.result);
-                            const audio = new Audio(`data:audio/x-wav;base64,${resStr}`);
-                            this.delayPlayQueue.push({
-                                startTime: this.delayPlayRecordStartTimes.A,
-                                endTime: this.uploadSilent.currentTime,
-                                audio: audio
-                            });
-                        };
-                        reader.readAsBinaryString(blob);
-                    };
-                    this.recorderB.onstop = () => {
-                        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
-                        while (chunks.length > 0) {
-                            chunks.shift();
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (readerE) => {
-                            const resStr = btoa(readerE.target.result);
-                            const audio = new Audio(`data:audio/x-wav;base64,${resStr}`);
-                            this.delayPlayQueue.push({
-                                startTime: this.delayPlayRecordStartTimes.B,
-                                endTime: this.uploadSilent.currentTime,
-                                audio: audio
-                            });
-                        };
-                        reader.readAsBinaryString(blob);
-                    };
-                    document.getElementById("close-and-play").classList.remove("hidden");
-                    document.getElementById("close-and-play-ghost").classList.add("hidden");
-                }
-            };
+            
         } else if (arrayPlay) {
             this.delayPlay = false;
             if (arrayData) {
@@ -529,9 +415,7 @@ export class Player {
         } else if (this.delayPlay) {
             return this.mp3.getDetailedFreqArray();
 
-            this.delayAnalyser.smoothingTimeConstant = 0.0
-            this.delayAnalyser.getByteFrequencyData(this.delayDataArray);
-            return this.delayDataArray.map(ele => ele);
+            
         } else {
             // this.detailedAnalyser.smoothingTimeConstant = 0;
             this.detailedAnalyser.smoothingTimeConstant = 0.0;
@@ -547,9 +431,6 @@ export class Player {
         } else if (this.delayPlay) {
             return this.mp3.getDetailedTimeArray();
 
-            this.delayAnalyser.smoothingTimeConstant = 0.0
-            this.delayAnalyser.getByteTimeDomainData(this.delayDataArray);
-            return this.delayDataArray.map(ele => ele);
         } else {
             this.detailedAnalyser.smoothingTimeConstant = 0;
             this.detailedAnalyser.getByteTimeDomainData(this.detailedDataArray);
@@ -604,10 +485,6 @@ export class Player {
             if (this.mp3) {
                 this.mp3.calibrateLag();
             }
-            
-            // if (this.playingDelayPieces && this.delayPieceObj && this.uploadLoud.currentTime > 0) {
-            //     this.delayPieceObj.audio.currentTime = delayInSeconds + this.uploadLoud.currentTime - this.delayPieceObj.startTime;
-            // }
             return;
         }
 

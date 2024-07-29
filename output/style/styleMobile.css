@@ -290,7 +290,22 @@
 
 .middle-smudge {
     position: absolute;
-    top: 138.5vh;
+    top: 136.5vh;
+    left: 50%;
+    width: 90%;
+    transform: translate(-50%, 0%);
+    height: 11vh;
+    /* background-color: lightgray; */
+    opacity: 0.1;
+    border-radius: 30%;
+    border: 1vw solid darkgray;
+    animation-name: fadeIn;
+    animation-duration: 5s;
+}
+
+.inner-smudge {
+    position: absolute;
+    top: 139vh;
     left: 50%;
     width: 60%;
     transform: translate(-50%, 0%);
@@ -303,17 +318,49 @@
     animation-duration: 5s;
 }
 
-.inner-smudge {
+.spiral-down {
+    position: absolute;
+    top: 140vh;
+    left: 50%;
+    width: 35%;
+    transform: translate(-60%, 0%);
+    height: 5vh;
+    opacity: 0.1;
+    border-radius: 50%;
+    border-left: 1vw solid darkgray;
+    border-top: 1vw solid darkgray;
+    animation-name: fadeIn;
+    animation-duration: 5s;
+}
+
+.spiral-up {
     position: absolute;
     top: 139.5vh;
     left: 50%;
-    width: 40%;
-    transform: translate(-50%, 0%);
-    height: 4vh;
-    /* background-color: lightgray; */
+    width: 35%;
+    transform: translate(-40%, 0%);
+    height: 5vh;
     opacity: 0.1;
     border-radius: 50%;
-    border: 1vw solid darkgray;
+    border-right: 1vw solid darkgray;
+    border-bottom: 1vw solid darkgray;
+    animation-name: fadeIn;
+    animation-duration: 5s;
+}
+
+.smudge-center {
+    position: absolute;
+    top: 141.5vh;
+    left: 50%;
+    width: 1.5vw;
+    transform: translate(-50%, 0%);
+    height: 2vh;
+    /* background-color: lightgray; */
+    opacity: 0.1;
+    border-radius: 30%;
+    background-color: darkgray;
+    /* border-left: 0.75vw solid darkgray;
+    border-top: 1vw solid darkgray; */
     animation-name: fadeIn;
     animation-duration: 5s;
 }

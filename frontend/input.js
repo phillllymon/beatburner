@@ -52,6 +52,13 @@ twangs.push(twang2);
 
 // resetUserProfile();
 
+// temp for video
+// document.activateTapper = (tapperId, slideId) => {
+//     activateTapper(tapperId, slideId);
+// };
+// document.getElementById("song-label").style.opacity = 0;
+// end temp for video
+
 
 
 
@@ -1139,7 +1146,8 @@ getUserProfile().then((profile) => {
     // retrieve frequency values for sustained notes and doubles
     [
         ["select-sustained-frequency", "sustainedNotesFrequency"],
-        ["select-double-frequency", "doubleFrequency"]
+        ["select-double-frequency", "doubleFrequency"],
+        ["algorithm-selector", "algorithm"]
     ].forEach((settingSet) => {
         if (profile[settingSet[1]]) {
             masterInfo[settingSet[1]] = profile[settingSet[1]];

@@ -147,7 +147,7 @@ export class Animator {
         const timesToUse = [];
 
         if (now - this.lastTime > 35 || !this.masterInfo.useShortSteps) {
-            console.log("SLOW" + Math.random());
+            // console.log("SLOW" + Math.random());
             timesToUse.push(now);
             this.lastTime = now;
         } else {
@@ -236,7 +236,9 @@ function updateMeter(notesHit, notesMissed, masterInfo) {
         skilzMeter.classList.add("skilz-meter-lit");
         if (masterInfo.animations) {
             perfect.classList.remove("hidden");
-            perfectContainer.classList.add("perfect-slide-left");
+            if (masterInfo.streak < 226) {
+                perfectContainer.classList.add("perfect-slide-left");
+            }
             // setTimeout(() => {
             //     perfect.classList.add("hidden");
             //     perfectContainer.classList.remove("perfect-slide-left");
@@ -260,7 +262,7 @@ function updateMeter(notesHit, notesMissed, masterInfo) {
                     perfect.classList.add("perfect-stay");
                     perfect.classList.remove("hidden");
                     perfectContainer.classList.add("perfect-slide-only");
-                }, 50);
+                }, 0);
                 
             }
         }
@@ -479,6 +481,12 @@ function moveNotes(
             note.note.remove();
             notes.delete(note);
         }
+
+        // temp for video
+        // if (newTop > theTravelLength) {
+        //     document.activateTapper(`tapper-${note.slideId.split("-")[1]}`, note.slideId);
+        // }
+        // end temp for video
 
         // if (theSongMode === "calibrate") {
         //     if (newTop > theTravelLength) {

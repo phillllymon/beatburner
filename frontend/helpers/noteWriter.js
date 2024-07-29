@@ -587,6 +587,9 @@ export class NoteWriter {
                 // });
                 
                 let zoomInFactor = 4;
+                if (this.masterInfo.algorithm === "B") {
+                    zoomInFactor = 2;
+                }
                 // let zoomInFactor = 6;
                 if (this.times[this.times.length - 1] - this.times.length[0] < 3900 || this.times.length < 100) {
                     zoomInFactor = 1;
@@ -813,11 +816,11 @@ export class NoteWriter {
                 // }[notesPerSecond];
 
                 let cutoff = {
-                    1: 1,
-                    2: 0.85,
-                    3: 0.75,
-                    4: 0.5,
-                    5: 0.25
+                    1: 0.15,
+                    2: 0.3,
+                    3: 0.5,
+                    4: 0.75,
+                    5: 1
                 }[notesPerSecond];
 
                 // for zoomInFactor
@@ -871,7 +874,12 @@ export class NoteWriter {
                     "many": 0
                 } [this.masterInfo.doubleFrequency];
 
-                const hillsToSearch = hills.slice(Math.floor(hills.length - numNotes), hills.length - 1);
+                const numToCutOff = this.masterInfo.algorithm === "A" ? numNotes : cutoff * hills.length;
+                // console.log(cutoff);
+
+                // const hillsToSearch = hills.slice(Math.floor(hills.length - numNotes), hills.length - 1); // num notes
+                // const hillsToSearch = hills.slice(Math.floor(hills.length - (cutoff * hills.length)), hills.length - 1); // cutoff
+                const hillsToSearch = hills.slice(Math.floor(hills.length - numToCutOff), hills.length - 1);
                 hillsToSearch.forEach((hill, i) => {
                     if (hill[1] === midIdx) {
                         makeNote = true;
