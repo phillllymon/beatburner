@@ -1,16 +1,16 @@
 export const gameDataConst = {
-    songDelay: 4000, // ms
+    songDelay: 4700, // ms // this minus two seconds will be travel time
     maxTailLength: 500,
     targetBoundSizes: {
-        top: 0.04,
-        bottom: 0.03
+        top: 0.05,
+        bottom: 0.05
     },
     mobile: {
         maxTailLength: 1.2,
         travelLength: 1.285, // fraction of viewWidth
         targetBounds: {
-            top: 0.96,      // fraction of travelLength
-            bottom: 1.03    // fraction of travelLength
+            top: 0.05,      
+            bottom: 0.05    
         }
     },
     minNoteGap: 150,    // ms between notes on the same slide
@@ -24,8 +24,8 @@ export const gameDataConst = {
 
 export const songStages = [
     [
-        "liveInMyHead", // medium happy 92.2 // 123 notes 193s
         "blahBlahBlah", // 174 notes 169s
+        "liveInMyHead", // medium happy 92.2 // 123 notes 193s
         "innerPeace", // medium *best 89 // 123 notes 152s
         "burningBayou", // 168 notes 176s
         "heyYou"

@@ -20,9 +20,8 @@ export class Player {
 
         this.timeStarted = false;
         this.song2Timeout = false;
-        this.delay = masterInfo.songDelay;
-        // this.delay = 0;
-        this.timeToStart2 = this.delay;
+
+        this.timeToStart2 = masterInfo.songDelay;
 
         this.song1.addEventListener("ended", () => {
             this.playing1 = false;
@@ -38,7 +37,7 @@ export class Player {
 
             this.masterInfo.songActive = false;
             this.playing2 = false;
-            this.timeToStart2 = this.delay;
+            this.timeToStart2 = this.masterInfo.songDelay;
             this.restart();
             showSongControlButton("button-play");
             onEnd();
@@ -103,112 +102,9 @@ export class Player {
         }, 4000);
     }
 
-    switchRecorder() {
-        console.log("switching recorder");
-        const oldRecorder = this.currentRecorder === "A" ? this.recorderA : this.recorderB;
-        const newRecorder = this.currentRecorder === "A" ? this.recorderB : this.recorderA;
-        newRecorder.start();
-        if (this.currentRecorder === "A") {
-            this.delayPlayRecordStartTimes.B = this.uploadSilent.currentTime;
-        } else {
-            this.delayPlayRecordStartTimes.A = this.uploadSilent.currentTime;
-        }
-        oldRecorder.stop();
-        setTimeout(() => {
-            if (this.playingOnDelay) {
-                this.switchRecorder();
-            }
-        }, 4000);
-        this.currentRecorder = this.currentRecorder === "A" ? "B" : "A";
-    }
-
-    startDelayRecording() {
-        this.uploadSilent.play();
-        if (this.currentRecorder === "A") {
-            this.recorderA.start();
-            this.delayPlayRecordStartTimes.A = this.uploadSilent.currentTime;
-        } else {
-            this.recorderB.start();
-            this.delayPlayRecordStartTimes.B = this.uploadSilent.currentTime;
-        }
-        setTimeout(() => {
-            if (this.playingOnDelay) {
-                this.switchRecorder();
-            }
-        }, 4000);
-        this.playingOnDelay = true;
-        
-
-
-        // this.uploadLoud.play();
-        // console.log("HERE!");
-    }
-
-    playNextDelayPiece() {
-        if (this.delayPlayQueue.length > 0) {
-            console.log("pulling next piece from queue of " + this.delayPlayQueue.length);
-            this.delayPieceObj = this.delayPlayQueue.shift();
-            const ctx = new AudioContext();
-            const src = ctx.createMediaElementSource(this.delayPieceObj.audio);
-            this.delayAnalyser = ctx.createAnalyser();
-            src.connect(this.delayAnalyser);
-            ctx.setSinkId({ type: "none" });
-            this.delayAnalyser.connect(ctx.destination);
-            this.delayAnalyser.fftSize = 4096;
-            this.delayDataArray = new Uint8Array(this.delayAnalyser.frequencyBinCount);
-            this.delayPieceObj.audio.play();
-            this.playingDelayPieces = true;
-            setTimeout(() => {
-                if (this.playingOnDelay) {
-                    this.playNextDelayPiece();
-                    console.log("play next piece");
-                }
-            }, 1000.0 * (this.delayPieceObj.endTime - this.delayPieceObj.startTime));
-        } else {
-            console.log("QUEUE EMPTY");
-        }
-    }
-
-    startDelayPlaying() {
-        setLoading("loading");
-        this.masterInfo.pauseDisabled = true;
-        setTimeout(() => {
-            setLoadingPercent(18 + (4 * Math.random()));
-            setTimeout(() => {
-                setLoadingPercent(38 + (4 * Math.random()));
-                setTimeout(() => {
-                    setLoadingPercent(58 + (4 * Math.random()));
-                    setTimeout(() => {
-                        setLoadingPercent(88 + (4 * Math.random()));
-                        setTimeout(() => {
-                            setLoadingPercent(100);
-                        }, 900 + (200 * Math.random()));
-                    }, 900 + (200 * Math.random()));
-                }, 900 + (200 * Math.random()));
-            }, 900 + (200 * Math.random()));
-        }, 900 + (200 * Math.random()));
-        setTimeout(() => {
-            this.playNextDelayPiece();
-            setTimeout(() => {
-                this.uploadLoud.play();
-                this.delaySongStarted = true;
-                this.masterInfo.pauseDisabled = false;
-            }, 4000);
-            this.countdown();
-            stopLoading();
-        }, 5000); // 4000 to record 1st piece then 1s buffer to get ready to play
-    }
+    
 
     start() {
-
-        // temp
-        // this.song2.play();
-        // setInterval(() => {
-        //     console.log("start over");
-        //     this.song2.currentTime = 0;
-        // }, 3000);
-        // return;
-        // end temp
 
         this.masterInfo.songActive = true;
         if (this.delayPlay) {
@@ -231,33 +127,11 @@ export class Player {
             setTimeout(() => {this.startSong2()}, this.timeToStart2);
             this.waiting = true;
 
-            // TEMP - old above, SEE animateWaiting() BELOW
-            // this.song2.play();
-            
-            // this.animateWaiting();
-            // END TEMP
-
         } else {
             this.song2.play();
             this.playing2 = true;
         }
         this.paused = false;
-    }
-
-    // PART OF TEMP ABOVE
-    animateWaiting(song = this.song1) {
-        this.song2.currentTime = 0.01;
-        this.song2.play();
-        if (song.currentTime < 4.0) {
-            requestAnimationFrame(() => {
-                this.animateWaiting(song);
-            });
-        } else {
-            this.playing2 = true;
-            this.timeToStart2 = false;
-            this.waiting = false;
-            document.getElementById("song-label").innerText = this.song1.currentTime;
-        }
     }
 
     startSong2() {
@@ -266,6 +140,9 @@ export class Player {
             this.playing2 = true;
             this.timeToStart2 = false;
             this.waiting = false;
+            // console.log("-----");
+            // console.log(this.song1.currentTime);
+            // console.log("-----");
             // document.getElementById("song-label").innerText = this.song1.currentTime;
         }
     }
@@ -320,7 +197,7 @@ export class Player {
                 clearTimeout(this.song2Timeout);
                 this.waiting = false;
             }
-            this.timeToStart2 = this.delay;
+            this.timeToStart2 = this.masterInfo.songDelay;
             this.song2.currentTime = 0;
             this.masterInfo.songAtStart = true;
             this.countdownCanceled = true;
@@ -333,7 +210,7 @@ export class Player {
                 clearTimeout(this.song2Timeout);
                 this.waiting = false;
             }
-            this.timeToStart2 = this.delay;
+            this.timeToStart2 = this.masterInfo.songDelay;
             this.song1.currentTime = 0;
             this.song2.currentTime = 0;
             this.masterInfo.songAtStart = true;
@@ -343,7 +220,7 @@ export class Player {
 
     setSource(songData, arrayPlay = false, arrayData = false, delayPlay = false) {
         if (delayPlay) { // for mp3 uploads - it plays the mp3 silently, records it in segments, uses the segments for analyser, & plays mp3 outloud on delay
-            this.mp3 = new Mp3Player(songData, this.onEnd);
+            this.mp3 = new Mp3Player(this.masterInfo, songData, this.onEnd);
 
             this.delayPlay = true;
             return;
@@ -445,7 +322,7 @@ export class Player {
         this.freqArrays.push(this.dataArray.map(val => val));
         const now = performance.now();
         this.times.push(now);
-        while (this.times[0] < now - this.delay) {
+        while (this.times[0] < now - this.masterInfo.songDelay) {
             this.times.shift();
             this.freqArrays.shift();
         }
@@ -478,7 +355,7 @@ export class Player {
         }
     }
 
-    calibrateLag(delay = this.delay) {
+    calibrateLag(delay = this.masterInfo.songDelay) {
         const delayInSeconds = 1.0 * delay / 1000;
         
         if (this.delayPlay) {

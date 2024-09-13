@@ -28,9 +28,9 @@ export class NoteWriter {
 
         this.numToneVals = 5; // min; will shift off only if already above this number
         // this.recentToneVals = [80];
-        // this.recentToneVals = [20, 50, 80];
+        this.recentToneVals = [20, 50, 80];
         // this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80];
-        this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80];
+        // this.recentToneVals = [20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80];
         // this.recentToneVals = [
         //     20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80,
         //     20, 20, 20, 50, 50, 80, 80, 80, 20, 20, 20, 50, 50, 80, 80, 80,
@@ -111,7 +111,7 @@ export class NoteWriter {
     }
 
     writeTails(theseTallestTowers, slideIds, futureTallestTowers, notesPerSecond, timeArrayVariance) {
-        if (this.recentToneVals.length < 5 || notesPerSecond < 2) {
+        if (this.recentToneVals.length < 3 || notesPerSecond < 2) {
             return;
         }
 
@@ -164,7 +164,7 @@ export class NoteWriter {
 
                 let notTooLong = true;
                 if (lastNote.isTail) {
-                    if (lastNote.totalHeight > 1.5 * this.masterInfo.travelLength) {
+                    if (lastNote.totalHeight > 1.5 * (2000.0 / (this.masterInfo.songDelay - 2000)) * this.masterInfo.travelLength) {
                         notTooLong = false;
                     }
                 }
@@ -978,20 +978,26 @@ export class NoteWriter {
 
             if (this.masterInfo.songMode === "demo" && notesPerSecond === 1) {
                 const thisSongNotes = songNotes[this.masterInfo.songCode];
+                // const thisSongNotes = songNotes["blahBlahBlah"];
+                
+                // console.log(thisSongNotes);
                 if (thisSongNotes) {
                     if (this.lastSongTime === undefined || this.lastSongTime === undefined || songTime < this.lastSongTime) {
                         this.lastSongTime = 0;
                         this.noteIdx = 0;
                         makeNote = false;
                     } else {
+                        
+                        
                         let makeNextNote = false;
-                        while (thisSongNotes[this.noteIdx] < songTime + 2.0 - (this.masterInfo.manualDelay / 1000.0)) {
+                        while (thisSongNotes[this.noteIdx] < ((1.0 * this.masterInfo.songDelay - 4000) / 1000.0) + songTime + 2.0 - (this.masterInfo.manualDelay / 1000.0)) {
+                            
                             this.noteIdx += 1;
                             makeNextNote = true;
                         }
                         if (makeNextNote) {
                             toneValToUse = hardToneValToUse;
-                            console.log(toneValToUse);
+                            
                             makeNote = true;
                         } else {
                             makeNote = false;

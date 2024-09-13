@@ -15,8 +15,8 @@
 
 .tapper {
     border: 1.25vh solid rgb(199, 129, 0);
-    border-left: 3vh solid rgb(199, 129, 0);
-    border-right: 3vh solid rgb(199, 129, 0);
+    border-left: 2.5vh solid rgb(199, 129, 0);
+    border-right: 2.5vh solid rgb(199, 129, 0);
 }
 #lower-shadow-bar {
     top: 100%;
@@ -28,10 +28,15 @@
 }
 
 #tapper-left .note-bulb {
-    background-color: rgb(255, 50, 50);
+    /* background-color: rgb(255, 50, 50);
     border: 3vh solid rgb(241, 56, 56);
     border-top: 0.35vh solid rgb(243, 111, 111);
-    border-bottom: 1.5vh solid rgb(226, 0, 0);
+    border-bottom: 1.5vh solid rgb(226, 0, 0); */
+
+    background-color: rgb(255, 50, 50);
+    border: 3vh solid rgb(221, 5, 5);
+    border-top: 0.35vh solid rgb(236, 94, 94);
+    border-bottom: 1.5vh solid rgb(216, 1, 1);
 }
 #tapper-a .note-bulb {
     background-color: rgb(93, 117, 255);

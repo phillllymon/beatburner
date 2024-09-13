@@ -6,7 +6,8 @@ import {
 } from "./util.js";
 
 export class Mp3Player {
-    constructor(src, onEnd) {
+    constructor(masterInfo, src, onEnd) {
+        this.masterInfo = masterInfo;
         setLoading();
         setTimeout(() => {
             setLoadingPercent(10);
@@ -35,7 +36,7 @@ export class Mp3Player {
         this.chunks = [];
         this.paused = false;
         this.ended = false;
-        this.timeToPlayLoud = 4000;
+        this.timeToPlayLoud = this.masterInfo.songDelay;
         let canPlay = false;
         this.silentPlayer.oncanplaythrough = () => {
             if (!canPlay) {
@@ -293,7 +294,7 @@ export class Mp3Player {
         if (this.playingLoud) {
             this.loudPlayer.pause();
         } else {
-            this.timeToPlayLoud = 4000 - (performance.now() - this.playTime);
+            this.timeToPlayLoud = this.masterInfo.songDelay - (performance.now() - this.playTime);
             clearTimeout(this.wait);
         }
         this.paused = true;
@@ -316,7 +317,7 @@ export class Mp3Player {
         this.ended = false;
         this.playingLoud = false;
         this.paused = false;
-        this.timeToPlayLoud = 4000;
+        this.timeToPlayLoud = this.masterInfo.songDelay;
         while (this.chunks.length > 0) {
             this.chunks.shift();
         }
@@ -378,7 +379,7 @@ export class Mp3Player {
             const clipLength = this.queue[0].endTime - this.queue[0].startTime;
             if (clipLength > 3) { // don't screw with real short segments
                 if (this.queue[0].audio.currentTime < 0.9 * clipLength) { // need clip to be able to end
-                    this.queue[0].audio.currentTime = this.loudPlayer.currentTime + 4.0 - this.queue[0].startTime;
+                    this.queue[0].audio.currentTime = this.loudPlayer.currentTime + (1.0 * this.masterInfo.songDelay / 1000) - this.queue[0].startTime;
                 }
             }
         }

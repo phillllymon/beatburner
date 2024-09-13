@@ -5,7 +5,6 @@ import {
 export class StreamPlayer {
     constructor(masterInfo, songDelay) {
         this.masterInfo = masterInfo;
-        this.songDelay = songDelay;
         this.queue = [];
         this.started = false;
         this.current = null;
@@ -18,7 +17,7 @@ export class StreamPlayer {
         this.blobs = [];
     }
 
-    calibrateLag(delay = this.songDelay) {
+    calibrateLag(delay = this.masterInfo.songDelay) {
         const delayInSeconds = 1.0 * delay / 1000;
         if (this.player && this.silentPlayer.currentTime > delayInSeconds) {
             this.silentPlayer.currentTime = this.player.currentTime + delayInSeconds;
@@ -34,7 +33,7 @@ export class StreamPlayer {
         setTimeout(() => {
             thisObj.currentAudio = songObj.song;
             songObj.song.play();
-        }, this.songDelay);
+        }, this.masterInfo.songDelay);
     }
 
     getDetailedFreqArray() {
@@ -79,7 +78,7 @@ export class StreamPlayer {
             this.freqArrays.push(this.liveDataArray.map(val => val));
             const now = performance.now();
             this.times.push(now);
-            while (this.times[0] < now - this.songDelay) {
+            while (this.times[0] < now - this.masterInfo.songDelay) {
                 this.times.shift();
                 this.freqArrays.shift();
             }
@@ -92,7 +91,7 @@ export class StreamPlayer {
             this.freqArrays.push(this.dataArray.map(val => val));
             const now = performance.now();
             this.times.push(now);
-            while (this.times[0] < now - this.songDelay) {
+            while (this.times[0] < now - this.masterInfo.songDelay) {
                 this.times.shift();
                 this.freqArrays.shift();
             }
@@ -105,7 +104,7 @@ export class StreamPlayer {
                 this.freqArrays.push(this.current.dataArray.map(val => val));
                 const now = performance.now();
                 this.times.push(now);
-                while (this.times[0] < now - this.songDelay) {
+                while (this.times[0] < now - this.masterInfo.songDelay) {
                     this.times.shift();
                     this.freqArrays.shift();
                 }

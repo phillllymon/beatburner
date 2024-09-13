@@ -237,6 +237,10 @@
     background-color: rgb(255, 231, 188);
 }
 
+.inset-bulb {
+    color: transparent;
+}
+
 .note-bulb {
     border-top: 0.35vh solid rgb(241, 219, 177);
     border-bottom: 1.5vh solid rgb(219, 199, 163);

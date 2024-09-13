@@ -16,12 +16,13 @@ import { tone } from "./tone.js";
 // // END TEMP
 
 export class Tutorial {
-    constructor(masterInfo, controlsManager, animator, player, noteWriter, addNote) {
+    constructor(masterInfo, controlsManager, animator, player, noteWriter, menuManager, addNote) {
         this.masterInfo = masterInfo;
         this.controlsManager = controlsManager;
         this.animator = animator;
         this.player = player;
         this.noteWriter = noteWriter;
+        this.menuManager = menuManager;
         this.addNote = addNote;
         this.playing = false;
         this.playingSong = false;
@@ -496,7 +497,7 @@ export class Tutorial {
                             this.animator.stopAnimation(true);
                             this.triggerTutorialStep(2);
                         }
-                    }, 1990);
+                    }, this.masterInfo.songDelay - 2010);
                 }
             }, 1500);
         }
@@ -670,11 +671,12 @@ export class Tutorial {
     }
 
     animateNotes(audio, notes) {
+        const adjustOffset = (1.0 * this.masterInfo.songDelay - 4000) / 1000.0;
         if (this.playingRealSong) {
             const nowInSong = audio.currentTime + 2.0;
             let nextNoteArr = notes[this.nextNoteIdx];
             if (nextNoteArr !== undefined) {
-                while (nextNoteArr[0] < nowInSong) {
+                while (nextNoteArr[0] < nowInSong + adjustOffset) {
                     this.addNote(nextNoteArr[1], 50, false, this.masterInfo.manualDelay);
                     this.nextNoteIdx += 1;
                     if (this.nextNoteIdx > notes.length - 1) {
@@ -687,6 +689,7 @@ export class Tutorial {
         }
     }
     animateDisco(audio, notes) {
+        const adjustOffset = (1.0 * this.masterInfo.songDelay - 4000) / 1000.0;
         if (this.playingSong) {
             if (this.masterInfo.streak > 10) {
                 this.triggerTutorialStep(5);
@@ -700,7 +703,7 @@ export class Tutorial {
             // const nowInSong = audio.currentTime + 2.0;
             let nextNoteArr = notes[this.nextNoteIdx];
             if (nextNoteArr !== undefined) {
-                while (nextNoteArr[0] < nowInSong) {
+                while (nextNoteArr[0] < nowInSong + adjustOffset) {
                     this.addNote(nextNoteArr[1], 50, false, this.masterInfo.manualDelay);
                     this.releaseTime = performance.now();
                     this.nextNoteIdx += 1;
@@ -847,10 +850,11 @@ export class Tutorial {
 
     startExtendedTutorial() {
         setLoading();
+        this.menuManager.setMainMenuOption("choose-song-button");
         this.masterInfo.extendedTutorial = true;
         this.masterInfo.hideAllMenus();
         this.masterInfo.songMode = "demo";
-        const songCode = "liveInMyHead";
+        const songCode = "blahBlahBlah";
         fetch(`./songStrings/${songCode}.txt`).then((res) => {
             res.text().then((str) => {
                 this.masterInfo.currentSong = songData[songCode];

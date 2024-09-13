@@ -273,8 +273,8 @@ export class MenuManager {
                     songToLoad = this.masterInfo.defaultSong;
                 }
                 if (!songToLoad) {
-                    songToLoad = "liveInMyHead";
-                    document.getElementById("song-to-play").innerText = songData["liveInMyHead"];
+                    songToLoad = "blahBlahBlah";
+                    document.getElementById("song-to-play").innerText = songData["blahBlahBlah"];
                 }
 
                 // if (this.masterInfo.defaultSong) {

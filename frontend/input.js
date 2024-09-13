@@ -13,6 +13,7 @@ import { FileConverter } from "./helpers/fileConverter.js";
 import { Tutorial } from "./helpers/tutorial.js";
 import { Calibrator } from "./helpers/calibrator.js";
 import { StatsManager } from "./helpers/statsManager.js";
+import { lightUp, flyAway } from "./helpers/animations.js";
 import {
     setElementText,
     removeElementClass,
@@ -71,12 +72,14 @@ setTimeout(() => {
 // ^animation above
 
 const {
-    songDelay,
     allSlides,
     targetBoundSizes,
     minNoteGap,
     maxTailLength
 } = gameDataConst; // from data.js
+
+let songDelay = gameDataConst.songDelay;
+// console.log(songDelay);
 
 // let viewWidth = document.getElementById("game-container").clientWidth;
 // let viewHeight = document.getElementById("game-container").clientHeight;
@@ -89,10 +92,13 @@ let vMin = Math.min(viewWidth, viewHeight);
 let slideLength = 1.5 * vMin;
 let travelLength = 1.365 * vMin;
 
-let noteSpeed = 1.0 * (travelLength / ( (songDelay / 1000.0) / 2 ));
+const noteSpeed = 1.0 * travelLength / (songDelay - 2000);
+
+const targetTime = 100; // ms either side
+const targetDist = 1.0 * noteSpeed * targetTime;
 const targetBounds = {
-    top: travelLength - (targetBoundSizes.top * travelLength),
-    bottom: travelLength + (targetBoundSizes.bottom * travelLength)
+    top: travelLength - targetDist,
+    bottom: travelLength + targetDist
 }
 
 handleMobile();
@@ -175,6 +181,7 @@ let onFire = false;
 let puttingOutFire = false;
 let extendedTutorial = false;
 let songActive = false;
+let animationStyle = "lightUp";
 
 let promptedCalibration = false;
 
@@ -183,6 +190,7 @@ const masterInfo = {
     allSlides,
     animatedBackground,
     animations,
+    animationStyle,
     audioLoaded,
     autoAdjustment,
     autoCalibrating,
@@ -213,14 +221,16 @@ const masterInfo = {
     songNotesHit,
     songNotesMissed,
     songStreak,
+    // speedAdjust,
     streak,
     streaming,
     sustainedNotes,
     sustainedNotesFrequency,
     tapperKeys,
-    targets,
     targetBounds,
+    targets,
     targetTails,
+    targetTime,
     travelLength,
     useShortSteps,
     vMin,
@@ -258,6 +268,7 @@ const player = new Player(
     () => {
         // console.log(notesRecord);
         // console.log(noteAttempts);
+        // console.log(notesMade);
         statsManager.updateInfo();
         animator.stopAnimation();
         if (masterInfo.songStreak > longestStreak) {
@@ -357,6 +368,7 @@ const tutorial = new Tutorial(
     animator,
     player,
     noteWriter,
+    menuManager,
     addNote
 );
 
@@ -428,6 +440,8 @@ document.addEventListener("keypress", (e) => {
         document.getElementById(masterInfo.waitingForKey[0]).innerText = e.code;
         const bulbId = `bulb-${masterInfo.waitingForKey[0].split("").slice(0, masterInfo.waitingForKey[0].length - 4).join("")}`;
         document.getElementById(bulbId).innerText = e.code;
+        const insetId = `inset-${masterInfo.waitingForKey[0].split("").slice(0, masterInfo.waitingForKey[0].length - 4).join("")}`;
+        document.getElementById(insetId).innerText = e.code;
         document.getElementById("save-settings").style.opacity = "1";
         masterInfo.waitingForKey = false;
         document.getElementById("change-key-message").innerText = "";
@@ -527,12 +541,13 @@ function deactivateTapper(tapperId) {
 }
 
 // record note attempts
-// const noteAttempts = [];
+const noteAttempts = [];
 // end record note attempts
 // document.addEventListener("touchstart", (e) => {
 //     console.log(e.target);
 // });
 function activateTapper(tapperId, slideId, leavingClass) {
+
     // console.log(slideId);
     if (masterInfo.canEnterCode) {
         triggerCode(slideId);
@@ -546,7 +561,7 @@ function activateTapper(tapperId, slideId, leavingClass) {
     // end record note attempts
 
     activeTappers[tapperId] = true;
-    let closest = 500;
+    let closest = 5000;
     let numNotes = 0;
     let target = null;
     notes.forEach((note) => {
@@ -578,7 +593,16 @@ function activateTapper(tapperId, slideId, leavingClass) {
     // document.getElementById(tapperId).style.backgroundColor = "rgba(255, 166, 0, 0.2)";
     const tapperTargets = targets[slideId];
     if (tapperTargets.size === 0) {
+        
+        // document.getElementById("button-pause").style.backgroundColor = "red";
+        // setTimeout(() => {
+        //     document.getElementById("button-pause").style.backgroundColor = "gray";
+        // }, 1000);
+        
         triggerMissedNote();
+    } else {
+        // console.log("----");
+        // console.log(masterInfo.targets);
     }
     if (tapperTargets.has(target)) {
         notes.delete(target);
@@ -671,7 +695,7 @@ function makeTail(slideId, parentNote) {
 }
 
 let lastNote = null;
-let notesMade = 0;
+// let notesMade = 0;
 
 // // TEMP
 // const notesRecord = [];
@@ -687,7 +711,7 @@ let notesMade = 0;
 // };
 
 // for recording notes
-const notesRecord = [];
+// const notesRecord = [];
 
 function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false) {
     // notesRecord.push([slideId, player.song2.currentTime]);
@@ -704,23 +728,28 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
 
     // TEMP
     // if (document.noteVal !== undefined) {
-    //     newNote.style.fontSize = "30px";
-    //     newNote.innerText = document.noteVal;
+        // newNote.style.fontSize = "30px";
+        // newNote.innerText = document.noteVal;
+        // newNote.innerText = animator.currentSlider;
         
     // }
     // end TEMP
     
     let startPos = -1.0 * autoAdjustment; // should be zero initially
     if (timeOffset > 0) {
-        const travelTime = masterInfo.travelLength / 2.0;
+        const travelTime = masterInfo.songDelay - 2000;
         const fraction = 1.0 * timeOffset / travelTime;
         const distOffset = fraction * masterInfo.travelLength;
+
+        // const travelTime = masterInfo.travelLength / 2.0;
+        // const fraction = 1.0 * timeOffset / travelTime;
+        // const distOffset = fraction * masterInfo.travelLength;
         startPos += distOffset;
     }
     
     let newNoteAligned = false;
     // match previous note if super close    
-    if (lastNote && !lastNote.killed && !lastNote.isTail && Math.abs(lastNote.position - startPos) < 0.05 * (masterInfo.travelLength + autoAdjustment)) {
+    if (lastNote && !lastNote.killed && !lastNote.isTail && Math.abs(lastNote.position - startPos) < 0.05 * (2000.0 / (masterInfo.songDelay - 2000)) * (masterInfo.travelLength + autoAdjustment)) {
         if (masterInfo.double && canDouble && !lastNote.aligned && animator.notesPerSecond > 1) {
             startPos = lastNote.position;
             newNoteAligned = true;
@@ -740,7 +769,13 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
         isTail: false,
         tail: null,
         seen: false,
-        aligned: newNoteAligned
+        aligned: newNoteAligned,
+
+        // temp
+        // timing: player.song1.currentTime - 2.1,
+        // printed: false,
+        // launched: performance.now()
+        // end temp
     };
 
     notes.add(noteInfo);
@@ -748,6 +783,8 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
     document.getElementById(slideId).appendChild(newNote);
 
     // TEMP
+    // console.log(player.song1.currentTime, player.song2.currentTime);
+    // notesMade += 1;
     // masterInfo.numNotes += 1;
     // notesRecord.push(player.song2.currentTime);
     // END TEMP
@@ -755,7 +792,7 @@ function addNote(slideId, val, marked = false, timeOffset = 0, canDouble = false
     lastNote = noteInfo;
     if (masterInfo.songMode !== "tutorial") {
         mostRecentNotesOrTails[slideId] = noteInfo;
-        notesMade += 1;
+        // notesMade += 1;
         return noteInfo;
     }
 }
@@ -845,20 +882,15 @@ function triggerHitNote(slideId, tapperId, hasTail) {
     document.getElementById(smudgeId).classList.remove("smudge-active");
 
     if (!hasTail) {
-        const lighted = document.createElement("div");
-        lighted.classList.add("note-lighted");
-        const middleLighted = document.createElement("div");
-        middleLighted.classList.add("note-middle-lighted");
-        const light = document.createElement("div");
-        light.id = `${slideId}-flash`;
-        light.appendChild(lighted);
-        light.appendChild(middleLighted);
-        document.getElementById(`dummy-${tapperId}`).appendChild(light);
-        light.classList.add("flash");
-        setTimeout(() => {
-            light.remove();
-        }, 1000);
-        
+
+        if (masterInfo.animationStyle === "flyAway") {
+            flyAway(slideId, tapperId, animator.slides.length);
+        } else if (masterInfo.animationStyle === "lightUp") {
+            lightUp(slideId, tapperId);
+        } else {
+            flyAway(slideId, tapperId, animator.slides.length);
+            lightUp(slideId, tapperId);
+        }
     }
     
     animator.recordNoteHit();
@@ -1056,12 +1088,13 @@ function setupMobile() {
         masterInfo.travelLength = gameDataConst.mobile.travelLength * viewHeight;
         masterInfo.autoAdjustment = 0.05 * masterInfo.travelLength;
 
-        // const newNoteSpeed = Math.floor(masterInfo.travelLength / ( (masterInfo.songDelay / 1000) / 2 ));
-        const newNoteSpeed = 1.0 * masterInfo.travelLength / ( (masterInfo.songDelay / 1000.0) / 2.0 );
+        const noteSpeed = 1.0 * masterInfo.travelLength / (masterInfo.songDelay - 2000);
+        const targetDist = noteSpeed * masterInfo.targetTime;
+
+        masterInfo.targetBounds.top = masterInfo.travelLength - targetDist;
+        masterInfo.targetBounds.bottom = masterInfo.travelLength + targetDist;
         
-        masterInfo.targetBounds.top = gameDataConst.mobile.targetBounds.top * masterInfo.travelLength;
-        masterInfo.targetBounds.bottom = gameDataConst.mobile.targetBounds.bottom * masterInfo.travelLength;
-        masterInfo.noteSpeed = newNoteSpeed;
+        
         masterInfo.maxTailLength = 1.0 * gameDataConst.mobile.maxTailLength * masterInfo.travelLength;
         masterInfo.slideLength = masterInfo.travelLength * 1.3;
         
@@ -1147,14 +1180,16 @@ getUserProfile().then((profile) => {
     [
         ["select-sustained-frequency", "sustainedNotesFrequency"],
         ["select-double-frequency", "doubleFrequency"],
-        ["algorithm-selector", "algorithm"]
+        ["algorithm-selector", "algorithm"],
+        ["speed-selector", "songDelay"],
+        ["animation-style-selector", "animationStyle"]
     ].forEach((settingSet) => {
         if (profile[settingSet[1]]) {
             masterInfo[settingSet[1]] = profile[settingSet[1]];
             const select = document.getElementById(settingSet[0]);
             select.childNodes.forEach((option) => {
                 option.selected = false;
-                if (option.value === masterInfo[settingSet[1]]) {
+                if (option.value === masterInfo[settingSet[1]] || parseFloat(option.value) === masterInfo[settingSet[1]]) {
                     option.selected = true;
                 }
             });
@@ -1162,11 +1197,39 @@ getUserProfile().then((profile) => {
             profile[settingSet[1]] = masterInfo[settingSet[1]];
         }
     });
+    document.getElementById("toggle-algorithm").innerHTML = masterInfo.algorithm;
+    document.getElementById("toggle-speed").innerHTML = {
+        6500: "super slow",
+        5500: "slow",
+        4700: "medium",
+        4000: "fast",
+        3500: "crazy fast"
+    }[masterInfo.songDelay];
+    document.getElementById("toggle-animation-style").innerHTML = {
+        "lightUp": "Light up",
+        "flyAway": "Fly away",
+        "both": "Both"
+    }[masterInfo.animationStyle];
 
+    
+    masterInfo.targetBounds.top = masterInfo.travelLength - (masterInfo.travelLength * gameDataConst.mobile.targetBounds.top);
+    masterInfo.targetBounds.bottom = masterInfo.travelLength + (masterInfo.travelLength * gameDataConst.mobile.targetBounds.bottom);
+
+    // console.log(profile);
+    if (!profile.player) {
+        profile.player = Math.round(1000000 * Math.random());
+    }
     if (profile.queryInitial) {
-        fetch("https://beatburner.com/api/statusQuery.php", { method: "POST" }).then((res) => {
+        fetch("https://beatburner.com/api/statusQuery.php", { 
+            method: "POST",
+            body: JSON.stringify({
+                player: profile.player
+            })
+        }).then((res) => {
             res.json().then((r) => {
+                // console.log(r);
                 if (r.message === "success") {
+                    // console.log(r);
                     masterInfo.sendStat = r.data.queryStats;
                     profile.queryStats = r.data.queryStats;
                     profile.queryInitial = r.data.queryInitial;
@@ -1323,7 +1386,7 @@ function initialAnimate() {
                     "tapper-b",
                     "tapper-right"
                 ][Math.floor(4 * Math.random())];
-                lightUp(tapperId);
+                lightBuzz(tapperId);
             }, (1500 * Math.random()));
         }
     }, 1800);
@@ -1335,13 +1398,21 @@ function initialAnimate() {
     });
     setTimeout(() => {
         menuManager.showMenu(startMenu);
+        if (masterInfo.animationStyle === "flyAway" || masterInfo.animationStyle === "both") {
+            ["bulb-left", "bulb-a", "bulb-b", "bulb-right"].forEach((id) => {
+                document.getElementById(id).classList.add("hidden");
+            });
+            // ["inset-left", "inset-a", "inset-b", "inset-right"].forEach((id) => {
+            //     document.getElementById(id).classList.remove("hidden");
+            // });
+        }
     }, 3700);
     setTimeout(() => {
         guitar.play();
     }, 3500);
 }
 
-function lightUp(tapperId) {
+function lightBuzz(tapperId) {
     const lighted = document.createElement("div");
     lighted.classList.add("note-lighted");
     const middleLighted = document.createElement("div");

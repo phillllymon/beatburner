@@ -47,11 +47,11 @@ export class ControlsManager {
     activateSongSelect(chooseDefault = true) {
         document.getElementById("stages").innerText = "";
         const levelNames = {
-            1: "super easy",
-            2: "easy",
-            3: "medium",
-            4: "hard",
-            5: "crazy hard"
+            1: "Super easy",
+            2: "Easy",
+            3: "Medium",
+            4: "Hard",
+            5: "Crazy hard"
         }
         const passingScores = {
             1: 75,
@@ -612,6 +612,60 @@ export class ControlsManager {
                 profile.algorithm = this.masterInfo.algorithm;
                 setUserProfile(profile);
             });
+            document.getElementById("toggle-algorithm").innerHTML = this.masterInfo.algorithm;
+        });
+        const animationStyleSelector = document.getElementById("animation-style-selector");
+        animationStyleSelector.addEventListener("change", () => {
+            this.masterInfo.animationStyle = animationStyleSelector.value;
+            getUserProfile().then((profile) => {
+                profile.animationStyle = this.masterInfo.animationStyle;
+                setUserProfile(profile);
+            });
+            document.getElementById("toggle-animation-style").innerHTML = {
+                "lightUp": "Light up",
+                "flyAway": "Fly away",
+                "both": "Both"
+            }[this.masterInfo.animationStyle];
+            if (this.masterInfo.animationStyle === "flyAway" || this.masterInfo.animationStyle === "both") {
+                ["bulb-left", "bulb-a", "bulb-b", "bulb-right"].forEach((id) => {
+                    document.getElementById(id).classList.add("hidden");
+                });
+                // ["inset-left", "inset-a", "inset-b", "inset-right"].forEach((id) => {
+                //     document.getElementById(id).classList.remove("hidden");
+                // });
+            } else {
+                ["bulb-left", "bulb-a", "bulb-b", "bulb-right"].forEach((id) => {
+                    document.getElementById(id).classList.remove("hidden");
+                });
+                // ["inset-left", "inset-a", "inset-b", "inset-right"].forEach((id) => {
+                //     document.getElementById(id).classList.add("hidden");
+                // });
+            }
+        });
+        const speedSelector = document.getElementById("speed-selector");
+        speedSelector.addEventListener("change", () => {
+            
+            this.masterInfo.songDelay = parseInt(speedSelector.value);
+            const noteSpeed = 1.0 * this.masterInfo.travelLength / (this.masterInfo.songDelay - 2000);
+            const targetDist = noteSpeed * this.masterInfo.targetTime;
+
+
+            this.masterInfo.targetBounds.top = this.masterInfo.travelLength - targetDist;
+            this.masterInfo.targetBounds.bottom = this.masterInfo.travelLength + targetDist;
+            // console.log(this.masterInfo.songDelay);
+            getUserProfile().then((profile) => {
+                profile.songDelay = this.masterInfo.songDelay;
+                setUserProfile(profile);
+            });
+            const speedName = {
+                "6500": "super slow",
+                "5500": "slow",
+                "4700": "medium",
+                "4000": "fast",
+                "3500": "crazy fast"
+            }[speedSelector.value];
+            document.getElementById("toggle-speed").innerHTML = speedName;
+            this.restartFunction();
         });
         resetButton.addEventListener("click", () => {
             getUserProfile().then((profile) => {

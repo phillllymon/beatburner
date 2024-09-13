@@ -16,7 +16,6 @@ export class Animator {
         // numArrays = 1
     ) {
         this.masterInfo = masterInfo;
-        this.delay = this.masterInfo.songDelay;
         this.recents = masterInfo.mostRecentNotesOrTails;
         this.notes = masterInfo.notes;
         this.allSlides = masterInfo.allSlides;
@@ -25,6 +24,7 @@ export class Animator {
         getUserProfile().then((profile) => {
             this.notesPerSecond = profile.level;
             this.setNumSlides(profile.slides);
+            this.labelFeedbackModal();
         });
         this.targetTails = masterInfo.targetTails;
         this.targets = masterInfo.targets;
@@ -58,6 +58,7 @@ export class Animator {
 
     setNotesPerSecond(val) {
         this.notesPerSecond = val;
+        this.labelFeedbackModal();
     }
 
     setNumSlides(val) {
@@ -68,6 +69,18 @@ export class Animator {
         } else {
             this.slides = [this.allSlides[0], this.allSlides[1], this.allSlides[2], this.allSlides[3]];
         }
+        this.labelFeedbackModal();
+    }
+
+    labelFeedbackModal() {
+        const level = {
+            1: "Super easy",
+            2: "Easy",
+            3: "Medium",
+            4: "Hard",
+            5: "Crazy hard"
+        }[this.notesPerSecond];
+        document.getElementById("song-difficulty").innerText = `${level} / ${this.slides.length} slides`;
     }
 
     recordNoteHit() {
@@ -162,7 +175,7 @@ export class Animator {
         // console.log(timesToUse.map(ele => ele));
         timesToUse.forEach((timeToUse) => {
             const timeOffset = now - timeToUse;
-            const delayToUse = this.delay + timeOffset;
+            const delayToUse = this.masterInfo.songDelay + timeOffset;
             player.calibrateLag(delayToUse);
             const dataArray = player.getDetailedFreqArray();
             const timeArray = player.getDetailedTimeArray();
@@ -189,7 +202,8 @@ export class Animator {
             dt,
             this,
             this.masterInfo.songMode,
-            this.masterInfo.travelLength
+            this.masterInfo.travelLength,
+            player
         );
 
         if (this.animating) {
@@ -324,24 +338,31 @@ function moveNotes(
     dt,
     obj,
     theSongMode,
-    theTravelLength
+    theTravelLength,
+    // player
 ) {
     
     // document.noteVal = dt;
 
-    const now = performance.now();
-    const elapsedTime = now - obj.slideStartTime;
+    // const now = performance.now();
+    // const elapsedTime = now - obj.slideStartTime;
     // console.log("elapsed: " + elapsedTime);
-    const totalTravelTime = 1.0 * obj.masterInfo.songDelay / 2.0;
+    // const totalTravelTime = 1.0 * obj.masterInfo.songDelay / 2.0;
+    const totalTravelTime = 1.0 * obj.masterInfo.songDelay - 2000;
+
+    // temp
+    const speed = 1.0 * theTravelLength / totalTravelTime;
+    const movement = speed * dt;
+
     // console.log("travelTime: " + totalTravelTime);
-    let travelFraction = 0;
-    if (elapsedTime > 1) {
-        travelFraction = 1.0 * elapsedTime / totalTravelTime; // will quickly go above 1
-    }
+    // let travelFraction = 0;
+    // if (elapsedTime > 1) {
+    //     travelFraction = 1.0 * elapsedTime / totalTravelTime; // will quickly go above 1
+    // }
     // console.log("fraction: " + travelFraction);
-    const desiredPos = 1.0 * travelFraction * obj.masterInfo.travelLength;
+    // const desiredPos = 1.0 * travelFraction * obj.masterInfo.travelLength;
     // console.log("desiredPos: " + desiredPos);
-    const movement = desiredPos - obj.masterInfo.sliderPos;
+    // const movement = desiredPos - obj.masterInfo.sliderPos; // ************** UNCOMMENT THIS WHEN YOU REMOVE TEMP!!!!!!!
     // console.log("movement: " + movement);
     // console.log("sliderPos: " + obj.masterInfo.sliderPos);
 
@@ -376,8 +397,11 @@ function moveNotes(
     });
     
     // switch sliders
-    if (obj.masterInfo.sliderPos > 100000) {
+    if (obj.masterInfo.sliderPos > 10000) {
+    // if (obj.masterInfo.sliderPos > 100000) {
         
+        // console.log("SWITCH");
+        // console.log(obj.masterInfo.targets);
         
         let oldPref = "a-";
         let newPref = "b-";
@@ -399,7 +423,7 @@ function moveNotes(
             obj.movingBothSliders = false;
             obj.oldSliderPos = 0;
             document.getElementById(oldSliderId).style.top = "0px";
-        }, 2000);
+        }, 1.5 * totalTravelTime);
         
         obj.masterInfo.sliderPos = 0;
 
@@ -455,7 +479,7 @@ function moveNotes(
             
         }
         if (newTop > theTargetBounds.bottom && note.target === true) {
-
+            
             // note.note.style.backgroundColor = "green";
 
             note.target = false;
@@ -485,6 +509,11 @@ function moveNotes(
         // temp for video
         // if (newTop > theTravelLength) {
         //     document.activateTapper(`tapper-${note.slideId.split("-")[1]}`, note.slideId);
+        //     // if (!note.printed) {
+        //     //     note.printed = true;
+        //     //     // console.log(note.timing, player.livePlayer.currentTime);
+        //     //     // console.log(`travel time: ${performance.now() - note.launched}`);
+        //     // }
         // }
         // end temp for video
 

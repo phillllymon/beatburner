@@ -175,8 +175,8 @@ export class StationManager {
                 const audioCtx = new AudioContext();
                 const radioSourceDelay = audioCtx.createMediaElementSource(radioPlayer);
     
-                const radioDelay = audioCtx.createDelay(4.0);
-                radioDelay.delayTime.setValueAtTime(4.0, radioPlayer.currentTime);
+                const radioDelay = audioCtx.createDelay(1.0 * this.masterInfo.songDelay / 1000);
+                radioDelay.delayTime.setValueAtTime(1.0 * this.masterInfo.songDelay / 1000, radioPlayer.currentTime);
                 radioSourceDelay.connect(radioDelay);
                 radioDelay.connect(audioCtx.destination);
                 
